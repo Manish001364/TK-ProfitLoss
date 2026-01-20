@@ -5,3 +5,7 @@
 .phpunit.result.cache
 *.log
 .DS_Store
+-e 
+# Environment files
+*.env
+*.env.*

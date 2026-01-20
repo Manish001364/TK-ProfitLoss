@@ -1,12 +1,12 @@
-# P&L Module Installation Guide for te-abc
+# P&L Module Installation Guide for TicketKart
 
-Follow these steps to add the P&L module to your te-abc Laravel project.
+Follow these steps to add the P&L module to your Laravel project.
 
 ---
 
 ## Step 1: Install Required Packages
 
-Open terminal in your `te-abc` project root and run:
+Open terminal in your project root and run:
 
 ```bash
 composer require maatwebsite/excel
@@ -17,68 +17,68 @@ composer require barryvdh/laravel-dompdf
 
 ## Step 2: Copy Module Files
 
-Copy these folders/files from this repo to your te-abc project:
+Copy these folders/files from this package to your project:
 
 ### Models
 ```
-app/Models/PnL/  →  te-abc/app/Models/PnL/
+app/Models/PnL/  →  your-project/app/Models/PnL/
 ```
 
 ### Controllers
 ```
-app/Http/Controllers/PnL/  →  te-abc/app/Http/Controllers/PnL/
+app/Http/Controllers/PnL/  →  your-project/app/Http/Controllers/PnL/
 ```
 
 ### Exports
 ```
-app/Exports/  →  te-abc/app/Exports/
+app/Exports/  →  your-project/app/Exports/
 ```
 
 ### Mail
 ```
-app/Mail/PaymentReminderMail.php  →  te-abc/app/Mail/PaymentReminderMail.php
+app/Mail/PaymentReminderMail.php  →  your-project/app/Mail/PaymentReminderMail.php
 ```
 
 ### Policies
 ```
-app/Policies/  →  te-abc/app/Policies/
+app/Policies/  →  your-project/app/Policies/
 ```
 
 ### Service Provider
 ```
-app/Providers/PnLServiceProvider.php  →  te-abc/app/Providers/PnLServiceProvider.php
+app/Providers/PnLServiceProvider.php  →  your-project/app/Providers/PnLServiceProvider.php
 ```
 
 ### Traits
 ```
-app/Traits/  →  te-abc/app/Traits/
+app/Traits/  →  your-project/app/Traits/
 ```
 
 ### Console Commands
 ```
-app/Console/Commands/SendPaymentReminders.php  →  te-abc/app/Console/Commands/SendPaymentReminders.php
+app/Console/Commands/SendPaymentReminders.php  →  your-project/app/Console/Commands/SendPaymentReminders.php
 ```
 
 ### Migrations
 ```
-database/migrations/*  →  te-abc/database/migrations/
+database/migrations/*  →  your-project/database/migrations/
 ```
 
 ### Views
 ```
-resources/views/pnl/  →  te-abc/resources/views/pnl/
+resources/views/pnl/  →  your-project/resources/views/pnl/
 ```
 
 ### Routes
 ```
-routes/pnl.php  →  te-abc/routes/pnl.php
+routes/pnl.php  →  your-project/routes/pnl.php
 ```
 
 ---
 
 ## Step 3: Register Service Provider
 
-Edit `config/app.php` in te-abc, find the `providers` array and add:
+Edit `config/app.php`, find the `providers` array and add:
 
 ```php
 'providers' => [
@@ -92,7 +92,7 @@ Edit `config/app.php` in te-abc, find the `providers` array and add:
 
 ## Step 4: Add Routes
 
-Edit `routes/web.php` in te-abc, add at the bottom:
+Edit `routes/web.php`, add at the bottom:
 
 ```php
 // P&L Module Routes
@@ -144,52 +144,56 @@ php artisan tinker
 
 ---
 
-## Step 6: Add Menu to AdminLTE Sidebar
+## Step 6: Add Menu Link to Sidebar
 
-Edit `config/adminlte.php`, find the `'menu'` array and add:
+Edit `resources/views/customer/sidemenu.blade.php` and add the P&L menu link.
+
+Find a suitable location in the `<ul class="menuUl">` section (e.g., after the Finance menu item) and add:
 
 ```php
-[
-    'text' => 'P&L Management',
-    'icon' => 'fas fa-chart-line',
-    'submenu' => [
-        [
-            'text' => 'Dashboard',
-            'url'  => 'pnl/dashboard',
-            'icon' => 'fas fa-tachometer-alt',
-        ],
-        [
-            'text' => 'Events',
-            'url'  => 'pnl/events',
-            'icon' => 'fas fa-calendar-alt',
-        ],
-        [
-            'text' => 'Vendors & Artists',
-            'url'  => 'pnl/vendors',
-            'icon' => 'fas fa-users',
-        ],
-        [
-            'text' => 'Expenses',
-            'url'  => 'pnl/expenses',
-            'icon' => 'fas fa-receipt',
-        ],
-        [
-            'text' => 'Revenue',
-            'url'  => 'pnl/revenues',
-            'icon' => 'fas fa-ticket-alt',
-        ],
-        [
-            'text' => 'Payments',
-            'url'  => 'pnl/payments',
-            'icon' => 'fas fa-credit-card',
-        ],
-        [
-            'text' => 'Categories',
-            'url'  => 'pnl/categories',
-            'icon' => 'fas fa-tags',
-        ],
-    ],
-],
+@php
+    $pnlActive = request()->is('pnl/*') || request()->routeIs('pnl.*');
+@endphp
+
+<li class="menuLi d-flex align-items-center {{ $pnlActive ? 'leftMenuActive' : '' }}">
+    <a href="{{ route('pnl.dashboard') }}" class="d-flex icon-color gap-2">
+        <i class="{{ $pnlActive ? 'fi fi-sr-chart-line' : 'fi fi-rr-chart-line' }} icon-color menuIcon fs-5"
+            class="tooltip-trigger" 
+            @mouseenter="showTooltip($el.getAttribute('data-tooltip'))"
+            @mouseleave="hideTooltip()" 
+            data-tooltip="P&L"></i>
+        <span class="menuCon d-flex justify-content-between align-items-center gap-2">
+            <span>P&L</span>
+        </span>
+    </a>
+</li>
+```
+
+**Alternative simple version** (if you don't want the tooltip):
+
+```php
+<li class="menuLi d-flex align-items-center {{ request()->is('pnl/*') ? 'leftMenuActive' : '' }}">
+    <a href="{{ route('pnl.dashboard') }}" class="d-flex icon-color gap-2">
+        <i class="{{ request()->is('pnl/*') ? 'fi fi-sr-chart-line' : 'fi fi-rr-chart-line' }} icon-color menuIcon fs-5"></i>
+        <span class="menuCon d-flex justify-content-between align-items-center gap-2">
+            <span>P&L Management</span>
+        </span>
+    </a>
+</li>
+```
+
+### For Mobile Menu (Optional)
+
+If you want to add P&L to the mobile bottom menu, find the mobile section in `sidemenu.blade.php` and add it to the dropdown menu:
+
+```php
+<li>
+    <a href="{{ route('pnl.dashboard') }}"
+        class="d-flex gap-2 align-items-center dropdown-item py-2 {{ request()->is('pnl/*') ? 'leftMenuActive' : '' }}">
+        <i class="{{ request()->is('pnl/*') ? 'fi fi-sr-chart-line' : 'fi fi-rr-chart-line' }} fs-5 menuIcon icon-color"></i>
+        <span style="color: {{ request()->is('pnl/*') ? '#FD0404' : '#8d8d8d' }};">P&L</span>
+    </a>
+</li>
 ```
 
 ---
@@ -227,6 +231,17 @@ You should see the P&L Dashboard!
 
 ---
 
+## Layout Information
+
+The P&L module views are configured to use your existing organiser layout:
+- **Layout file:** `resources/views/layouts/organiser_layout.blade.php`
+- **Content section:** `@yield('content')`
+- **Custom JS section:** `@yield('customjs')`
+
+The module uses Bootstrap 5 classes and integrates with your existing jQuery and Select2 setup.
+
+---
+
 ## Troubleshooting
 
 ### Class not found error
@@ -250,8 +265,28 @@ chmod -R 775 storage
 chmod -R 775 bootstrap/cache
 ```
 
+### Modal not working
+Make sure Bootstrap 5 JS is loaded. The P&L views use `bootstrap.Modal` for confirmation dialogs.
+
+### Icons not showing
+The P&L module uses FontAwesome icons (`fas fa-*`). Make sure FontAwesome is included in your layout.
+
+---
+
+## Available Routes
+
+| Route | URL | Description |
+|-------|-----|-------------|
+| `pnl.dashboard` | `/pnl/dashboard` | Main P&L Dashboard |
+| `pnl.events.index` | `/pnl/events` | Events List |
+| `pnl.vendors.index` | `/pnl/vendors` | Vendors & Artists |
+| `pnl.expenses.index` | `/pnl/expenses` | Expenses List |
+| `pnl.revenues.index` | `/pnl/revenues` | Revenue Tracking |
+| `pnl.payments.index` | `/pnl/payments` | Payment Tracking |
+| `pnl.categories.index` | `/pnl/categories` | Expense Categories |
+
 ---
 
 ## Done!
 
-Your P&L module is now integrated with te-abc.
+Your P&L module is now integrated with your TicketKart project.

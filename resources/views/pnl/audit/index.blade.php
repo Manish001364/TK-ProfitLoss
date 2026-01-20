@@ -1,123 +1,153 @@
-@extends('adminlte::page')
-
-@section('title', 'Audit Log')
-
-@section('content_header')
-    <h1><i class="fas fa-history"></i> Audit Log</h1>
-@stop
+@extends('layouts.organiser_layout')
 
 @section('content')
-    <!-- Filters -->
-    <div class="card card-outline card-primary mb-4">
-        <div class="card-body">
-            <form method="GET" action="{{ route('pnl.audit.index') }}" class="row align-items-end">
-                <div class="col-md-2">
-                    <div class="form-group mb-0">
-                        <label>Action</label>
-                        <select name="action" class="form-control">
-                            <option value="">All Actions</option>
-                            @foreach($actions as $key => $label)
-                                <option value="{{ $key }}" {{ request('action') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group mb-0">
-                        <label>Model</label>
-                        <select name="model_type" class="form-control">
-                            <option value="">All Models</option>
-                            <option value="Event" {{ request('model_type') === 'Event' ? 'selected' : '' }}>Events</option>
-                            <option value="Expense" {{ request('model_type') === 'Expense' ? 'selected' : '' }}>Expenses</option>
-                            <option value="Payment" {{ request('model_type') === 'Payment' ? 'selected' : '' }}>Payments</option>
-                            <option value="Vendor" {{ request('model_type') === 'Vendor' ? 'selected' : '' }}>Vendors</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group mb-0">
-                        <label>From Date</label>
-                        <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group mb-0">
-                        <label>To Date</label>
-                        <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
-                    <a href="{{ route('pnl.audit.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i></a>
-                </div>
-            </form>
+    <div class="container-fluid py-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0"><i class="fas fa-history"></i> Audit Log</h1>
+            <a href="{{ route('pnl.dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
-    </div>
 
-    <!-- Audit Logs -->
-    <div class="card">
-        <div class="card-body p-0">
-            <table class="table table-hover">
-                <thead class="thead-light">
-                    <tr>
-                        <th>Date/Time</th>
-                        <th>User</th>
-                        <th>Action</th>
-                        <th>Model</th>
-                        <th>Changes</th>
-                        <th width="80"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($logs as $log)
-                        <tr>
-                            <td>
-                                <small>
-                                    {{ $log->created_at->format('d M Y') }}<br>
-                                    {{ $log->created_at->format('h:i A') }}
-                                </small>
-                            </td>
-                            <td>{{ $log->user?->name ?? 'System' }}</td>
-                            <td>
-                                <span class="badge badge-{{ $log->action_color }}">{{ ucfirst($log->action) }}</span>
-                            </td>
-                            <td>
-                                {{ class_basename($log->auditable_type) }}
-                                <br><small class="text-muted">{{ substr($log->auditable_id, 0, 8) }}...</small>
-                            </td>
-                            <td>
-                                @if($log->action === 'updated' && $log->changed_fields)
-                                    @foreach(array_slice($log->changed_fields, 0, 2) as $field => $change)
-                                        <small><strong>{{ $field }}:</strong> {{ $change['old'] ?? '-' }} → {{ $change['new'] ?? '-' }}</small><br>
-                                    @endforeach
-                                    @if(count($log->changed_fields) > 2)
-                                        <small class="text-muted">+{{ count($log->changed_fields) - 2 }} more</small>
-                                    @endif
-                                @elseif($log->reason)
-                                    <small>{{ $log->reason }}</small>
-                                @else
-                                    <small class="text-muted">-</small>
-                                @endif
-                            </td>
-                            <td>
-                                <a href="{{ route('pnl.audit.show', $log) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="fas fa-history fa-3x mb-3"></i>
-                                <p>No audit logs found</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" action="{{ route('pnl.audit.index') }}" class="row align-items-end">
+                    <div class="col-md-3">
+                        <div class="form-group mb-2 mb-md-0">
+                            <label>Action</label>
+                            <select name="action" class="form-control">
+                                <option value="">All Actions</option>
+                                <option value="created" {{ request('action') === 'created' ? 'selected' : '' }}>Created</option>
+                                <option value="updated" {{ request('action') === 'updated' ? 'selected' : '' }}>Updated</option>
+                                <option value="deleted" {{ request('action') === 'deleted' ? 'selected' : '' }}>Deleted</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-2 mb-md-0">
+                            <label>From Date</label>
+                            <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group mb-2 mb-md-0">
+                            <label>To Date</label>
+                            <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
+                        <a href="{{ route('pnl.audit.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+                    </div>
+                </form>
+            </div>
         </div>
-        @if($logs->hasPages())
-            <div class="card-footer">{{ $logs->links() }}</div>
-        @endif
+
+        <!-- Audit Log Table -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Item</th>
+                                <th>Changes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($logs as $log)
+                                <tr>
+                                    <td>
+                                        {{ $log->created_at->format('d M Y') }}
+                                        <br><small class="text-muted">{{ $log->created_at->format('H:i:s') }}</small>
+                                    </td>
+                                    <td>{{ $log->user?->name ?? 'System' }}</td>
+                                    <td>
+                                        @php
+                                            $actionColors = [
+                                                'created' => 'success',
+                                                'updated' => 'warning',
+                                                'deleted' => 'danger',
+                                            ];
+                                        @endphp
+                                        <span class="badge bg-{{ $actionColors[$log->action] ?? 'secondary' }}">
+                                            {{ ucfirst($log->action) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ class_basename($log->loggable_type) }}</strong>
+                                        @if($log->loggable)
+                                            <br><small>{{ $log->loggable->title ?? $log->loggable->name ?? 'ID: ' . $log->loggable_id }}</small>
+                                        @else
+                                            <br><small class="text-muted">ID: {{ $log->loggable_id }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($log->old_values || $log->new_values)
+                                            <button type="button" class="btn btn-sm btn-outline-info" 
+                                                    onclick="showChanges({{ json_encode($log->old_values) }}, {{ json_encode($log->new_values) }})">
+                                                <i class="fas fa-eye"></i> View Changes
+                                            </button>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <i class="fas fa-history fa-4x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No audit logs found</h5>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @if($logs->hasPages())
+                <div class="card-footer">{{ $logs->links() }}</div>
+            @endif
+        </div>
+
+        <!-- Changes Modal -->
+        <div class="modal fade" id="changesModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-exchange-alt"></i> Changes</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-danger">Old Values</h6>
+                                <pre id="oldValues" class="bg-light p-3 rounded"></pre>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-success">New Values</h6>
+                                <pre id="newValues" class="bg-light p-3 rounded"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-@stop
+@endsection
+
+@section('customjs')
+    <script>
+        function showChanges(oldValues, newValues) {
+            document.getElementById('oldValues').textContent = JSON.stringify(oldValues, null, 2);
+            document.getElementById('newValues').textContent = JSON.stringify(newValues, null, 2);
+            var changesModal = new bootstrap.Modal(document.getElementById('changesModal'));
+            changesModal.show();
+        }
+    </script>
+@endsection

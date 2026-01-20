@@ -101,21 +101,46 @@ require __DIR__.'/pnl.php';
 
 ---
 
-## Step 5: Run Migrations
+## Step 5: Run Migrations (SAFE - Creates NEW Tables Only)
 
+All P&L tables are prefixed with `pnl_` so they will NOT touch your existing tables.
+
+### Check what migrations will run (preview only):
+```bash
+php artisan migrate:status
+```
+
+### Run only the P&L migrations:
 ```bash
 php artisan migrate
 ```
 
-This creates 8 tables:
-- pnl_events
-- pnl_vendors
-- pnl_expense_categories
-- pnl_expenses
-- pnl_payments
-- pnl_revenues
-- pnl_attachments
-- pnl_audit_logs
+### New tables created (8 total):
+
+| Table Name | Description | Touches Existing? |
+|------------|-------------|-------------------|
+| `pnl_events` | Event details | ❌ NO |
+| `pnl_vendors` | Artists/DJs/Vendors | ❌ NO |
+| `pnl_expense_categories` | Expense categories | ❌ NO |
+| `pnl_expenses` | Individual expenses | ❌ NO |
+| `pnl_payments` | Payment tracking | ❌ NO |
+| `pnl_revenues` | Ticket sales | ❌ NO |
+| `pnl_attachments` | File uploads | ❌ NO |
+| `pnl_audit_logs` | Change history | ❌ NO |
+
+**Note:** These migrations only CREATE new tables. They do NOT modify any existing tables in your database.
+
+### If you want to rollback P&L tables only:
+```bash
+php artisan migrate:rollback --step=8
+```
+
+### Verify tables created:
+```bash
+php artisan tinker
+>>> Schema::hasTable('pnl_events')
+=> true
+```
 
 ---
 

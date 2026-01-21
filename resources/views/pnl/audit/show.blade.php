@@ -19,34 +19,34 @@
                 <table class="table table-borderless">
                     <tr>
                         <td class="text-muted" width="150">Action:</td>
-                        <td><span class="badge bg-{{ $log->action === 'created' ? 'success' : ($log->action === 'deleted' ? 'danger' : 'warning') }}">{{ ucfirst($log->action) }}</span></td>
+                        <td><span class="badge bg-{{ $auditLog->action === 'created' ? 'success' : ($auditLog->action === 'deleted' ? 'danger' : 'warning') }}">{{ ucfirst($auditLog->action) }}</span></td>
                     </tr>
                     <tr>
                         <td class="text-muted">Type:</td>
-                        <td>{{ class_basename($log->auditable_type) }}</td>
+                        <td>{{ class_basename($auditLog->auditable_type) }}</td>
                     </tr>
                     <tr>
                         <td class="text-muted">User:</td>
-                        <td>{{ $log->user->name ?? 'System' }}</td>
+                        <td>{{ $auditLog->user->name ?? 'System' }}</td>
                     </tr>
                     <tr>
                         <td class="text-muted">Date:</td>
-                        <td>{{ $log->created_at->format('d M Y H:i:s') }}</td>
+                        <td>{{ $auditLog->created_at->format('d M Y H:i:s') }}</td>
                     </tr>
                     <tr>
                         <td class="text-muted">IP Address:</td>
-                        <td><code>{{ $log->ip_address ?? 'N/A' }}</code></td>
+                        <td><code>{{ $auditLog->ip_address ?? 'N/A' }}</code></td>
                     </tr>
                 </table>
 
-                @if($log->old_values)
+                @if($auditLog->old_values)
                 <h6 class="mt-4">Old Values:</h6>
-                <pre class="bg-light p-3 rounded small">{{ json_encode($log->old_values, JSON_PRETTY_PRINT) }}</pre>
+                <pre class="bg-light p-3 rounded small">{{ json_encode($auditLog->old_values, JSON_PRETTY_PRINT) }}</pre>
                 @endif
 
-                @if($log->new_values)
+                @if($auditLog->new_values)
                 <h6 class="mt-4">New Values:</h6>
-                <pre class="bg-light p-3 rounded small">{{ json_encode($log->new_values, JSON_PRETTY_PRINT) }}</pre>
+                <pre class="bg-light p-3 rounded small">{{ json_encode($auditLog->new_values, JSON_PRETTY_PRINT) }}</pre>
                 @endif
             </div>
         </div>

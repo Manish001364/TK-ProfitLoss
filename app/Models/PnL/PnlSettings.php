@@ -23,6 +23,7 @@ class PnlSettings extends Model
         'company_name',
         'company_address',
         'company_vat_number',
+        'walkthrough_dismissed',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class PnlSettings extends Model
         'send_email_on_payment_created' => 'boolean',
         'send_email_on_payment_paid' => 'boolean',
         'send_email_on_payment_scheduled' => 'boolean',
+        'walkthrough_dismissed' => 'boolean',
     ];
 
     // Relationships

@@ -46,38 +46,78 @@ class PnlExpenseCategory extends Model
      */
     public static function getAllForUser($userId)
     {
-        // First, try to get from the new split tables if they exist
+        $allCategories = collect();
+        
+        // 1. First get system defaults from legacy table (user_id = NULL)
+        $legacySystemCategories = self::whereNull('user_id')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($item) {
+                $item->is_system = true;
+                return $item;
+            });
+        $allCategories = $allCategories->merge($legacySystemCategories);
+        
+        // 2. Try to get from new system table (if exists)
         try {
-            $systemCategories = DB::table('pnl_expense_categories_system')
-                ->select('id', DB::raw('NULL as user_id'), 'name', 'type', 'description', 'color', 'icon', 'default_budget_limit', 'sort_order', 'is_active', 'created_at', 'updated_at')
+            $newSystemCategories = DB::table('pnl_expense_categories_system')
                 ->where('is_active', true)
+                ->orderBy('sort_order')
                 ->get()
                 ->map(function ($item) {
                     $item->is_system = true;
                     return $item;
                 });
-
-            $userCategories = DB::table('pnl_expense_categories_user')
-                ->select('id', 'user_id', 'name', 'type', 'description', 'color', 'icon', 'default_budget_limit', 'sort_order', 'is_active', 'created_at', 'updated_at')
+            $allCategories = $allCategories->merge($newSystemCategories);
+        } catch (\Exception $e) {
+            // Table doesn't exist - that's okay
+        }
+        
+        // 3. Get user's custom categories from legacy table
+        $userCategories = self::where('user_id', $userId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($item) {
+                $item->is_system = false;
+                return $item;
+            });
+        $allCategories = $allCategories->merge($userCategories);
+        
+        // 4. Try to get from new user table (if exists)
+        try {
+            $newUserCategories = DB::table('pnl_expense_categories_user')
                 ->where('user_id', $userId)
                 ->where('is_active', true)
+                ->orderBy('sort_order')
                 ->get()
                 ->map(function ($item) {
                     $item->is_system = false;
                     return $item;
                 });
-
-            return $systemCategories->merge($userCategories)->sortBy('sort_order')->values();
+            $allCategories = $allCategories->merge($newUserCategories);
         } catch (\Exception $e) {
-            // Fallback to legacy table
-            return self::where(function ($query) use ($userId) {
-                $query->where('user_id', $userId)
-                      ->orWhereNull('user_id');
-            })
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+            // Table doesn't exist - that's okay
         }
+        
+        // 5. If still empty, return hardcoded defaults
+        if ($allCategories->isEmpty()) {
+            $defaults = self::getDefaultCategories();
+            foreach ($defaults as $index => $cat) {
+                $allCategories->push((object)[
+                    'id' => 'default_' . ($index + 1),
+                    'name' => $cat['name'],
+                    'type' => $cat['type'],
+                    'color' => $cat['color'],
+                    'icon' => $cat['icon'],
+                    'is_system' => true,
+                ]);
+            }
+        }
+        
+        // Remove duplicates by name (prefer user categories over system)
+        return $allCategories->unique('name')->sortBy('sort_order')->values();
     }
 
     // Default categories for new users (legacy - kept for backward compatibility)

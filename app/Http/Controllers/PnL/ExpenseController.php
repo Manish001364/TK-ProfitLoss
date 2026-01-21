@@ -56,21 +56,23 @@ class ExpenseController extends Controller
     {
         $userId = auth()->id();
         $events = PnlEvent::forUser($userId)->orderBy('event_date', 'desc')->get();
-        $categories = PnlExpenseCategory::forUser($userId)->active()->ordered()->get();
+        $categories = PnlExpenseCategory::getAllForUser($userId);
         $vendors = PnlVendor::forUser($userId)->active()->orderBy('full_name')->get();
         
         $selectedEventId = $request->get('event_id');
         
-        // Get user settings for default tax rate
+        // Get user settings for default tax rate and currency
         $settings = PnlSettings::getOrCreate($userId);
         $defaultTaxRate = $settings->default_tax_rate;
+        $currencies = PnlSettings::getCurrencies();
+        $defaultCurrency = $settings->default_currency ?? 'GBP';
         
         // Generate next invoice number using new format: INV-YYYYMM-XXX
         $nextInvoiceNumber = $this->generateNextInvoiceNumber($userId);
 
         return view('pnl.expenses.create', compact(
             'events', 'categories', 'vendors', 'selectedEventId', 
-            'defaultTaxRate', 'nextInvoiceNumber', 'settings'
+            'defaultTaxRate', 'nextInvoiceNumber', 'settings', 'currencies', 'defaultCurrency'
         ));
     }
 

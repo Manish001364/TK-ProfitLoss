@@ -37,13 +37,9 @@
         <div class="pnl-nav-divider"></div>
         <small class="pnl-nav-label">Configuration</small>
         
-        <a href="{{ route('pnl.categories.index') }}" class="pnl-nav-link {{ request()->routeIs('pnl.categories.*') ? 'active' : '' }}">
+        <a href="{{ route('pnl.configuration.index') }}" class="pnl-nav-link {{ request()->routeIs('pnl.configuration.*') || request()->routeIs('pnl.categories.*') || request()->routeIs('pnl.service-types.*') ? 'active' : '' }}">
             <i class="fas fa-tags"></i>
-            <span>Expense Categories</span>
-        </a>
-        <a href="{{ route('pnl.service-types.index') }}" class="pnl-nav-link {{ request()->routeIs('pnl.service-types.*') ? 'active' : '' }}">
-            <i class="fas fa-user-tag"></i>
-            <span>Service Types</span>
+            <span>Categories & Services</span>
         </a>
         <a href="{{ route('pnl.settings.index') }}" class="pnl-nav-link {{ request()->routeIs('pnl.settings.*') ? 'active' : '' }}">
             <i class="fas fa-cog"></i>

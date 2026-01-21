@@ -6,17 +6,57 @@ use App\Http\Controllers\Controller;
 use App\Models\PnL\PnlExpenseCategory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class ExpenseCategoryController extends Controller
 {
     public function index()
     {
-        $categories = PnlExpenseCategory::forUser(auth()->id())
+        $userId = auth()->id();
+        
+        // Get system default categories (read-only)
+        $systemCategories = collect();
+        try {
+            $systemCategories = DB::table('pnl_expense_categories_system')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function ($item) {
+                    $item->is_system = true;
+                    $item->expenses_count = DB::table('pnl_expenses')
+                        ->where('category_id', $item->id)
+                        ->count();
+                    return $item;
+                });
+        } catch (\Exception $e) {
+            // Table might not exist yet
+        }
+
+        // Get user's custom categories
+        $userCategories = PnlExpenseCategory::where('user_id', $userId)
             ->withCount('expenses')
             ->ordered()
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->is_system = false;
+                return $item;
+            });
 
-        return view('pnl.categories.index', compact('categories'));
+        // Also get legacy categories with NULL user_id (system defaults from old schema)
+        $legacyDefaults = PnlExpenseCategory::whereNull('user_id')
+            ->where('is_active', true)
+            ->withCount('expenses')
+            ->ordered()
+            ->get()
+            ->map(function ($item) {
+                $item->is_system = true;
+                return $item;
+            });
+
+        // Combine all categories (system first, then user)
+        $categories = $systemCategories->merge($legacyDefaults)->merge($userCategories);
+
+        return view('pnl.categories.index', compact('categories', 'systemCategories', 'userCategories'));
     }
 
     public function create()
@@ -36,7 +76,7 @@ class ExpenseCategoryController extends Controller
         ]);
 
         $validated['user_id'] = auth()->id();
-        $validated['sort_order'] = PnlExpenseCategory::forUser(auth()->id())->max('sort_order') + 1;
+        $validated['sort_order'] = PnlExpenseCategory::where('user_id', auth()->id())->max('sort_order') + 1;
 
         $category = PnlExpenseCategory::create($validated);
 

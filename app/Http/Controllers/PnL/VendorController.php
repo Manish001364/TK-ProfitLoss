@@ -194,7 +194,8 @@ class VendorController extends Controller
     {
         $this->authorize('update', $vendor);
         
-        $vendorTypes = PnlVendor::getTypes();
+        $userId = auth()->id();
+        $vendorTypes = PnlServiceType::getTypesForDropdown($userId);
         $countries = PnlVendor::getCountries();
         return view('pnl.vendors.edit', compact('vendor', 'vendorTypes', 'countries'));
     }

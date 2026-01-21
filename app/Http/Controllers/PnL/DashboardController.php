@@ -195,8 +195,18 @@ class DashboardController extends Controller
         $trendData = $this->getMonthlyTrend($userId, $chartMonths);
 
         // Check if walkthrough should be shown
-        $settings = \App\Models\PnL\PnlSettings::where('user_id', $userId)->first();
+        $settings = \App\Models\PnL\PnlSettings::getOrCreate($userId);
         $showWalkthrough = !$settings?->walkthrough_dismissed && $events->count() == 0;
+        
+        // Get currency symbol for display
+        $defaultCurrency = $settings->default_currency ?? 'GBP';
+        $currencySymbol = match($defaultCurrency) {
+            'GBP' => '£',
+            'USD' => '$',
+            'EUR' => '€',
+            'INR' => '₹',
+            default => $defaultCurrency . ' '
+        };
 
         return view('pnl.dashboard.index', compact(
             'events',
@@ -220,7 +230,9 @@ class DashboardController extends Controller
             'dateFrom',
             'dateTo',
             'chartPeriod',
-            'showWalkthrough'
+            'showWalkthrough',
+            'currencySymbol',
+            'defaultCurrency'
         ));
     }
 

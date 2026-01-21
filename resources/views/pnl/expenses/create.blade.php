@@ -89,23 +89,44 @@
             <!-- Amount & Tax -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-success text-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-pound-sign me-2"></i>Amount & Tax</h6>
+                    <h6 class="mb-0"><i class="fas fa-coins me-2"></i>Amount & Tax</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small">Net Amount (£) <span class="text-danger">*</span></label>
+                        <div class="col-md-4">
+                            <label class="form-label small">Currency <span class="text-danger">*</span></label>
+                            <select name="currency" id="expense_currency" class="form-select">
+                                @foreach($currencies as $code => $info)
+                                    <option value="{{ $code }}" data-symbol="{{ $info['symbol'] }}" {{ old('currency', $defaultCurrency) === $code ? 'selected' : '' }}>
+                                        {{ $info['symbol'] }} {{ $code }} - {{ $info['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Select the currency you're paying in</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Net Amount <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text">£</span>
+                                <span class="input-group-text currency-symbol">{{ $currencies[$defaultCurrency]['symbol'] ?? '£' }}</span>
                                 <input type="number" step="0.01" name="amount" id="amount" class="form-control @error('amount') is-invalid @enderror" 
                                        value="{{ old('amount', 0) }}" required min="0">
                             </div>
                             @error('amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label small">Expense Date <span class="text-danger">*</span></label>
                             <input type="date" name="expense_date" class="form-control" value="{{ old('expense_date', date('Y-m-d')) }}" required>
                         </div>
+
+                        @if($defaultCurrency !== 'GBP')
+                        <!-- Converted Amount Info -->
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0 py-2">
+                                <i class="fas fa-exchange-alt me-2"></i>
+                                <span id="conversion_info">This expense will be recorded in {{ $defaultCurrency }}. Dashboard totals are shown in your default currency ({{ $defaultCurrency }}).</span>
+                            </div>
+                        </div>
+                        @endif
                         
                         <!-- Tax Toggle - iPhone Style -->
                         <div class="col-12">
@@ -134,9 +155,9 @@
                                     <small class="text-muted">Default: {{ $defaultTaxRate ?? 20 }}% VAT</small>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label small">Tax Amount (£)</label>
+                                    <label class="form-label small">Tax Amount</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">£</span>
+                                        <span class="input-group-text currency-symbol">{{ $currencies[$defaultCurrency]['symbol'] ?? '£' }}</span>
                                         <input type="number" step="0.01" name="tax_amount" id="tax_amount" class="form-control bg-light" 
                                                value="{{ old('tax_amount', 0) }}" min="0" readonly>
                                     </div>
@@ -145,7 +166,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label small">Total (Gross)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">£</span>
+                                        <span class="input-group-text currency-symbol">{{ $currencies[$defaultCurrency]['symbol'] ?? '£' }}</span>
                                         <input type="text" class="form-control bg-success-subtle fw-bold text-success" id="total_display" readonly>
                                     </div>
                                 </div>

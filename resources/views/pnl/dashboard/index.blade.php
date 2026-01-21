@@ -186,7 +186,7 @@
                                                 <span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background-color: {{ $cat->color }};"></span>
                                                 {{ Str::limit($cat->name, 15) }}
                                             </span>
-                                            <span class="small fw-bold" style="font-size: 0.75rem;">£{{ number_format($cat->total, 0) }}</span>
+                                            <span class="small fw-bold" style="font-size: 0.75rem;">{{ $currencySymbol }}{{ number_format($cat->total, 0) }}</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -214,15 +214,15 @@
                             <div class="card-body pt-0">
                                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                                     <span class="small"><i class="fas fa-check-circle text-success me-2"></i>Paid</span>
-                                    <span class="badge bg-success-subtle text-success">£{{ number_format($paymentSummary['paid'], 0) }}</span>
+                                    <span class="badge bg-success-subtle text-success">{{ $currencySymbol }}{{ number_format($paymentSummary['paid'], 0) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                                     <span class="small"><i class="fas fa-clock text-warning me-2"></i>Scheduled</span>
-                                    <span class="badge bg-warning-subtle text-warning">£{{ number_format($paymentSummary['scheduled'], 0) }}</span>
+                                    <span class="badge bg-warning-subtle text-warning">{{ $currencySymbol }}{{ number_format($paymentSummary['scheduled'], 0) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between align-items-center py-2">
                                     <span class="small"><i class="fas fa-hourglass-half text-info me-2"></i>Pending</span>
-                                    <span class="badge bg-info-subtle text-info">£{{ number_format($paymentSummary['pending'], 0) }}</span>
+                                    <span class="badge bg-info-subtle text-info">{{ $currencySymbol }}{{ number_format($paymentSummary['pending'], 0) }}</span>
                                 </div>
                                 <a href="{{ route('pnl.payments.index') }}" class="btn btn-sm btn-outline-secondary w-100 mt-3">
                                     View All Payments
@@ -242,7 +242,7 @@
                                     <div class="py-2 border-bottom">
                                         <div class="d-flex justify-content-between">
                                             <strong class="small">{{ $payment->vendor?->display_name ?? 'Unknown Vendor' }}</strong>
-                                            <span class="badge bg-danger">£{{ number_format($payment->amount, 0) }}</span>
+                                            <span class="badge bg-danger">{{ $currencySymbol }}{{ number_format($payment->amount, 0) }}</span>
                                         </div>
                                         <small class="text-muted">{{ $payment->expense?->title ?? 'No expense linked' }}</small>
                                         <br><small class="text-danger">Due: {{ $payment->scheduled_date ? $payment->scheduled_date->format('d M Y') : 'Not set' }}</small>
@@ -268,7 +268,7 @@
                                     <div class="py-2 border-bottom">
                                         <div class="d-flex justify-content-between">
                                             <strong class="small">{{ $payment->vendor?->display_name ?? 'Unknown Vendor' }}</strong>
-                                            <span class="badge bg-info">£{{ number_format($payment->amount, 0) }}</span>
+                                            <span class="badge bg-info">{{ $currencySymbol }}{{ number_format($payment->amount, 0) }}</span>
                                         </div>
                                         <small class="text-muted">{{ $payment->expense?->title ?? 'No expense linked' }}</small>
                                         <br>

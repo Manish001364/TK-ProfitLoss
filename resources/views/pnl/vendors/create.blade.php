@@ -21,7 +21,7 @@
             </div>
         @endif
 
-        <form action="{{ route('pnl.vendors.store') }}" method="POST">
+        <form action="{{ route('pnl.vendors.store') }}" method="POST" id="vendorForm">
             @csrf
             
             <!-- Basic Information - Required -->
@@ -76,23 +76,80 @@
                                    value="{{ old('email') }}" placeholder="vendor@example.com">
                             @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
+                            <!-- Empty for layout -->
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label small">Primary Phone <span class="text-danger">*</span></label>
-                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" required 
-                                   value="{{ old('phone') }}" placeholder="+44 7xxx xxx xxx">
+                            <input type="tel" name="phone" id="phone" class="form-control @error('phone') is-invalid @enderror" required 
+                                   value="{{ old('phone') }}">
+                            <input type="hidden" name="phone_country_code" id="phone_country_code" value="{{ old('phone_country_code', '+44') }}">
+                            @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <small class="text-muted phone-valid-msg d-none text-success"><i class="fas fa-check"></i> Valid number</small>
+                            <small class="text-muted phone-invalid-msg d-none text-danger"><i class="fas fa-times"></i> Invalid number format</small>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label small">Secondary Phone</label>
-                            <input type="text" name="alternate_phone" class="form-control" 
-                                   value="{{ old('alternate_phone') }}" placeholder="Alternate number">
+                            <input type="tel" name="alternate_phone" id="alternate_phone" class="form-control" 
+                                   value="{{ old('alternate_phone') }}">
+                            <input type="hidden" name="alternate_phone_country_code" id="alternate_phone_country_code" value="{{ old('alternate_phone_country_code', '+44') }}">
+                            <small class="text-muted alt-phone-valid-msg d-none text-success"><i class="fas fa-check"></i> Valid number</small>
+                            <small class="text-muted alt-phone-invalid-msg d-none text-danger"><i class="fas fa-times"></i> Invalid number format</small>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Details -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2 text-success"></i>Address Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label small">Business Address</label>
-                            <textarea name="business_address" class="form-control" rows="2" placeholder="Full business address">{{ old('business_address') }}</textarea>
+                            <textarea name="business_address" class="form-control" rows="2" placeholder="Street address, city">{{ old('business_address') }}</textarea>
                         </div>
-                        <div class="col-12">
-                            <label class="form-label small">Home Address (if different)</label>
+                        <div class="col-md-6">
+                            <label class="form-label small">Country</label>
+                            <select name="business_country" id="business_country" class="form-select">
+                                @foreach($countries as $code => $name)
+                                    <option value="{{ $name }}" {{ old('business_country', 'United Kingdom') === $name ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Postcode / ZIP</label>
+                            <input type="text" name="business_postcode" id="business_postcode" class="form-control" 
+                                   value="{{ old('business_postcode') }}" placeholder="e.g., SW1A 1AA">
+                            <small class="text-muted postcode-hint">UK format: SW1A 1AA</small>
+                        </div>
+                        
+                        <div class="col-12 mt-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="showHomeAddress" {{ old('home_address') ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="showHomeAddress">Add different home address</label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 home-address-section" style="{{ old('home_address') ? '' : 'display: none;' }}">
+                            <hr class="my-3">
+                            <label class="form-label small">Home Address</label>
                             <textarea name="home_address" class="form-control" rows="2" placeholder="Residential address">{{ old('home_address') }}</textarea>
+                        </div>
+                        <div class="col-md-6 home-address-section" style="{{ old('home_address') ? '' : 'display: none;' }}">
+                            <label class="form-label small">Home Country</label>
+                            <select name="home_country" class="form-select">
+                                <option value="">Same as business</option>
+                                @foreach($countries as $code => $name)
+                                    <option value="{{ $name }}" {{ old('home_country') === $name ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 home-address-section" style="{{ old('home_address') ? '' : 'display: none;' }}">
+                            <label class="form-label small">Home Postcode</label>
+                            <input type="text" name="home_postcode" class="form-control" value="{{ old('home_postcode') }}">
                         </div>
                     </div>
                 </div>
@@ -112,7 +169,8 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small">Contact Phone</label>
-                            <input type="text" name="emergency_contact_phone" class="form-control" value="{{ old('emergency_contact_phone') }}">
+                            <input type="tel" name="emergency_contact_phone" id="emergency_phone" class="form-control" value="{{ old('emergency_contact_phone') }}">
+                            <input type="hidden" name="emergency_contact_phone_country_code" id="emergency_phone_country_code" value="{{ old('emergency_contact_phone_country_code', '+44') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small">Relation/Role</label>
@@ -229,4 +287,125 @@
             </div>
         </form>
     </div>
+@endsection
+
+@section('customjs')
+    <!-- intl-tel-input CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/css/intlTelInput.css">
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/intlTelInput.min.js"></script>
+    
+    <style>
+        .iti { width: 100%; }
+        .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags.png"); }
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags@2x.png"); }
+        }
+    </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize intl-tel-input for all phone fields
+            const phoneInputs = [
+                { input: document.querySelector('#phone'), hidden: document.querySelector('#phone_country_code'), validMsg: '.phone-valid-msg', invalidMsg: '.phone-invalid-msg' },
+                { input: document.querySelector('#alternate_phone'), hidden: document.querySelector('#alternate_phone_country_code'), validMsg: '.alt-phone-valid-msg', invalidMsg: '.alt-phone-invalid-msg' },
+                { input: document.querySelector('#emergency_phone'), hidden: document.querySelector('#emergency_phone_country_code'), validMsg: null, invalidMsg: null }
+            ];
+            
+            const itiInstances = [];
+            
+            phoneInputs.forEach(function(config) {
+                if (!config.input) return;
+                
+                const iti = intlTelInput(config.input, {
+                    initialCountry: "gb",
+                    preferredCountries: ["gb", "us", "in", "de", "fr", "es", "it", "nl", "ie", "au", "ca", "ae", "sg"],
+                    separateDialCode: true,
+                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/utils.js",
+                    nationalMode: true,
+                    autoPlaceholder: "aggressive",
+                    formatOnDisplay: true
+                });
+                
+                itiInstances.push({ iti: iti, config: config });
+                
+                // Update hidden field when country changes
+                config.input.addEventListener('countrychange', function() {
+                    const countryData = iti.getSelectedCountryData();
+                    config.hidden.value = '+' + countryData.dialCode;
+                });
+                
+                // Validate on blur
+                config.input.addEventListener('blur', function() {
+                    const countryData = iti.getSelectedCountryData();
+                    config.hidden.value = '+' + countryData.dialCode;
+                    
+                    if (config.validMsg && config.invalidMsg) {
+                        const validMsg = document.querySelector(config.validMsg);
+                        const invalidMsg = document.querySelector(config.invalidMsg);
+                        
+                        if (config.input.value.trim()) {
+                            if (iti.isValidNumber()) {
+                                validMsg.classList.remove('d-none');
+                                invalidMsg.classList.add('d-none');
+                                config.input.classList.remove('is-invalid');
+                                config.input.classList.add('is-valid');
+                            } else {
+                                validMsg.classList.add('d-none');
+                                invalidMsg.classList.remove('d-none');
+                                config.input.classList.add('is-invalid');
+                                config.input.classList.remove('is-valid');
+                            }
+                        } else {
+                            validMsg.classList.add('d-none');
+                            invalidMsg.classList.add('d-none');
+                            config.input.classList.remove('is-invalid', 'is-valid');
+                        }
+                    }
+                });
+                
+                // Set initial value
+                const countryData = iti.getSelectedCountryData();
+                config.hidden.value = '+' + countryData.dialCode;
+            });
+            
+            // Form submit - get national number only
+            document.querySelector('#vendorForm').addEventListener('submit', function() {
+                itiInstances.forEach(function(item) {
+                    if (item.config.input.value) {
+                        // Store just the national number (without country code)
+                        item.config.input.value = item.iti.getNumber(intlTelInputUtils.numberFormat.NATIONAL).replace(/\s/g, '');
+                    }
+                });
+            });
+            
+            // Home address toggle
+            document.querySelector('#showHomeAddress').addEventListener('change', function() {
+                const sections = document.querySelectorAll('.home-address-section');
+                sections.forEach(function(section) {
+                    section.style.display = this.checked ? '' : 'none';
+                }.bind(this));
+            });
+            
+            // Postcode validation based on country
+            const postcodePatterns = {
+                'United Kingdom': { pattern: /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i, hint: 'UK format: SW1A 1AA' },
+                'United States': { pattern: /^\d{5}(-\d{4})?$/, hint: 'US format: 12345 or 12345-6789' },
+                'Canada': { pattern: /^[A-Z]\d[A-Z]\s*\d[A-Z]\d$/i, hint: 'Canadian format: A1A 1A1' },
+                'India': { pattern: /^\d{6}$/, hint: 'Indian format: 110001' },
+                'Germany': { pattern: /^\d{5}$/, hint: 'German format: 10115' },
+                'France': { pattern: /^\d{5}$/, hint: 'French format: 75001' },
+                'Australia': { pattern: /^\d{4}$/, hint: 'Australian format: 2000' },
+                'default': { pattern: /^.+$/, hint: 'Enter postcode' }
+            };
+            
+            document.querySelector('#business_country').addEventListener('change', function() {
+                const country = this.value;
+                const postcodeInput = document.querySelector('#business_postcode');
+                const hint = document.querySelector('.postcode-hint');
+                
+                const patternConfig = postcodePatterns[country] || postcodePatterns['default'];
+                hint.textContent = patternConfig.hint;
+            });
+        });
+    </script>
 @endsection

@@ -66,7 +66,7 @@ class ServiceTypeController extends Controller
         ]);
 
         return redirect()
-            ->route('pnl.service-types.index')
+            ->route('pnl.configuration.index')
             ->with('success', 'Service type created successfully!');
     }
 
@@ -81,7 +81,7 @@ class ServiceTypeController extends Controller
             
         if (!$serviceType) {
             return redirect()
-                ->route('pnl.service-types.index')
+                ->route('pnl.configuration.index')
                 ->with('error', 'Service type not found or you cannot edit system defaults.');
         }
         
@@ -107,7 +107,7 @@ class ServiceTypeController extends Controller
             
         if (!$serviceType) {
             return redirect()
-                ->route('pnl.service-types.index')
+                ->route('pnl.configuration.index')
                 ->with('error', 'Service type not found or you cannot edit system defaults.');
         }
 
@@ -123,7 +123,7 @@ class ServiceTypeController extends Controller
             ]);
 
         return redirect()
-            ->route('pnl.service-types.index')
+            ->route('pnl.configuration.index')
             ->with('success', 'Service type updated successfully!');
     }
 
@@ -157,7 +157,7 @@ class ServiceTypeController extends Controller
             ->delete();
 
         return redirect()
-            ->route('pnl.service-types.index')
+            ->route('pnl.configuration.index')
             ->with('success', 'Service type deleted successfully!');
     }
 }

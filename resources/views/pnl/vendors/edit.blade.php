@@ -296,108 +296,21 @@
 @endsection
 
 @section('customjs')
-    <!-- intl-tel-input CSS & JS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/css/intlTelInput.css">
-    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/intlTelInput.min.js"></script>
-    
-    <style>
-        .iti { width: 100%; display: block; }
-        .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags.png"); }
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags@2x.png"); }
-        }
-        .iti__country-list {
-            z-index: 99999 !important;
-            max-height: 250px;
-            background: #fff;
-            border: 1px solid #dee2e6;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            position: absolute !important;
-        }
-        .iti--container {
-            z-index: 99999 !important;
-            position: absolute !important;
-        }
-        .card, .card-body {
-            overflow: visible !important;
-        }
-    </style>
-    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Helper to get country code from dial code
-            function getCountryFromDialCode(dialCode) {
-                const dialCodeMap = {
-                    '+1': 'us', '+44': 'gb', '+91': 'in', '+49': 'de', '+33': 'fr',
-                    '+34': 'es', '+39': 'it', '+31': 'nl', '+353': 'ie', '+61': 'au',
-                    '+1': 'ca', '+971': 'ae', '+65': 'sg'
-                };
-                return dialCodeMap[dialCode] || 'gb';
+            // Home address toggle
+            const homeAddressToggle = document.querySelector('#showHomeAddress');
+            if (homeAddressToggle) {
+                homeAddressToggle.addEventListener('change', function() {
+                    const sections = document.querySelectorAll('.home-address-section');
+                    sections.forEach(function(section) {
+                        section.style.display = homeAddressToggle.checked ? 'block' : 'none';
+                    });
+                });
             }
-
-            // Initialize intl-tel-input for all phone fields
-            const phoneInputs = [
-                { input: document.querySelector('#phone'), hidden: document.querySelector('#phone_country_code'), validMsg: '.phone-valid-msg', invalidMsg: '.phone-invalid-msg' },
-                { input: document.querySelector('#alternate_phone'), hidden: document.querySelector('#alternate_phone_country_code'), validMsg: '.alt-phone-valid-msg', invalidMsg: '.alt-phone-invalid-msg' },
-                { input: document.querySelector('#emergency_phone'), hidden: document.querySelector('#emergency_phone_country_code'), validMsg: null, invalidMsg: null }
-            ];
-            
-            const itiInstances = [];
-            
-            phoneInputs.forEach(function(config) {
-                if (!config.input) return;
-                
-                const initialCountryCode = config.input.dataset.initialCountry || '+44';
-                const initialCountry = getCountryFromDialCode(initialCountryCode);
-                
-                const iti = intlTelInput(config.input, {
-                    initialCountry: initialCountry,
-                    preferredCountries: ["gb", "us", "in", "de", "fr", "es", "it", "nl", "ie", "au", "ca", "ae", "sg"],
-                    separateDialCode: true,
-                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/utils.js",
-                    nationalMode: true,
-                    autoPlaceholder: "aggressive",
-                    formatOnDisplay: true,
-                    dropdownContainer: document.body
-                });
-                
-                itiInstances.push({ iti: iti, config: config });
-                
-                // Update hidden field when country changes
-                config.input.addEventListener('countrychange', function() {
-                    const countryData = iti.getSelectedCountryData();
-                    config.hidden.value = '+' + countryData.dialCode;
-                });
-                
-                // Validate on blur
-                config.input.addEventListener('blur', function() {
-                    const countryData = iti.getSelectedCountryData();
-                    config.hidden.value = '+' + countryData.dialCode;
-                    
-                    if (config.validMsg && config.invalidMsg) {
-                        const validMsg = document.querySelector(config.validMsg);
-                        const invalidMsg = document.querySelector(config.invalidMsg);
-                        
-                        if (config.input.value.trim()) {
-                            if (iti.isValidNumber()) {
-                                validMsg.classList.remove('d-none');
-                                invalidMsg.classList.add('d-none');
-                                config.input.classList.remove('is-invalid');
-                                config.input.classList.add('is-valid');
-                            } else {
-                                validMsg.classList.add('d-none');
-                                invalidMsg.classList.remove('d-none');
-                                config.input.classList.add('is-invalid');
-                                config.input.classList.remove('is-valid');
-                            }
-                        } else {
-                            validMsg.classList.add('d-none');
-                            invalidMsg.classList.add('d-none');
-                            config.input.classList.remove('is-invalid', 'is-valid');
-                        }
-                    }
-                });
-            });
+        });
+    </script>
+@endsection
             
             // Form submit - get national number only
             document.querySelector('#vendorForm').addEventListener('submit', function() {

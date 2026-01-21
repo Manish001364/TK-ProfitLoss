@@ -62,7 +62,7 @@
                                     <option value="">Select vendor or add new</option>
                                     @foreach($vendors as $vendor)
                                         <option value="{{ $vendor->id }}" {{ old('vendor_id') == $vendor->id ? 'selected' : '' }}>
-                                            {{ $vendor->display_name }} ({{ ucfirst($vendor->type) }})
+                                            {{ $vendor->display_name }} ({{ $vendor->service_type_name }})
                                         </option>
                                     @endforeach
                                 </select>

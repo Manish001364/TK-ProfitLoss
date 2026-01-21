@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS `pnl_events` (
     `event_time` TIME NULL,
     `status` ENUM('draft', 'planning', 'active', 'completed', 'cancelled') DEFAULT 'planning',
     `budget` DECIMAL(15, 2) DEFAULT 0.00,
+    `currency` VARCHAR(3) DEFAULT 'GBP' COMMENT 'Event currency code',
     `expected_revenue` DECIMAL(15, 2) NULL,
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

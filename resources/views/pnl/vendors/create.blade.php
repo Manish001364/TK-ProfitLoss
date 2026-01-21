@@ -298,18 +298,28 @@
     
     <style>
         /* Fix intl-tel-input width and styling */
-        .iti { width: 100%; }
+        .iti { width: 100%; display: block; }
         .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags.png"); }
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
             .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags@2x.png"); }
         }
-        /* Ensure dropdown appears properly */
+        /* CRITICAL: Ensure dropdown appears properly - fix z-index and overflow issues */
         .iti__country-list {
-            z-index: 9999;
+            z-index: 99999 !important;
             max-height: 250px;
             background: #fff;
             border: 1px solid #dee2e6;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: absolute !important;
+        }
+        /* Ensure the dropdown container has proper positioning */
+        .iti--container {
+            z-index: 99999 !important;
+            position: absolute !important;
+        }
+        /* Fix parent overflow issues */
+        .card, .card-body {
+            overflow: visible !important;
         }
         .iti--separate-dial-code .iti__selected-flag {
             background-color: #f8f9fa;
@@ -317,6 +327,10 @@
         }
         .iti--separate-dial-code input {
             padding-left: 100px !important;
+        }
+        .iti__arrow {
+            border-left-color: #333;
+            border-right-color: #333;
         }
         .phone-example { font-size: 11px; }
     </style>

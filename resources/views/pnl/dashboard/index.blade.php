@@ -341,11 +341,11 @@
                                                     {{ ucfirst($event['status']) }}
                                                 </span>
                                             </td>
-                                            <td class="border-0 text-end text-success">£{{ number_format($event['revenue'], 0) }}</td>
-                                            <td class="border-0 text-end text-danger">£{{ number_format($event['expenses'], 0) }}</td>
+                                            <td class="border-0 text-end text-success">{{ $currencySymbol }}{{ number_format($event['revenue'], 0) }}</td>
+                                            <td class="border-0 text-end text-danger">{{ $currencySymbol }}{{ number_format($event['expenses'], 0) }}</td>
                                             <td class="border-0 text-end">
                                                 <span class="{{ $event['profit'] >= 0 ? 'text-success' : 'text-danger' }}">
-                                                    {{ $event['profit'] >= 0 ? '' : '-' }}£{{ number_format(abs($event['profit']), 0) }}
+                                                    {{ $event['profit'] >= 0 ? '' : '-' }}{{ $currencySymbol }}{{ number_format(abs($event['profit']), 0) }}
                                                 </span>
                                                 <i class="fas fa-{{ $event['profit_status'] === 'profit' ? 'arrow-up text-success' : ($event['profit_status'] === 'loss' ? 'arrow-down text-danger' : 'equals text-secondary') }} ms-1"></i>
                                             </td>
@@ -422,8 +422,8 @@
                                                 <span class="badge bg-info-subtle text-info">{{ ucfirst($vendor['type']) }}</span>
                                             </td>
                                             <td class="border-0 small text-muted">{{ $vendor['email'] ?? '-' }}</td>
-                                            <td class="border-0 text-end text-success fw-bold">£{{ number_format($vendor['total_paid'], 0) }}</td>
-                                            <td class="border-0 text-end text-warning">£{{ number_format($vendor['total_pending'], 0) }}</td>
+                                            <td class="border-0 text-end text-success fw-bold">{{ $currencySymbol }}{{ number_format($vendor['total_paid'], 0) }}</td>
+                                            <td class="border-0 text-end text-warning">{{ $currencySymbol }}{{ number_format($vendor['total_pending'], 0) }}</td>
                                             <td class="border-0 text-center">
                                                 <span class="badge bg-secondary">{{ $vendor['payments_count'] }}</span>
                                             </td>
@@ -485,7 +485,7 @@
                                                         <strong>{{ $vt->label }}</strong>
                                                     </td>
                                                     <td class="text-center">{{ $vt->count }}</td>
-                                                    <td class="text-end fw-bold">£{{ number_format($vt->total, 0) }}</td>
+                                                    <td class="text-end fw-bold">{{ $currencySymbol }}{{ number_format($vt->total, 0) }}</td>
                                                     <td class="text-end text-muted">
                                                         {{ $totalVendorExpense > 0 ? number_format(($vt->total / $totalVendorExpense) * 100, 1) : 0 }}%
                                                     </td>
@@ -501,7 +501,7 @@
                                             <tr>
                                                 <td><strong>Total</strong></td>
                                                 <td class="text-center"><strong>{{ $expenseByVendorType->sum('count') }}</strong></td>
-                                                <td class="text-end"><strong>£{{ number_format($totalVendorExpense, 0) }}</strong></td>
+                                                <td class="text-end"><strong>{{ $currencySymbol }}{{ number_format($totalVendorExpense, 0) }}</strong></td>
                                                 <td class="text-end"><strong>100%</strong></td>
                                             </tr>
                                         </tfoot>

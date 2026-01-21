@@ -134,11 +134,11 @@
                 </div>
             </div>
 
-            <!-- Expense Breakdown - Smaller -->
+            <!-- Expense Breakdown by Category - Smaller -->
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white border-0 py-3">
-                        <h6 class="mb-0">Expense Breakdown</h6>
+                        <h6 class="mb-0">Expense by Category</h6>
                     </div>
                     <div class="card-body pt-0">
                         <div style="max-width: 180px; margin: 0 auto;">
@@ -154,6 +154,69 @@
                                     <span class="small fw-bold">£{{ number_format($cat->total, 0) }}</span>
                                 </div>
                             @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense by Vendor Type -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h6 class="mb-0"><i class="fas fa-chart-pie me-2 text-primary"></i>Expense by Vendor Type</h6>
+                        <small class="text-muted">Where is your money going? Artist, DJ, Venue, Equipment, etc.</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <canvas id="vendorTypeChart" height="200"></canvas>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Vendor Type</th>
+                                                <th class="text-center">Expenses</th>
+                                                <th class="text-end">Amount</th>
+                                                <th class="text-end">% of Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php $totalVendorExpense = $expenseByVendorType->sum('total'); @endphp
+                                            @forelse($expenseByVendorType as $vt)
+                                                <tr>
+                                                    <td>
+                                                        <span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background-color: {{ $vt->color }};"></span>
+                                                        <strong>{{ $vt->label }}</strong>
+                                                    </td>
+                                                    <td class="text-center">{{ $vt->count }}</td>
+                                                    <td class="text-end fw-bold">£{{ number_format($vt->total, 0) }}</td>
+                                                    <td class="text-end text-muted">
+                                                        {{ $totalVendorExpense > 0 ? number_format(($vt->total / $totalVendorExpense) * 100, 1) : 0 }}%
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted py-3">No vendor expenses yet</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                        @if($totalVendorExpense > 0)
+                                        <tfoot class="table-light">
+                                            <tr>
+                                                <td><strong>Total</strong></td>
+                                                <td class="text-center"><strong>{{ $expenseByVendorType->sum('count') }}</strong></td>
+                                                <td class="text-end"><strong>£{{ number_format($totalVendorExpense, 0) }}</strong></td>
+                                                <td class="text-end"><strong>100%</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                        @endif
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -492,6 +492,15 @@
                     }
                 }
             });
+
+            // Vendor Search
+            $('#vendorSearch').on('keyup', function() {
+                const searchText = $(this).val().toLowerCase();
+                $('#vendorTable tbody tr.vendor-row').each(function() {
+                    const rowText = $(this).text().toLowerCase();
+                    $(this).toggle(rowText.indexOf(searchText) > -1);
+                });
+            });
         });
     </script>
 @endsection

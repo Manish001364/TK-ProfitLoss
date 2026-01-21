@@ -1,11 +1,18 @@
 # P&L Module Installation Guide for TicketKart
-## Version 2.5 - Multi-Currency, International Phone & Cash Flow
+## Version 2.6 - Service Types, Multi-Currency, International Phone & Cash Flow
 
 Follow these steps to add the P&L module to your Laravel project.
 
 ---
 
-## What's New in v2.5
+## What's New in v2.6
+
+- **Service Types Management** - 13 system defaults + custom vendor categories
+- **Default Service Types**: Artist, DJ, Venue, Catering, Security, Equipment Hire, Marketing, Staff, Transport, Photography, Decor, MC/Host, Other
+- **Custom Service Types**: Create your own vendor categories for unique needs
+- **Improved Sidebar**: Configuration section with Expense Categories, Service Types, Settings
+
+## What's in v2.5
 
 - **International Phone Numbers** - Country flag dropdown with validation (intl-tel-input)
 - **Address Enhancement** - Country & postcode fields with validation

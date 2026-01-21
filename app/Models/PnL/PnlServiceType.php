@@ -164,6 +164,47 @@ class PnlServiceType extends Model
     }
 
     /**
+     * Get a service type by slug OR ID (for flexibility)
+     */
+    public static function getBySlugOrId($userId, $slugOrId)
+    {
+        // First try by slug
+        $result = self::getBySlug($userId, $slugOrId);
+        if ($result) {
+            return $result;
+        }
+
+        // Then try by ID in system types
+        try {
+            $systemType = DB::table('pnl_service_types_system')
+                ->where('id', $slugOrId)
+                ->first();
+            if ($systemType) {
+                $systemType->is_system = true;
+                return $systemType;
+            }
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        // Then try by ID in user types
+        try {
+            $userType = DB::table('pnl_service_types_user')
+                ->where('id', $slugOrId)
+                ->where('user_id', $userId)
+                ->first();
+            if ($userType) {
+                $userType->is_system = false;
+                return $userType;
+            }
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        return null;
+    }
+
+    /**
      * Create a custom service type for a user
      */
     public static function createForUser($userId, array $data): self

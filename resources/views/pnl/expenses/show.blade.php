@@ -75,11 +75,15 @@
                             <tr>
                                 <td class="text-muted">Category</td>
                                 <td>
-                                    <span class="badge" style="background-color: {{ $expense->category->color }}20; color: {{ $expense->category->color }}">
-                                        <i class="{{ $expense->category->icon ?? 'fas fa-tag' }} me-1"></i>
-                                        {{ $expense->category->name }}
-                                    </span>
-                                    <span class="badge bg-secondary-subtle text-secondary ms-1">{{ ucfirst($expense->category->type) }}</span>
+                                    @if($expense->category)
+                                        <span class="badge" style="background-color: {{ $expense->category->color ?? '#6c757d' }}20; color: {{ $expense->category->color ?? '#6c757d' }}">
+                                            <i class="{{ $expense->category->icon ?? 'fas fa-tag' }} me-1"></i>
+                                            {{ $expense->category->name }}
+                                        </span>
+                                        <span class="badge bg-secondary-subtle text-secondary ms-1">{{ ucfirst($expense->category->type ?? 'variable') }}</span>
+                                    @else
+                                        <span class="badge bg-secondary">Uncategorized</span>
+                                    @endif
                                 </td>
                             </tr>
                             <tr>

@@ -58,17 +58,31 @@ class PnlEvent extends Model
     // Calculated Attributes
     public function getTotalExpensesAttribute(): float
     {
-        return $this->expenses()->sum('total_amount');
+        return (float) $this->expenses()->sum('total_amount');
     }
 
     public function getTotalRevenueAttribute(): float
     {
-        return $this->revenues()->sum('net_revenue_after_refunds');
+        // Calculate: (ticket_price * tickets_sold) - fees - refunds
+        $revenues = $this->revenues()->get();
+        $total = 0;
+        foreach ($revenues as $revenue) {
+            $gross = $revenue->ticket_price * $revenue->tickets_sold;
+            $net = $gross - $revenue->platform_fees - $revenue->payment_gateway_fees - $revenue->taxes - $revenue->refund_amount;
+            $total += $net;
+        }
+        return (float) $total;
     }
 
     public function getGrossRevenueAttribute(): float
     {
-        return $this->revenues()->sum('gross_revenue');
+        // Calculate: ticket_price * tickets_sold
+        $revenues = $this->revenues()->get();
+        $total = 0;
+        foreach ($revenues as $revenue) {
+            $total += $revenue->ticket_price * $revenue->tickets_sold;
+        }
+        return (float) $total;
     }
 
     public function getNetProfitAttribute(): float

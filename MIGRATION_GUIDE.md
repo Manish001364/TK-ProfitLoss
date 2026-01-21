@@ -6,7 +6,111 @@ If you have already installed a previous version of the P&L module, follow these
 
 ---
 
-## Version 2.3 Changes (January 2025) - LATEST
+## Version 2.4 Changes (January 2025) - LATEST
+
+### New Features
+- **Split Expense Categories** - System categories (read-only) separated from user categories (editable)
+- **Dashboard Walkthrough** - First-time user onboarding guide
+- **Smart Budget Tips** - Rule-based insights for budget utilisation and revenue optimisation
+- **Chart Period Filters** - Filter Revenue vs Expenses chart by 3/6/12 months or Year to Date
+
+### Database Migration for v2.4
+
+Run this SQL to create the new category tables and migrate data:
+
+```sql
+-- ==============================================
+-- MIGRATION SCRIPT v2.4 - Expense Category Split
+-- ==============================================
+-- This migration splits the expense categories into:
+-- 1. pnl_expense_categories_system (read-only defaults)
+-- 2. pnl_expense_categories_user (user-created categories)
+
+-- 1. Create System Categories Table
+CREATE TABLE IF NOT EXISTS `pnl_expense_categories_system` (
+    `id` CHAR(36) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `type` ENUM('fixed', 'variable') DEFAULT 'variable',
+    `description` TEXT NULL,
+    `color` VARCHAR(20) DEFAULT '#6366f1',
+    `icon` VARCHAR(50) DEFAULT 'fas fa-tag',
+    `default_budget_limit` DECIMAL(15, 2) NULL,
+    `sort_order` INT DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_pnl_expense_categories_system_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Insert default system categories
+INSERT INTO `pnl_expense_categories_system` (`id`, `name`, `type`, `description`, `color`, `icon`, `sort_order`) VALUES
+(UUID(), 'Artist Fees', 'fixed', 'Payments to artists and performers', '#dc3545', 'fas fa-music', 1),
+(UUID(), 'DJ Fees', 'fixed', 'Payments to DJs', '#6f42c1', 'fas fa-headphones', 2),
+(UUID(), 'Venue Hire', 'fixed', 'Venue rental and facility costs', '#0dcaf0', 'fas fa-building', 3),
+(UUID(), 'Catering', 'variable', 'Food and beverage expenses', '#fd7e14', 'fas fa-utensils', 4),
+(UUID(), 'Security', 'variable', 'Security personnel and services', '#6c757d', 'fas fa-shield-alt', 5),
+(UUID(), 'Equipment Hire', 'variable', 'Sound, lighting, and stage equipment', '#20c997', 'fas fa-cogs', 6),
+(UUID(), 'Marketing', 'variable', 'Advertising, promotions, and marketing', '#d63384', 'fas fa-bullhorn', 7),
+(UUID(), 'Staff', 'variable', 'Staff and volunteer expenses', '#198754', 'fas fa-users', 8),
+(UUID(), 'Transportation', 'variable', 'Transport and logistics', '#0d6efd', 'fas fa-truck', 9),
+(UUID(), 'Insurance', 'fixed', 'Event insurance and liability', '#ffc107', 'fas fa-file-contract', 10),
+(UUID(), 'Licensing', 'fixed', 'Music licensing and permits', '#17a2b8', 'fas fa-certificate', 11),
+(UUID(), 'Production', 'variable', 'Stage production and technical', '#6610f2', 'fas fa-theater-masks', 12),
+(UUID(), 'Other', 'variable', 'Miscellaneous expenses', '#adb5bd', 'fas fa-tag', 99);
+
+-- 3. Create User Categories Table
+CREATE TABLE IF NOT EXISTS `pnl_expense_categories_user` (
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `type` ENUM('fixed', 'variable') DEFAULT 'variable',
+    `description` TEXT NULL,
+    `color` VARCHAR(20) DEFAULT '#6366f1',
+    `icon` VARCHAR(50) DEFAULT 'fas fa-tag',
+    `default_budget_limit` DECIMAL(15, 2) NULL,
+    `sort_order` INT DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_pnl_expense_categories_user_user_id` (`user_id`),
+    INDEX `idx_pnl_expense_categories_user_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 4. Migrate existing user-created categories to user table
+INSERT INTO `pnl_expense_categories_user` (`id`, `user_id`, `name`, `type`, `description`, `color`, `icon`, `default_budget_limit`, `sort_order`, `is_active`, `created_at`, `updated_at`)
+SELECT `id`, `user_id`, `name`, `type`, `description`, `color`, `icon`, `default_budget_limit`, `sort_order`, `is_active`, `created_at`, `updated_at`
+FROM `pnl_expense_categories`
+WHERE `user_id` IS NOT NULL;
+
+-- 5. Add walkthrough_dismissed column to pnl_settings (if not exists)
+ALTER TABLE `pnl_settings` 
+    ADD COLUMN IF NOT EXISTS `walkthrough_dismissed` TINYINT(1) DEFAULT 0 COMMENT 'User dismissed the walkthrough';
+
+-- 6. Add ticketkart_event_id column to pnl_events (if not exists)
+ALTER TABLE `pnl_events` 
+    ADD COLUMN IF NOT EXISTS `ticketkart_event_id` BIGINT UNSIGNED NULL COMMENT 'Links to main TicketKart events table' AFTER `user_id`,
+    ADD INDEX IF NOT EXISTS `idx_pnl_events_tk_event` (`ticketkart_event_id`);
+
+-- ==============================================
+-- END OF v2.4 MIGRATION
+-- ==============================================
+```
+
+### Important Notes for v2.4
+
+1. **Backward Compatibility**: The original `pnl_expense_categories` table is kept for existing expense references. All foreign keys will continue to work.
+
+2. **Category Display**: The UI now queries both system and user tables to display categories. System categories show a "System Default" badge and cannot be edited by users.
+
+3. **New Categories**: When users create new categories, they are stored in `pnl_expense_categories_user`.
+
+4. **Settings Route**: A new route `pnl.settings.dismiss-walkthrough` has been added for the walkthrough feature.
+
+---
+
+## Version 2.3 Changes (January 2025)
 
 ### New Features
 - **Built-in Sidebar Navigation** - All P&L pages now have integrated sidebar

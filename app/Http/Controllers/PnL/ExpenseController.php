@@ -69,10 +69,16 @@ class ExpenseController extends Controller
         
         // Generate next invoice number using new format: INV-YYYYMM-XXX
         $nextInvoiceNumber = $this->generateNextInvoiceNumber($userId);
+        
+        // Get vendor types for quick add modal
+        $vendorTypes = \App\Models\PnL\PnlServiceType::getAllForUser($userId)
+            ->pluck('name', 'slug')
+            ->toArray();
 
         return view('pnl.expenses.create', compact(
             'events', 'categories', 'vendors', 'selectedEventId', 
-            'defaultTaxRate', 'nextInvoiceNumber', 'settings', 'currencies', 'defaultCurrency'
+            'defaultTaxRate', 'nextInvoiceNumber', 'settings', 'currencies', 'defaultCurrency',
+            'vendorTypes'
         ));
     }
 

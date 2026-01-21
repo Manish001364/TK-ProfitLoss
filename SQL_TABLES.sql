@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `pnl_settings` (
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_events` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NULL,
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
     `venue` VARCHAR(255) NULL,
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `pnl_events` (
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`),
+    INDEX `idx_pnl_events_user_id` (`user_id`),
     INDEX `idx_pnl_events_status` (`status`),
     INDEX `idx_pnl_events_event_date` (`event_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -54,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `pnl_events` (
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_vendors` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NULL,
     `type` ENUM('artist', 'dj', 'vendor', 'caterer', 'security', 'equipment', 'venue', 'marketing', 'staff', 'other') DEFAULT 'vendor',
     `full_name` VARCHAR(255) NOT NULL,
     `business_name` VARCHAR(255) NULL,

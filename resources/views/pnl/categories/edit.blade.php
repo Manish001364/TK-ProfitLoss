@@ -16,8 +16,8 @@
             @method('PUT')
             
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-tag me-2 text-primary"></i>Category Details</h6>
+                <div class="card-header bg-danger text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-tag me-2"></i>Category Details</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">

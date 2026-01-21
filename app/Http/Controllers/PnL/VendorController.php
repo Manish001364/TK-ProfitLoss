@@ -240,7 +240,7 @@ class VendorController extends Controller
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
             'business_name' => 'nullable|string|max:255',
-            'type' => 'required|string|max:100', // Changed: Accept any string, validate manually
+            'type' => 'required|string|max:100', // Service type slug from dropdown
             'email' => 'nullable|email|max:255',
             'phone_country_code' => 'nullable|string|max:10',
             'phone' => 'required|string|max:50',
@@ -271,7 +271,8 @@ class VendorController extends Controller
         ]);
 
         // Validate service type exists (system or user)
-        $serviceTypeExists = $this->validateServiceTypeExists($validated['type'], $userId);
+        $serviceTypeSlug = $validated['type'];
+        $serviceTypeExists = $this->validateServiceTypeExists($serviceTypeSlug, $userId);
         if (!$serviceTypeExists) {
             return redirect()
                 ->back()
@@ -279,7 +280,12 @@ class VendorController extends Controller
                 ->withErrors(['type' => 'The selected service type is invalid. Please select a valid type from the dropdown.']);
         }
 
+        // Map service type slug to valid ENUM value for backward compatibility
+        $enumType = $this->mapServiceTypeToEnum($serviceTypeSlug);
+
         $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['service_type_id'] = $serviceTypeSlug; // Store the original service type slug
+        $validated['type'] = $enumType; // Store mapped ENUM value
 
         $vendor->update($validated);
 

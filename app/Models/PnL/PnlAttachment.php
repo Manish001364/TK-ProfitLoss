@@ -5,28 +5,25 @@ namespace App\Models\PnL;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Storage;
 
 class PnlAttachment extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids;
 
     protected $table = 'pnl_attachments';
 
     protected $fillable = [
         'attachable_type',
         'attachable_id',
-        'user_id',
         'filename',
         'original_filename',
         'mime_type',
-        'file_size',
+        'size',
         'path',
-        'type',
-        'description',
+        'uploaded_by',
     ];
 
     // Attachment type options

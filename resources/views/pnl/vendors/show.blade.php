@@ -7,7 +7,7 @@
             <div>
                 <h4 class="mb-1">
                     <i class="fas fa-user"></i> {{ $vendor->display_name }}
-                    <span class="badge bg-info small">{{ ucfirst($vendor->type) }}</span>
+                    <span class="badge bg-info small">{{ $vendor->service_type_name }}</span>
                     <span class="badge bg-{{ $vendor->is_active ? 'success' : 'secondary' }} small">
                         {{ $vendor->is_active ? 'Active' : 'Inactive' }}
                     </span>

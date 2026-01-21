@@ -23,6 +23,7 @@ use App\Http\Controllers\PnL\AttachmentController;
 use App\Http\Controllers\PnL\ExportController;
 use App\Http\Controllers\PnL\AuditLogController;
 use App\Http\Controllers\PnL\SettingsController;
+use App\Http\Controllers\PnL\ServiceTypeController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {

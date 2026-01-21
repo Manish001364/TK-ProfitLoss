@@ -281,10 +281,25 @@
     <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/intlTelInput.min.js"></script>
     
     <style>
-        .iti { width: 100%; }
+        .iti { width: 100%; display: block; }
         .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags.png"); }
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
             .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags@2x.png"); }
+        }
+        .iti__country-list {
+            z-index: 99999 !important;
+            max-height: 250px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: absolute !important;
+        }
+        .iti--container {
+            z-index: 99999 !important;
+            position: absolute !important;
+        }
+        .card, .card-body {
+            overflow: visible !important;
         }
     </style>
     
@@ -322,7 +337,8 @@
                     utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/utils.js",
                     nationalMode: true,
                     autoPlaceholder: "aggressive",
-                    formatOnDisplay: true
+                    formatOnDisplay: true,
+                    dropdownContainer: document.body
                 });
                 
                 itiInstances.push({ iti: iti, config: config });

@@ -22,11 +22,18 @@ class PnlVendor extends Model
         'business_name',
         'type',
         'email',
+        'phone_country_code',
         'phone',
+        'alternate_phone_country_code',
         'alternate_phone',
         'business_address',
+        'business_country',
+        'business_postcode',
         'home_address',
+        'home_country',
+        'home_postcode',
         'emergency_contact_name',
+        'emergency_contact_phone_country_code',
         'emergency_contact_phone',
         'emergency_contact_relation',
         'bank_name',
@@ -39,6 +46,7 @@ class PnlVendor extends Model
         'gst_number',
         'notes',
         'preferred_payment_cycle',
+        'specialization',
         'is_active',
     ];
 
@@ -62,7 +70,29 @@ class PnlVendor extends Model
             'equipment' => 'Equipment',
             'catering' => 'Catering',
             'security' => 'Security',
+            'marketing' => 'Marketing',
             'other' => 'Other',
+        ];
+    }
+
+    // Supported countries list
+    public static function getCountries(): array
+    {
+        return [
+            'United Kingdom' => 'United Kingdom',
+            'United States' => 'United States',
+            'India' => 'India',
+            'Germany' => 'Germany',
+            'France' => 'France',
+            'Spain' => 'Spain',
+            'Italy' => 'Italy',
+            'Netherlands' => 'Netherlands',
+            'Ireland' => 'Ireland',
+            'Australia' => 'Australia',
+            'Canada' => 'Canada',
+            'United Arab Emirates' => 'United Arab Emirates',
+            'Singapore' => 'Singapore',
+            'Other' => 'Other',
         ];
     }
 
@@ -112,6 +142,36 @@ class PnlVendor extends Model
     {
         if (!$this->bank_account_number) return 'N/A';
         return 'XXXX' . substr($this->bank_account_number, -4);
+    }
+
+    /**
+     * Get formatted full phone number with country code
+     */
+    public function getFullPhoneAttribute(): string
+    {
+        if (!$this->phone) return '';
+        $code = $this->phone_country_code ?? '+44';
+        return $code . ' ' . $this->phone;
+    }
+
+    /**
+     * Get formatted full alternate phone number with country code
+     */
+    public function getFullAlternatePhoneAttribute(): string
+    {
+        if (!$this->alternate_phone) return '';
+        $code = $this->alternate_phone_country_code ?? '+44';
+        return $code . ' ' . $this->alternate_phone;
+    }
+
+    /**
+     * Get formatted emergency contact phone
+     */
+    public function getFullEmergencyPhoneAttribute(): string
+    {
+        if (!$this->emergency_contact_phone) return '';
+        $code = $this->emergency_contact_phone_country_code ?? '+44';
+        return $code . ' ' . $this->emergency_contact_phone;
     }
 
     // Scopes

@@ -1,7 +1,17 @@
 # P&L Module Installation Guide for TicketKart
-## Version 2.3 - With Built-in Sidebar Navigation
+## Version 2.5 - Multi-Currency, International Phone & Cash Flow
 
 Follow these steps to add the P&L module to your Laravel project.
+
+---
+
+## What's New in v2.5
+
+- **International Phone Numbers** - Country flag dropdown with validation (intl-tel-input)
+- **Address Enhancement** - Country & postcode fields with validation
+- **Multi-Currency Support** - Set default currency, per-event currency, exchange rates
+- **Cash Flow Projections** - New page for visualising upcoming payments & revenue
+- **Expected Revenue** - Track projected income per event
 
 ---
 
@@ -31,7 +41,7 @@ Extract the zip and copy these folders/files to your Laravel project:
 | `app/Policies/` | `your-project/app/Policies/` |
 | `app/Providers/PnLServiceProvider.php` | `your-project/app/Providers/PnLServiceProvider.php` |
 | `app/Traits/` | `your-project/app/Traits/` |
-| `app/Console/Commands/SendPaymentReminders.php` | `your-project/app/Console/Commands/SendPaymentReminders.php` |
+| `app/Console/Commands/` | `your-project/app/Console/Commands/` |
 | `resources/views/pnl/` | `your-project/resources/views/pnl/` |
 | `routes/pnl.php` | `your-project/routes/pnl.php` |
 
@@ -78,14 +88,17 @@ mysql -u your_username -p your_database < SQL_TABLES.sql
 4. Paste the contents of `SQL_TABLES.sql`
 5. Click "Go"
 
-### Tables Created (9 total):
+### Tables Created (12 total):
 
 | Table | Description |
 |-------|-------------|
-| `pnl_settings` | Per-user settings (VAT rate, invoice prefix) |
-| `pnl_events` | Event details |
-| `pnl_vendors` | Artists/DJs/Vendors |
-| `pnl_expense_categories` | Expense categories |
+| `pnl_settings` | Per-user settings (VAT rate, invoice prefix, **currency**) |
+| `pnl_currency_rates` | **User-defined exchange rates** (NEW) |
+| `pnl_events` | Event details with **currency** field |
+| `pnl_vendors` | Artists/DJs/Vendors with **phone country codes & address** |
+| `pnl_expense_categories` | Legacy expense categories |
+| `pnl_expense_categories_system` | System default categories (read-only) |
+| `pnl_expense_categories_user` | User-created categories |
 | `pnl_expenses` | Individual expenses with tax info |
 | `pnl_payments` | Payment tracking |
 | `pnl_revenues` | Ticket sales |
@@ -150,18 +163,51 @@ You should see the P&L Dashboard with the built-in sidebar navigation!
 
 ## Built-in Sidebar Navigation
 
-**NEW in v2.3:** The P&L module now includes its own sidebar navigation on every page:
+The P&L module includes its own sidebar navigation on every page:
 
 - 📊 **Dashboard** - Overview of all P&L data
+- 📈 **Cash Flow** - Projected payments & revenue (NEW v2.5)
 - 📅 **Events** - Manage event P&L
 - 👥 **Vendors & Artists** - Manage vendors, artists, DJs
 - 🧾 **Expenses** - Track all expenses
 - 💷 **Revenue** - Track ticket sales
 - 💳 **Payments** - Payment tracking & status
 - 🏷️ **Categories** - Expense categories
-- ⚙️ **Settings** - VAT, invoice settings
+- ⚙️ **Settings** - Currency, VAT, invoice settings
 
 The sidebar automatically highlights the current section and is mobile-responsive.
+
+---
+
+## Key Features in v2.5
+
+### International Phone Numbers
+Vendor phone fields now include:
+- Country flag dropdown (200+ countries)
+- Auto-detection of number format
+- Real-time validation
+- Stored as separate `phone_country_code` + national number
+
+### Address Enhancement
+- Country dropdown (UK, US, India, Germany, France, etc.)
+- Postcode field with format hints per country:
+  - UK: `SW1A 1AA`
+  - US: `12345` or `12345-6789`
+  - India: `110001`
+
+### Multi-Currency Support
+- **Default Currency**: Set in Settings (GBP, USD, EUR, INR, AUD, etc.)
+- **Per-Event Currency**: Each event can have its own currency
+- **Exchange Rates**: Define your own conversion rates in Settings
+- Supported currencies: GBP, USD, EUR, INR, AUD, CAD, AED, SGD, CHF, JPY, CNY
+
+### Cash Flow Projections
+New dedicated page showing:
+- Summary cards: Overdue, Due in 7/14/30/60/90 days
+- Interactive chart: Inflows vs Outflows
+- Upcoming payments list with urgency badges
+- Expected revenue from upcoming events
+- Net position calculation
 
 ---
 
@@ -172,20 +218,26 @@ After installation, you should have:
 ```
 your-project/
 ├── app/
-│   ├── Console/Commands/SendPaymentReminders.php
+│   ├── Console/Commands/
+│   │   ├── SendPaymentReminders.php
+│   │   └── ImportTicketKartRevenue.php
 │   ├── Exports/ (3 files)
 │   ├── Http/Controllers/PnL/ (11 controllers)
 │   ├── Mail/ (2 files)
-│   ├── Models/PnL/ (9 models)
-│   ├── Policies/ (5 files)
+│   ├── Models/PnL/ (10 models including PnlCurrencyRate)
+│   ├── Policies/ (6 files)
 │   ├── Providers/PnLServiceProvider.php
 │   └── Traits/HasAuditLog.php
 ├── resources/views/pnl/
 │   ├── layouts/
-│   │   └── app.blade.php          ← P&L layout with sidebar
+│   │   └── app.blade.php
 │   ├── partials/
-│   │   └── sidebar.blade.php      ← Built-in sidebar navigation
+│   │   ├── sidebar.blade.php
+│   │   ├── walkthrough.blade.php
+│   │   └── tips.blade.php
 │   ├── dashboard/
+│   │   ├── index.blade.php
+│   │   └── cashflow.blade.php (NEW)
 │   ├── events/
 │   ├── vendors/
 │   ├── expenses/
@@ -206,6 +258,7 @@ your-project/
 | Route | URL | Description |
 |-------|-----|-------------|
 | `pnl.dashboard` | `/pnl/dashboard` | Main Dashboard |
+| `pnl.dashboard.cashflow` | `/pnl/cashflow` | Cash Flow Projections (NEW) |
 | `pnl.events.index` | `/pnl/events` | Events List |
 | `pnl.vendors.index` | `/pnl/vendors` | Vendors List |
 | `pnl.expenses.index` | `/pnl/expenses` | Expenses List |
@@ -214,7 +267,7 @@ your-project/
 | `pnl.payments.upcoming` | `/pnl/payments/upcoming` | Upcoming Payments |
 | `pnl.payments.overdue` | `/pnl/payments/overdue` | Overdue Payments |
 | `pnl.categories.index` | `/pnl/categories` | Expense Categories |
-| `pnl.settings.index` | `/pnl/settings` | Settings |
+| `pnl.settings.index` | `/pnl/settings` | Settings (Currency, VAT, Invoice) |
 | `pnl.audit.index` | `/pnl/audit` | Audit Logs |
 
 ---
@@ -223,264 +276,37 @@ your-project/
 
 This section explains how to connect the P&L module with your existing TicketKart database tables (`events`, `eventtickets`, `orders`, etc.) so you can:
 
-1. **View TicketKart events directly** in the P&L module (no need to recreate events)
-2. **Auto-import revenue** from ticket sales in the `orders` table
+1. **View TicketKart events directly** in the P&L module
+2. **Auto-import revenue** from ticket sales
 3. **Link expenses** to your actual TicketKart events
 
-### Step 1: Add TicketKart Event Link Column
+### Step 1: Link Column Already Included
 
-Run this SQL to add a column linking P&L events to your main TicketKart events:
+The `pnl_events` table already includes `ticketkart_event_id` column for linking.
 
-```sql
--- Add column to link pnl_events with main TicketKart events table
-ALTER TABLE `pnl_events` 
-    ADD COLUMN `ticketkart_event_id` BIGINT UNSIGNED NULL AFTER `user_id`,
-    ADD INDEX `idx_pnl_events_tk_event` (`ticketkart_event_id`);
+### Step 2: Import Revenue Command
+
+Use the included command to import ticket sales:
+
+```bash
+# Import all linked events
+php artisan pnl:import-revenue
+
+# Import specific event
+php artisan pnl:import-revenue --event_id=abc-123-xyz
 ```
 
-### Step 2: Fetch TicketKart Events in Controller
-
-Update `app/Http/Controllers/PnL/EventController.php` to fetch events from your TicketKart `events` table:
-
-```php
-<?php
-// In EventController.php
-
-public function create()
-{
-    // Fetch user's events from main TicketKart events table
-    $ticketkartEvents = \DB::table('events')
-        ->where(function($query) {
-            $query->where('user_id', auth()->id())
-                  ->orWhere('organiser_id', auth()->id());
-        })
-        ->whereNull('deleted_at')
-        ->orderBy('start_date', 'desc')
-        ->get(['id', 'name', 'start_date', 'venue']);
-    
-    return view('pnl.events.create', compact('ticketkartEvents'));
-}
-
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'ticketkart_event_id' => 'nullable|exists:events,id',
-        'name' => 'required_without:ticketkart_event_id|string|max:255',
-        'event_date' => 'required|date',
-        // ... other validation rules
-    ]);
-
-    // If linking to TicketKart event, auto-fill details
-    if ($request->ticketkart_event_id) {
-        $tkEvent = \DB::table('events')->find($request->ticketkart_event_id);
-        if ($tkEvent) {
-            $validated['name'] = $tkEvent->name;
-            $validated['venue'] = $tkEvent->venue ?? null;
-            $validated['event_date'] = $tkEvent->start_date;
-            $validated['ticketkart_event_id'] = $tkEvent->id;
-        }
-    }
-
-    $validated['user_id'] = auth()->id();
-    $event = PnlEvent::create($validated);
-
-    return redirect()->route('pnl.events.show', $event)
-        ->with('success', 'Event created successfully!');
-}
-```
-
-### Step 3: Update Create Event View
-
-Update `resources/views/pnl/events/create.blade.php` to show TicketKart events dropdown:
-
-```html
-<!-- Add this at the top of the form -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-primary text-white border-0 py-3">
-        <h6 class="mb-0"><i class="fas fa-link me-2"></i>Link to TicketKart Event</h6>
-    </div>
-    <div class="card-body">
-        <div class="form-group">
-            <label class="form-label small">Select TicketKart Event (Optional)</label>
-            <select name="ticketkart_event_id" id="ticketkart_event_id" class="form-select">
-                <option value="">-- Create new P&L event manually --</option>
-                @foreach($ticketkartEvents as $tkEvent)
-                    <option value="{{ $tkEvent->id }}" 
-                            data-name="{{ $tkEvent->name }}"
-                            data-date="{{ $tkEvent->start_date }}"
-                            data-venue="{{ $tkEvent->venue }}">
-                        {{ $tkEvent->name }} ({{ \Carbon\Carbon::parse($tkEvent->start_date)->format('d M Y') }})
-                    </option>
-                @endforeach
-            </select>
-            <small class="text-muted">Select an existing TicketKart event to auto-fill details and link revenue</small>
-        </div>
-    </div>
-</div>
-
-<script>
-// Auto-fill form when TicketKart event is selected
-document.getElementById('ticketkart_event_id').addEventListener('change', function() {
-    const selected = this.options[this.selectedIndex];
-    if (selected.value) {
-        document.querySelector('[name="name"]').value = selected.dataset.name || '';
-        document.querySelector('[name="venue"]').value = selected.dataset.venue || '';
-        document.querySelector('[name="event_date"]').value = selected.dataset.date ? selected.dataset.date.split(' ')[0] : '';
-    }
-});
-</script>
-```
-
-### Step 4: Auto-Import Revenue from Orders
-
-Create a command to import ticket sales revenue from your `orders` table:
-
-**File: `app/Console/Commands/ImportTicketKartRevenue.php`**
-
-```php
-<?php
-
-namespace App\Console\Commands;
-
-use Illuminate\Console\Command;
-use App\Models\PnL\PnlEvent;
-use App\Models\PnL\PnlRevenue;
-use Illuminate\Support\Facades\DB;
-
-class ImportTicketKartRevenue extends Command
-{
-    protected $signature = 'pnl:import-revenue {--event_id= : Specific PnL event ID}';
-    protected $description = 'Import ticket sales revenue from TicketKart orders table';
-
-    public function handle()
-    {
-        $query = PnlEvent::whereNotNull('ticketkart_event_id');
-        
-        if ($eventId = $this->option('event_id')) {
-            $query->where('id', $eventId);
-        }
-
-        $events = $query->get();
-
-        foreach ($events as $pnlEvent) {
-            $this->importRevenueForEvent($pnlEvent);
-        }
-
-        $this->info('Revenue import completed!');
-    }
-
-    private function importRevenueForEvent(PnlEvent $pnlEvent)
-    {
-        // Get ticket sales from orders/eventtickets tables
-        // Adjust table/column names to match your TicketKart schema
-        $ticketSales = DB::table('orders')
-            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
-            ->where('order_items.event_id', $pnlEvent->ticketkart_event_id)
-            ->where('orders.status', 'completed') // Only completed orders
-            ->whereNull('orders.deleted_at')
-            ->select(
-                'order_items.ticket_id',
-                DB::raw('SUM(order_items.quantity) as tickets_sold'),
-                DB::raw('SUM(order_items.unit_price * order_items.quantity) as gross_revenue'),
-                DB::raw('SUM(order_items.booking_fee) as total_fees')
-            )
-            ->groupBy('order_items.ticket_id')
-            ->get();
-
-        foreach ($ticketSales as $sale) {
-            // Get ticket details
-            $ticket = DB::table('tickets')->find($sale->ticket_id);
-            
-            // Check if revenue entry already exists
-            $existingRevenue = PnlRevenue::where('event_id', $pnlEvent->id)
-                ->where('ticket_type', $ticket->name ?? 'General Admission')
-                ->first();
-
-            if ($existingRevenue) {
-                // Update existing
-                $existingRevenue->update([
-                    'tickets_sold' => $sale->tickets_sold,
-                    'gross_revenue' => $sale->gross_revenue,
-                    'platform_fee' => $sale->total_fees,
-                ]);
-            } else {
-                // Create new revenue entry
-                PnlRevenue::create([
-                    'event_id' => $pnlEvent->id,
-                    'user_id' => $pnlEvent->user_id,
-                    'ticket_type' => $ticket->name ?? 'General Admission',
-                    'ticket_price' => $ticket->price ?? 0,
-                    'tickets_sold' => $sale->tickets_sold,
-                    'gross_revenue' => $sale->gross_revenue,
-                    'platform_fee' => $sale->total_fees,
-                    'gateway_fee' => 0,
-                    'tax_amount' => 0,
-                    'refunds' => 0,
-                ]);
-            }
-        }
-
-        $this->info("Imported revenue for: {$pnlEvent->name}");
-    }
-}
-```
-
-### Step 5: Register the Command
+### Step 3: Schedule Auto-Import (Optional)
 
 Add to `app/Console/Kernel.php`:
 
 ```php
-protected $commands = [
-    // ... other commands
-    \App\Console\Commands\ImportTicketKartRevenue::class,
-];
-
 protected function schedule(Schedule $schedule)
 {
     // Auto-sync revenue every hour
     $schedule->command('pnl:import-revenue')->hourly();
 }
 ```
-
-### Step 6: Run Revenue Import
-
-**Manual import:**
-```bash
-php artisan pnl:import-revenue
-```
-
-**Import for specific event:**
-```bash
-php artisan pnl:import-revenue --event_id=abc-123-xyz
-```
-
----
-
-### TicketKart Database Reference
-
-Based on your TicketKart schema, here are the key tables and columns:
-
-| Table | Key Columns | Use in P&L |
-|-------|-------------|------------|
-| `events` | `id`, `name`, `start_date`, `venue`, `user_id`, `organiser_id` | Link P&L events |
-| `tickets` | `id`, `event_id`, `name`, `price` | Ticket types |
-| `eventtickets` | `id`, `event_id`, `ticket_id`, `booking_id` | Individual ticket sales |
-| `orders` | `id`, `user_id`, `total_amount`, `status` | Revenue data |
-| `order_items` | `order_id`, `event_id`, `ticket_id`, `quantity`, `unit_price` | Line items |
-
-**Note:** Adjust the column names in the code above to match your exact TicketKart database schema.
-
----
-
-### Quick Integration Checklist
-
-- [ ] Run SQL to add `ticketkart_event_id` column
-- [ ] Update `EventController.php` to fetch TicketKart events
-- [ ] Update `events/create.blade.php` with event selector
-- [ ] Create `ImportTicketKartRevenue.php` command
-- [ ] Register command in Kernel.php
-- [ ] Run `php artisan pnl:import-revenue` to test
-- [ ] Optionally schedule hourly sync
 
 ---
 
@@ -494,32 +320,43 @@ Based on your TicketKart schema, here are the key tables and columns:
 | Permission denied | `chmod -R 775 storage bootstrap/cache` |
 | PDF not generating | Ensure `barryvdh/laravel-dompdf` installed |
 | Email not sending | Check mail config in `.env` |
-| Sidebar not showing | Ensure `pnl/layouts/app.blade.php` and `pnl/partials/sidebar.blade.php` are copied |
-| Revenue not importing | Check table/column names match your TicketKart schema |
+| Phone flags not showing | Check CDN access to intl-tel-input |
+| Currency not saving | Run v2.5 migration from MIGRATION_GUIDE.md |
 
 ---
 
 ## Version History
 
-### v2.3 (Current)
-- **Built-in sidebar navigation** on all P&L pages
-- No need to manually add sidebar code to main TicketKart menu
+### v2.5 (Current)
+- **International phone numbers** with country flags (intl-tel-input)
+- **Address enhancement** with country & postcode validation
+- **Multi-currency support** with user-defined exchange rates
+- **Cash Flow Projections** page
+- **Expected revenue** field for events
+
+### v2.4
+- Dashboard walkthrough for new users
+- Smart budget tips (UK English "Utilisation")
+- Chart period filters (3/6/12 months, YTD)
+- Expense categories split into system/user tables
+
+### v2.3
+- Built-in sidebar navigation on all P&L pages
 - Self-contained P&L layout system
 - Mobile-responsive sidebar
 
 ### v2.2
-- Separate CSS file for sidebar
-- Sidebar menu partial blade file
+- TicketKart integration support
+- Revenue import command
 
 ### v2.1
 - Collapsible dashboard sections
-- Pagination controls on all tables
-- Fixed currency symbol (£)
-- Expense edit form improvements
+- Pagination controls
+- Currency symbol fixes
 
 ### v2.0
 - Per-organiser VAT/tax system
-- Invoice number format: INV-YYYYMM-XXX
+- Invoice number format
 - PDF invoice generation
 - Email notifications
 
@@ -527,12 +364,13 @@ Based on your TicketKart schema, here are the key tables and columns:
 
 ## Done!
 
-Your P&L module is ready with built-in navigation.
+Your P&L module is ready with all v2.5 features.
 
 **Quick Start:**
-1. Go to `/pnl/dashboard` - View your P&L summary
-2. Go to `/pnl/settings` - Set your VAT rate
-3. Go to `/pnl/events` - Create your first event
-4. Go to `/pnl/vendors` - Add vendors/artists
-5. Go to `/pnl/expenses` - Track expenses
-6. Go to `/pnl/revenues` - Track ticket sales
+1. Go to `/pnl/settings` - **Set your default currency and exchange rates**
+2. Go to `/pnl/dashboard` - View your P&L summary
+3. Go to `/pnl/cashflow` - **View cash flow projections**
+4. Go to `/pnl/events` - Create your first event (with currency)
+5. Go to `/pnl/vendors` - Add vendors/artists (with international phone)
+6. Go to `/pnl/expenses` - Track expenses
+7. Go to `/pnl/revenues` - Track ticket sales

@@ -26,6 +26,8 @@ class PnlEvent extends Model
         'event_date',
         'event_time',
         'budget',
+        'currency',
+        'expected_revenue',
         'status',
     ];
 
@@ -33,6 +35,7 @@ class PnlEvent extends Model
         'event_date' => 'date',
         'event_time' => 'datetime:H:i',
         'budget' => 'decimal:2',
+        'expected_revenue' => 'decimal:2',
         'ticketkart_event_id' => 'integer',
     ];
 
@@ -109,6 +112,14 @@ class PnlEvent extends Model
     {
         if ($this->budget <= 0) return 0;
         return ($this->total_expenses / $this->budget) * 100;
+    }
+
+    /**
+     * Get currency symbol for this event
+     */
+    public function getCurrencySymbolAttribute(): string
+    {
+        return PnlSettings::getCurrencySymbol($this->currency ?? 'GBP');
     }
 
     // Scopes

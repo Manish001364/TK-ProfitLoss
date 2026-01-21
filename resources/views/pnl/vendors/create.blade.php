@@ -373,7 +373,8 @@
                     utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/utils.js",
                     nationalMode: true,
                     autoPlaceholder: "aggressive",
-                    formatOnDisplay: true
+                    formatOnDisplay: true,
+                    dropdownContainer: document.body // CRITICAL: Prevent dropdown from being cut off by parent overflow
                 });
                 
                 itiInstances.push({ iti: iti, config: config });

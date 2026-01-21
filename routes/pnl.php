@@ -78,4 +78,5 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::post('settings/reset-invoice', [SettingsController::class, 'resetInvoiceSequence'])->name('settings.reset-invoice');
+    Route::post('settings/dismiss-walkthrough', [SettingsController::class, 'dismissWalkthrough'])->name('settings.dismiss-walkthrough');
 });

@@ -304,29 +304,41 @@
 @section('customjs')
     <script>
         $(document).ready(function() {
-            // Tax calculation
-            function updateTax() {
+            // Tax toggle and calculation
+            function updateTaxDisplay() {
                 const isTaxable = $('#is_taxable').is(':checked');
                 const amount = parseFloat($('#amount').val()) || 0;
                 const taxRate = parseFloat($('#tax_rate').val()) || 0;
                 
                 if (isTaxable) {
+                    // Show tax section, hide non-taxable message
+                    $('#tax_details_section').show();
+                    $('#non_taxable_section').hide();
+                    $('#tax_toggle_container').css('background', '#d1e7dd').css('border-color', '#badbcc');
+                    $('#tax_status_text').text('Tax will be added at ' + taxRate + '%');
+                    
+                    // Calculate tax
                     const taxAmount = (amount * taxRate / 100);
                     $('#tax_amount').val(taxAmount.toFixed(2));
                     $('#total_display').val((amount + taxAmount).toFixed(2));
-                    $('#tax_input_group').removeClass('opacity-50');
-                    $('#tax_rate, #tax_amount').prop('disabled', false);
                 } else {
+                    // Hide tax section, show non-taxable message
+                    $('#tax_details_section').hide();
+                    $('#non_taxable_section').show();
+                    $('#tax_toggle_container').css('background', '#f8f9fa').css('border-color', '#dee2e6');
+                    $('#tax_status_text').text('No tax will be applied');
+                    
+                    // No tax
                     $('#tax_amount').val('0.00');
-                    $('#total_display').val(amount.toFixed(2));
-                    $('#tax_input_group').addClass('opacity-50');
-                    $('#tax_rate, #tax_amount').prop('disabled', true);
+                    $('#non_taxable_total').text('£' + amount.toFixed(2));
                 }
             }
 
-            $('#amount, #tax_rate').on('input', updateTax);
-            $('#is_taxable').on('change', updateTax);
-            updateTax();
+            $('#amount, #tax_rate').on('input', updateTaxDisplay);
+            $('#is_taxable').on('change', updateTaxDisplay);
+            
+            // Initial state
+            updateTaxDisplay();
 
             // Payment status toggle
             $('#payment_status').on('change', function() {
@@ -341,9 +353,10 @@
 
         // Generate invoice number
         function generateInvoiceNumber() {
-            const timestamp = Date.now().toString().slice(-6);
-            const random = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-            $('#invoice_number').val('INV-' + timestamp + random);
+            const now = new Date();
+            const yearMonth = now.getFullYear().toString() + (now.getMonth() + 1).toString().padStart(2, '0');
+            const random = Math.floor(Math.random() * 900 + 100);
+            $('#invoice_number').val('INV-' + yearMonth + '-' + random);
         }
 
         // Quick add vendor

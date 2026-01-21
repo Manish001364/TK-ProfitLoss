@@ -22,6 +22,7 @@ use App\Http\Controllers\PnL\RevenueController;
 use App\Http\Controllers\PnL\AttachmentController;
 use App\Http\Controllers\PnL\ExportController;
 use App\Http\Controllers\PnL\AuditLogController;
+use App\Http\Controllers\PnL\SettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
@@ -72,4 +73,9 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
     // Audit Logs
     Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
     Route::get('audit/{auditLog}', [AuditLogController::class, 'show'])->name('audit.show');
+
+    // Settings
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('settings/reset-invoice', [SettingsController::class, 'resetInvoiceSequence'])->name('settings.reset-invoice');
 });

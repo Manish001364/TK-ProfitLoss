@@ -195,6 +195,7 @@ CREATE TABLE IF NOT EXISTS `pnl_payments` (
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_revenues` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NULL,
     `event_id` BIGINT UNSIGNED NOT NULL,
     `ticket_type` ENUM('general', 'vip', 'early_bird', 'group', 'premium', 'student', 'custom') DEFAULT 'general',
     `ticket_name` VARCHAR(255) NULL COMMENT 'Custom ticket name',
@@ -211,6 +212,7 @@ CREATE TABLE IF NOT EXISTS `pnl_revenues` (
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`),
+    INDEX `idx_pnl_revenues_user_id` (`user_id`),
     INDEX `idx_pnl_revenues_event_id` (`event_id`),
     INDEX `idx_pnl_revenues_ticket_type` (`ticket_type`),
     CONSTRAINT `fk_pnl_revenues_event` FOREIGN KEY (`event_id`) REFERENCES `pnl_events` (`id`) ON DELETE CASCADE

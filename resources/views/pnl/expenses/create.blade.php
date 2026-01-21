@@ -16,8 +16,8 @@
             
             <!-- Expense Details -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-receipt me-2 text-danger"></i>Expense Details</h6>
+                <div class="card-header bg-danger text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-receipt me-2"></i>Expense Details</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -88,8 +88,8 @@
 
             <!-- Amount & Tax -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-pound-sign me-2 text-success"></i>Amount & Tax</h6>
+                <div class="card-header bg-success text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-pound-sign me-2"></i>Amount & Tax</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -168,8 +168,8 @@
 
             <!-- Payment Settings -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-credit-card me-2 text-info"></i>Payment Settings</h6>
+                <div class="card-header bg-info text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Settings</h6>
                 </div>
                 <div class="card-body">
                     <input type="hidden" name="create_payment" value="1">
@@ -203,8 +203,8 @@
 
             <!-- Notification Settings -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-bell me-2 text-warning"></i>Notifications</h6>
+                <div class="card-header bg-warning text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">

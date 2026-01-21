@@ -197,6 +197,7 @@ class DashboardController extends Controller
             'profitStatus',
             'totalTicketsSold',
             'expenseByCategory',
+            'expenseByVendorType',
             'revenueByTicketType',
             'paymentSummary',
             'upcomingPayments',

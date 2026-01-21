@@ -96,8 +96,8 @@
 
             <!-- Amount & Tax -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-pound-sign me-2 text-success"></i>Amount & Tax</h6>
+                <div class="card-header bg-success text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-pound-sign me-2"></i>Amount & Tax</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">

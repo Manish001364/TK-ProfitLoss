@@ -39,7 +39,7 @@
                             <label class="form-label small">Service Type <span class="text-danger">*</span></label>
                             <select name="type" class="form-select @error('type') is-invalid @enderror" required>
                                 @foreach($vendorTypes as $key => $label)
-                                    <option value="{{ $key }}" {{ old('type', $vendor->type) === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                    <option value="{{ $key }}" {{ old('type', $vendor->service_type_id ?? $vendor->type) === $key ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
                             @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror

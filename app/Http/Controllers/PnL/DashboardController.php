@@ -345,9 +345,9 @@ class DashboardController extends Controller
         // Calculate projections for timeline chart
         $projectionData = $this->calculateProjections($userId, (int) $period);
 
-        // Cash flow summary
+        // Cash flow summary - use current_revenue (actual ticket sales) instead of expected_revenue
         $totalProjectedOutflow = $upcomingPaymentsList->sum('amount');
-        $totalProjectedInflow = $upcomingEvents->sum('expected_revenue');
+        $totalProjectedInflow = $upcomingEvents->sum('current_revenue');
 
         return view('pnl.dashboard.cashflow', compact(
             'upcoming7',

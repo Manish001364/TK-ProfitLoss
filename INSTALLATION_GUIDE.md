@@ -1,12 +1,11 @@
 # P&L Module Installation Guide for TicketKart
+## Version 2.0 - Fresh Install
 
 Follow these steps to add the P&L module to your Laravel project.
 
 ---
 
 ## Step 1: Install Required Packages
-
-Open terminal in your project root and run:
 
 ```bash
 composer require maatwebsite/excel
@@ -21,7 +20,7 @@ composer require barryvdh/laravel-dompdf
 
 ## Step 2: Copy Module Files
 
-Copy these folders/files from this package to your project:
+Extract the zip and copy these folders/files to your Laravel project:
 
 | Source | Destination |
 |--------|-------------|
@@ -65,29 +64,25 @@ require __DIR__.'/pnl.php';
 
 ## Step 5: Create Database Tables
 
-### Option A: Run Raw SQL (Recommended - No Migration Conflicts)
+Copy the contents of `SQL_TABLES.sql` and run directly in your MySQL database.
 
-Copy the contents of `SQL_TABLES.sql` and run directly in your MySQL database (via phpMyAdmin, MySQL Workbench, or command line).
-
+**Via Command Line:**
 ```bash
 mysql -u your_username -p your_database < SQL_TABLES.sql
 ```
 
-Or copy-paste the SQL directly into phpMyAdmin's SQL tab.
+**Via phpMyAdmin:**
+1. Open phpMyAdmin
+2. Select your database
+3. Click "SQL" tab
+4. Paste the contents of `SQL_TABLES.sql`
+5. Click "Go"
 
-### Option B: Use Laravel Migrations
-
-Copy `database/migrations/*` to your project's migrations folder, then run:
-
-```bash
-php artisan migrate
-```
-
-### Tables Created (9 total - all prefixed with `pnl_`):
+### Tables Created (9 total):
 
 | Table | Description |
 |-------|-------------|
-| `pnl_settings` | Per-user settings (VAT rate, invoice prefix, etc.) |
+| `pnl_settings` | Per-user settings (VAT rate, invoice prefix) |
 | `pnl_events` | Event details |
 | `pnl_vendors` | Artists/DJs/Vendors |
 | `pnl_expense_categories` | Expense categories |
@@ -97,18 +92,13 @@ php artisan migrate
 | `pnl_attachments` | File uploads |
 | `pnl_audit_logs` | Change history |
 
-**Note:** All tables are prefixed with `pnl_` - they will NOT touch your existing tables.
-
 ---
 
-## Step 6: Add Menu Links to Sidebar
+## Step 6: Add Menu Link to Sidebar
 
-Edit `resources/views/customer/sidemenu.blade.php` and add the P&L menu link.
+Edit `resources/views/customer/sidemenu.blade.php` and add the P&L menu:
 
-### Option 1: Simple Link
-
-Find a suitable location in the sidebar (e.g., after the Finance menu item) and add:
-
+### Simple Link:
 ```php
 <li class="menuLi d-flex align-items-center {{ request()->is('pnl/*') ? 'leftMenuActive' : '' }}">
     <a href="{{ route('pnl.dashboard') }}" class="d-flex icon-color gap-2">
@@ -120,8 +110,7 @@ Find a suitable location in the sidebar (e.g., after the Finance menu item) and 
 </li>
 ```
 
-### Option 2: Dropdown Menu with Sub-items
-
+### Dropdown Menu (Recommended):
 ```php
 @php
     $pnlActive = request()->is('pnl/*') || request()->routeIs('pnl.*');
@@ -183,90 +172,59 @@ You should see the P&L Dashboard!
 
 ---
 
-## Step 10: Configure Your Settings
+## Step 10: Configure Settings
 
 Visit: `your-domain.com/pnl/settings`
 
 Configure:
-- **Default Tax Rate** - Set your default VAT percentage (UK standard is 20%)
-- **Invoice Prefix** - Customize your invoice number prefix
-- **Company Details** - Add company info for invoice headers
-- **Email Notifications** - Choose when to notify vendors
+- **Default Tax Rate** - Set your VAT % (UK default: 20%)
+- **Invoice Prefix** - Customize prefix (e.g., INV, TK)
+- **Company Details** - For invoice headers
+- **Email Notifications** - When to notify vendors
 
 ---
 
-## Currency Configuration
+## Features
 
-The module uses **GBP (£)** as the default currency. All monetary values are displayed with the £ symbol.
+### Tax/VAT System
+- Per-organiser default VAT rate
+- Toggle taxable/non-taxable per expense
+- Tax calculated automatically
+- Shown on PDF invoices
 
-If you need to change the currency:
-1. Search and replace `£` in the view files (`resources/views/pnl/`)
-2. Update the locale in the JavaScript functions (search for `en-GB`)
+### Invoice Numbers
+- Format: `INV-YYYYMM-XXX` (e.g., INV-202501-001)
+- Auto-generated
+- Editable by user
+- Configurable prefix
+
+### Revenue Tracking
+- Ticket sales by type
+- Quick-add buttons for more tickets sold
+- Automatic calculations:
+  - Gross Revenue = Ticket Price × Tickets Sold
+  - Net Revenue = Gross - Fees - Taxes
+  - Final Revenue = Net - Refunds
+
+### Email Notifications
+- Send invoice to vendor
+- Notify on payment status change
+- Enable/disable per expense
 
 ---
 
 ## Available Routes
 
-### Main Pages
 | Route | URL | Description |
 |-------|-----|-------------|
-| `pnl.dashboard` | `/pnl/dashboard` | Main P&L Dashboard |
-| `pnl.settings.index` | `/pnl/settings` | Settings Page |
-
-### Events
-| Route | URL | Description |
-|-------|-----|-------------|
+| `pnl.dashboard` | `/pnl/dashboard` | Main Dashboard |
+| `pnl.settings.index` | `/pnl/settings` | Settings |
 | `pnl.events.index` | `/pnl/events` | Events List |
-| `pnl.events.create` | `/pnl/events/create` | Create Event |
-| `pnl.events.show` | `/pnl/events/{id}` | Event Details |
-
-### Vendors & Artists
-| Route | URL | Description |
-|-------|-----|-------------|
 | `pnl.vendors.index` | `/pnl/vendors` | Vendors List |
-| `pnl.vendors.create` | `/pnl/vendors/create` | Add Vendor/Artist |
-| `pnl.vendors.show` | `/pnl/vendors/{id}` | Vendor Details |
-
-### Expenses
-| Route | URL | Description |
-|-------|-----|-------------|
 | `pnl.expenses.index` | `/pnl/expenses` | Expenses List |
-| `pnl.expenses.create` | `/pnl/expenses/create` | Add Expense |
-| `pnl.expenses.show` | `/pnl/expenses/{id}` | Expense Details |
-| `pnl.expenses.pdf` | `/pnl/expenses/{id}/pdf` | Download Invoice PDF |
-| `pnl.expenses.email` | `POST /pnl/expenses/{id}/email` | Email Invoice to Vendor |
-
-### Revenue
-| Route | URL | Description |
-|-------|-----|-------------|
 | `pnl.revenues.index` | `/pnl/revenues` | Revenue List |
-| `pnl.revenues.create` | `/pnl/revenues/create` | Add Revenue Entry |
-| `pnl.revenues.edit` | `/pnl/revenues/{id}/edit` | Edit/Add More Tickets |
-
-### Payments
-| Route | URL | Description |
-|-------|-----|-------------|
-| `pnl.payments.index` | `/pnl/payments` | All Payments |
+| `pnl.payments.index` | `/pnl/payments` | Payments List |
 | `pnl.payments.upcoming` | `/pnl/payments/upcoming` | Upcoming Payments |
-| `pnl.payments.overdue` | `/pnl/payments/overdue` | Overdue Payments |
-
-### Categories
-| Route | URL | Description |
-|-------|-----|-------------|
-| `pnl.categories.index` | `/pnl/categories` | Expense Categories |
-
----
-
-## Invoice Number Format
-
-Invoices use the format: `{PREFIX}-{YYYYMM}-{SEQUENCE}`
-
-Examples:
-- `INV-202501-001` (January 2025, first invoice)
-- `INV-202501-002` (January 2025, second invoice)
-- `TK-202502-001` (February 2025, with custom prefix "TK")
-
-You can customize the prefix in Settings.
 
 ---
 
@@ -278,14 +236,12 @@ You can customize the prefix in Settings.
 | View not found | `php artisan view:clear` |
 | Route not found | `php artisan route:clear` |
 | Permission denied | `chmod -R 775 storage bootstrap/cache` |
-| Modal not working | Ensure Bootstrap 5 JS is loaded |
-| Icons not showing | Ensure FontAwesome is loaded |
-| PDF not generating | Ensure `barryvdh/laravel-dompdf` is installed |
-| Email not sending | Check mail configuration in `.env` |
+| PDF not generating | Ensure `barryvdh/laravel-dompdf` installed |
+| Email not sending | Check mail config in `.env` |
 
 ---
 
-## Files Included
+## Files Structure
 
 ```
 ├── app/
@@ -294,32 +250,25 @@ You can customize the prefix in Settings.
 │   ├── Http/Controllers/PnL/ (11 controllers)
 │   ├── Mail/ (2 mailable classes)
 │   ├── Models/PnL/ (9 models)
-│   ├── Policies/ (policy classes)
+│   ├── Policies/
 │   ├── Providers/PnLServiceProvider.php
 │   └── Traits/HasAuditLog.php
-├── database/migrations/ (9 migrations)
 ├── resources/views/pnl/ (all blade views)
 ├── routes/pnl.php
-├── SQL_TABLES.sql (⭐ Raw SQL - use this to avoid migration conflicts)
-├── INSTALLATION_GUIDE.md (this file)
-├── MIGRATION_GUIDE.md (for upgrading from previous versions)
-└── README.md
+├── SQL_TABLES.sql
+└── INSTALLATION_GUIDE.md
 ```
-
----
-
-## Upgrading from Previous Version?
-
-If you already have an older version installed, see `MIGRATION_GUIDE.md` for upgrade instructions.
 
 ---
 
 ## Done!
 
-Your P&L module is now integrated with TicketKart.
+Your P&L module is ready. 
 
-**Quick Links:**
-- Dashboard: `/pnl/dashboard`
-- Settings: `/pnl/settings`
-- Vendors: `/pnl/vendors`
-- Expenses: `/pnl/expenses`
+**Quick Start:**
+1. Go to `/pnl/settings` - Set your VAT rate
+2. Go to `/pnl/events` - Create your first event
+3. Go to `/pnl/vendors` - Add vendors/artists
+4. Go to `/pnl/expenses` - Track expenses
+5. Go to `/pnl/revenues` - Track ticket sales
+6. Go to `/pnl/dashboard` - View your P&L summary

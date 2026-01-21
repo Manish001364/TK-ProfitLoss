@@ -272,12 +272,18 @@ class DashboardController extends Controller
     public function cashFlow(Request $request)
     {
         $userId = auth()->id();
-        $period = $request->get('period', 30); // days
+        $period = $request->get('period', '30'); // days: 30, 60, 90
+
+        // Get settings for currency
+        $settings = \App\Models\PnL\PnlSettings::getOrCreate($userId);
+        $currencySymbol = $settings->currency_symbol;
 
         // Upcoming payments grouped by period
         $upcoming7 = PnlPayment::forUser($userId)->upcoming(7)->sum('amount') ?? 0;
         $upcoming14 = PnlPayment::forUser($userId)->upcoming(14)->sum('amount') ?? 0;
         $upcoming30 = PnlPayment::forUser($userId)->upcoming(30)->sum('amount') ?? 0;
+        $upcoming60 = PnlPayment::forUser($userId)->upcoming(60)->sum('amount') ?? 0;
+        $upcoming90 = PnlPayment::forUser($userId)->upcoming(90)->sum('amount') ?? 0;
 
         // Outstanding (all pending/scheduled)
         $outstanding = PnlPayment::forUser($userId)->pending()->sum('amount') ?? 0;
@@ -285,12 +291,133 @@ class DashboardController extends Controller
         // Overdue
         $overdue = PnlPayment::forUser($userId)->overdue()->sum('amount') ?? 0;
 
+        // Get detailed upcoming payments
+        $upcomingPaymentsList = PnlPayment::forUser($userId)
+            ->whereIn('status', ['pending', 'scheduled'])
+            ->where(function ($q) {
+                $q->whereNull('scheduled_date')
+                    ->orWhere('scheduled_date', '>=', now()->toDateString());
+            })
+            ->with(['expense.event', 'vendor'])
+            ->orderBy('scheduled_date')
+            ->get()
+            ->map(function ($payment) {
+                $daysUntil = $payment->scheduled_date ? now()->diffInDays($payment->scheduled_date, false) : null;
+                return [
+                    'id' => $payment->id,
+                    'vendor_name' => $payment->vendor?->display_name ?? 'Unknown Vendor',
+                    'event_name' => $payment->expense?->event?->name ?? 'Unknown Event',
+                    'amount' => $payment->amount,
+                    'scheduled_date' => $payment->scheduled_date,
+                    'days_until' => $daysUntil,
+                    'status' => $payment->status,
+                    'urgency' => $daysUntil !== null ? ($daysUntil <= 7 ? 'high' : ($daysUntil <= 14 ? 'medium' : 'low')) : 'unknown',
+                ];
+            });
+
+        // Get upcoming events with expected revenue
+        $upcomingEvents = PnlEvent::forUser($userId)
+            ->upcoming()
+            ->with(['revenues', 'expenses'])
+            ->orderBy('event_date')
+            ->limit(10)
+            ->get()
+            ->map(function ($event) {
+                return [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'date' => $event->event_date,
+                    'expected_revenue' => $event->expected_revenue ?? 0,
+                    'current_revenue' => $event->total_revenue,
+                    'total_expenses' => $event->total_expenses,
+                    'projected_profit' => ($event->expected_revenue ?? $event->total_revenue) - $event->total_expenses,
+                    'days_until' => now()->diffInDays($event->event_date, false),
+                ];
+            });
+
+        // Calculate projections for timeline chart
+        $projectionData = $this->calculateProjections($userId, (int) $period);
+
+        // Cash flow summary
+        $totalProjectedOutflow = $upcomingPaymentsList->sum('amount');
+        $totalProjectedInflow = $upcomingEvents->sum('expected_revenue');
+
         return view('pnl.dashboard.cashflow', compact(
             'upcoming7',
             'upcoming14',
             'upcoming30',
+            'upcoming60',
+            'upcoming90',
             'outstanding',
-            'overdue'
+            'overdue',
+            'upcomingPaymentsList',
+            'upcomingEvents',
+            'projectionData',
+            'totalProjectedOutflow',
+            'totalProjectedInflow',
+            'period',
+            'currencySymbol',
+            'settings'
         ));
+    }
+
+    /**
+     * Calculate cash flow projections for chart
+     */
+    private function calculateProjections($userId, $days = 30): array
+    {
+        $labels = [];
+        $outflows = [];
+        $inflows = [];
+        $cumulative = [];
+        $runningTotal = 0;
+
+        // Get all scheduled payments
+        $payments = PnlPayment::forUser($userId)
+            ->whereIn('status', ['pending', 'scheduled'])
+            ->whereNotNull('scheduled_date')
+            ->where('scheduled_date', '>=', now()->toDateString())
+            ->where('scheduled_date', '<=', now()->addDays($days)->toDateString())
+            ->select('scheduled_date', DB::raw('SUM(amount) as total'))
+            ->groupBy('scheduled_date')
+            ->pluck('total', 'scheduled_date')
+            ->toArray();
+
+        // Get expected revenue from upcoming events
+        $eventRevenues = PnlEvent::forUser($userId)
+            ->where('event_date', '>=', now()->toDateString())
+            ->where('event_date', '<=', now()->addDays($days)->toDateString())
+            ->select('event_date', DB::raw('SUM(COALESCE(expected_revenue, 0)) as total'))
+            ->groupBy('event_date')
+            ->pluck('total', 'event_date')
+            ->toArray();
+
+        // Build daily projections
+        for ($i = 0; $i <= $days; $i += 7) { // Weekly intervals for cleaner chart
+            $date = now()->addDays($i);
+            $dateStr = $date->format('Y-m-d');
+            $labels[] = $date->format('M d');
+
+            // Sum payments for this week
+            $weekOutflow = 0;
+            $weekInflow = 0;
+            for ($j = 0; $j < 7 && ($i + $j) <= $days; $j++) {
+                $checkDate = now()->addDays($i + $j)->format('Y-m-d');
+                $weekOutflow += $payments[$checkDate] ?? 0;
+                $weekInflow += $eventRevenues[$checkDate] ?? 0;
+            }
+
+            $outflows[] = (float) $weekOutflow;
+            $inflows[] = (float) $weekInflow;
+            $runningTotal += ($weekInflow - $weekOutflow);
+            $cumulative[] = (float) $runningTotal;
+        }
+
+        return [
+            'labels' => $labels,
+            'outflows' => $outflows,
+            'inflows' => $inflows,
+            'cumulative' => $cumulative,
+        ];
     }
 }

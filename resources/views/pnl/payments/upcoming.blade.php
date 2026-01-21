@@ -61,8 +61,8 @@
                                     @foreach($payments->get($key) as $payment)
                                         <tr>
                                             <td class="border-0">
-                                                <strong>{{ $payment->expense->event->name ?? 'Unknown Event' }}</strong><br>
-                                                <small class="text-muted">{{ $payment->expense->title ?? 'Unknown Expense' }}</small>
+                                                <strong>{{ $payment->expense?->event?->name ?? 'Unknown Event' }}</strong><br>
+                                                <small class="text-muted">{{ $payment->expense?->title ?? 'No expense linked' }}</small>
                                             </td>
                                             <td class="border-0 small">{{ $payment->vendor?->display_name ?? 'Not assigned' }}</td>
                                             <td class="border-0 text-end"><strong>£{{ number_format($payment->amount, 0) }}</strong></td>

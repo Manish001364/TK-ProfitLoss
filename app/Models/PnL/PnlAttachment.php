@@ -84,11 +84,6 @@ class PnlAttachment extends Model
     }
 
     // Scopes
-    public function scopeForUser($query, $userId)
-    {
-        return $query->where('user_id', $userId);
-    }
-
     public function scopeOfType($query, $type)
     {
         return $query->where('type', $type);

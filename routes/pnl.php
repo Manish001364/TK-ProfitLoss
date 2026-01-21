@@ -59,6 +59,9 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
     // Revenue
     Route::resource('revenues', RevenueController::class);
 
+    // Service Types (Vendor Categories)
+    Route::resource('service-types', ServiceTypeController::class)->except(['show']);
+
     // Attachments
     Route::post('attachments', [AttachmentController::class, 'store'])->name('attachments.store');
     Route::get('attachments/{attachment}/download', [AttachmentController::class, 'download'])->name('attachments.download');

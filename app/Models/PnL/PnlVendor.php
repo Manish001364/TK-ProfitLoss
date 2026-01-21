@@ -21,6 +21,7 @@ class PnlVendor extends Model
         'full_name',
         'business_name',
         'type',
+        'service_type_id',
         'email',
         'phone_country_code',
         'phone',
@@ -120,6 +121,36 @@ class PnlVendor extends Model
     public function auditLogs(): MorphMany
     {
         return $this->morphMany(PnlAuditLog::class, 'auditable');
+    }
+
+    /**
+     * Get the service type object for this vendor
+     */
+    public function getServiceTypeAttribute()
+    {
+        if (!$this->service_type_id) {
+            return null;
+        }
+        
+        return PnlServiceType::getBySlugOrId(auth()->id(), $this->service_type_id);
+    }
+
+    /**
+     * Get display name for the service type
+     */
+    public function getServiceTypeNameAttribute(): string
+    {
+        // First try from service_type_id
+        if ($this->service_type_id) {
+            $serviceType = PnlServiceType::getBySlugOrId(auth()->id(), $this->service_type_id);
+            if ($serviceType) {
+                return $serviceType->name;
+            }
+        }
+        
+        // Fallback to type ENUM field
+        $types = self::getTypes();
+        return $types[$this->type] ?? ucfirst($this->type ?? 'Vendor');
     }
 
     // Calculated Attributes

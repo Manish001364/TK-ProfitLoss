@@ -1,11 +1,16 @@
 # P&L Module Installation Guide for TicketKart
-## Version 2.6 - Service Types, Multi-Currency, International Phone & Cash Flow
+## Version 2.7 - Bug Fixes: Cash Flow Calculations & Expense Currency
 
 Follow these steps to add the P&L module to your Laravel project.
 
 ---
 
-## What's New in v2.6
+## What's New in v2.7
+
+- **CRITICAL FIX: Cash Flow Calculations** - Profit/Loss now correctly calculated from actual ticket sales revenue (not manual estimates)
+- **Expense Currency Support** - Each expense can now store its own currency code
+
+## What's in v2.6
 
 - **Service Types Management** - 13 system defaults + custom vendor categories
 - **Default Service Types**: Artist, DJ, Venue, Catering, Security, Equipment Hire, Marketing, Staff, Transport, Photography, Decor, MC/Host, Other

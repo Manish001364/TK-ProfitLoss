@@ -23,6 +23,7 @@ use App\Models\PnL\PnlRevenue;
 use App\Policies\PnlEventPolicy;
 use App\Policies\PnlVendorPolicy;
 use App\Policies\PnlExpensePolicy;
+use App\Policies\PnlExpenseCategoryPolicy;
 use App\Policies\PnlRevenuePolicy;
 use App\Policies\PnlPaymentPolicy;
 
@@ -45,6 +46,7 @@ class PnLServiceProvider extends ServiceProvider
         Gate::policy(PnlEvent::class, PnlEventPolicy::class);
         Gate::policy(PnlVendor::class, PnlVendorPolicy::class);
         Gate::policy(PnlExpense::class, PnlExpensePolicy::class);
+        Gate::policy(PnlExpenseCategory::class, PnlExpenseCategoryPolicy::class);
         Gate::policy(PnlRevenue::class, PnlRevenuePolicy::class);
         Gate::policy(PnlPayment::class, PnlPaymentPolicy::class);
     }

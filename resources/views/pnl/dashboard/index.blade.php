@@ -253,7 +253,7 @@
         </div>
 
         <!-- Recent Events -->
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">Recent Events Performance</h6>
                 <a href="{{ route('pnl.events.index') }}" class="btn btn-sm btn-outline-secondary">View All Events</a>
@@ -302,6 +302,69 @@
                                         <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
                                         <p class="text-muted mb-2">No events yet</p>
                                         <a href="{{ route('pnl.events.create') }}" class="btn btn-danger btn-sm">Create your first event</a>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor Summary -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-users me-2"></i>Vendors & Artists</h6>
+                <div class="d-flex gap-2">
+                    <div class="input-group input-group-sm" style="width: 200px;">
+                        <input type="text" class="form-control" id="vendorSearch" placeholder="Search vendors...">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    </div>
+                    <a href="{{ route('pnl.vendors.create') }}" class="btn btn-sm btn-success"><i class="fas fa-plus"></i> Add</a>
+                    <a href="{{ route('pnl.vendors.index') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="vendorTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="border-0">Vendor/Artist</th>
+                                <th class="border-0">Type</th>
+                                <th class="border-0">Email</th>
+                                <th class="border-0 text-end">Total Paid</th>
+                                <th class="border-0 text-end">Pending</th>
+                                <th class="border-0 text-center">Payments</th>
+                                <th class="border-0"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($vendorSummary as $vendor)
+                                <tr class="vendor-row">
+                                    <td class="border-0">
+                                        <strong>{{ $vendor['name'] }}</strong>
+                                    </td>
+                                    <td class="border-0">
+                                        <span class="badge bg-info-subtle text-info">{{ ucfirst($vendor['type']) }}</span>
+                                    </td>
+                                    <td class="border-0 small text-muted">{{ $vendor['email'] ?? '-' }}</td>
+                                    <td class="border-0 text-end text-success fw-bold">£{{ number_format($vendor['total_paid'], 0) }}</td>
+                                    <td class="border-0 text-end text-warning">£{{ number_format($vendor['total_pending'], 0) }}</td>
+                                    <td class="border-0 text-center">
+                                        <span class="badge bg-secondary">{{ $vendor['payments_count'] }}</span>
+                                    </td>
+                                    <td class="border-0">
+                                        <a href="{{ route('pnl.vendors.show', $vendor['id']) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 border-0">
+                                        <i class="fas fa-user-plus fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted mb-2">No vendors yet</p>
+                                        <a href="{{ route('pnl.vendors.create') }}" class="btn btn-success btn-sm">Add your first vendor</a>
                                     </td>
                                 </tr>
                             @endforelse

@@ -116,6 +116,8 @@ class PaymentController extends Controller
             'actual_paid_date' => 'nullable|date',
             'payment_method' => ['nullable', Rule::in(array_keys(PnlPayment::getPaymentMethods()))],
             'transaction_reference' => 'nullable|string|max:255',
+            'send_vendor_email' => 'boolean',
+            'send_organiser_email' => 'boolean',
         ]);
 
         $oldStatus = $payment->status;
@@ -129,9 +131,42 @@ class PaymentController extends Controller
 
         $payment->logStatusChange($oldStatus, 'paid', 'Marked as paid');
 
+        // Load relationships for email
+        $payment->load(['expense.event', 'vendor']);
+
+        $emailsSent = [];
+
+        // Send email to vendor if they have an email
+        $sendVendorEmail = $request->boolean('send_vendor_email', true);
+        if ($sendVendorEmail && $payment->vendor && $payment->vendor->email) {
+            try {
+                Mail::to($payment->vendor->email)->send(new PaymentConfirmationMail($payment, 'vendor'));
+                $emailsSent[] = 'vendor (' . $payment->vendor->email . ')';
+            } catch (\Exception $e) {
+                Log::error('Failed to send payment confirmation to vendor: ' . $e->getMessage());
+            }
+        }
+
+        // Send email to organiser (logged-in user)
+        $sendOrganiserEmail = $request->boolean('send_organiser_email', true);
+        $user = auth()->user();
+        if ($sendOrganiserEmail && $user && $user->email) {
+            try {
+                Mail::to($user->email)->send(new PaymentConfirmationMail($payment, 'organiser'));
+                $emailsSent[] = 'organiser (' . $user->email . ')';
+            } catch (\Exception $e) {
+                Log::error('Failed to send payment confirmation to organiser: ' . $e->getMessage());
+            }
+        }
+
+        $successMessage = 'Payment marked as paid!';
+        if (!empty($emailsSent)) {
+            $successMessage .= ' Confirmation emails sent to: ' . implode(', ', $emailsSent);
+        }
+
         return redirect()
             ->back()
-            ->with('success', 'Payment marked as paid!');
+            ->with('success', $successMessage);
     }
 
     public function sendReminder(PnlPayment $payment)

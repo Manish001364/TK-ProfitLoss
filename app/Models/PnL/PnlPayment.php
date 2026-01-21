@@ -31,6 +31,7 @@ class PnlPayment extends Model
         'reminder_on_due_date',
         'last_reminder_sent_at',
         'reminder_count',
+        'send_email_to_vendor',
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class PnlPayment extends Model
         'actual_paid_date' => 'date',
         'reminder_enabled' => 'boolean',
         'reminder_on_due_date' => 'boolean',
+        'send_email_to_vendor' => 'boolean',
         'last_reminder_sent_at' => 'datetime',
     ];
 

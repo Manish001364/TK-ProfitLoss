@@ -42,7 +42,8 @@ class VendorController extends Controller
     public function create()
     {
         $vendorTypes = PnlVendor::getTypes();
-        return view('pnl.vendors.create', compact('vendorTypes'));
+        $countries = PnlVendor::getCountries();
+        return view('pnl.vendors.create', compact('vendorTypes', 'countries'));
     }
 
     public function store(Request $request)

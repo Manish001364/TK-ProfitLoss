@@ -60,6 +60,9 @@
             </div>
         </div>
 
+        {{-- Include Smart Tips & Insights --}}
+        @include('pnl.partials.tips')
+
         <!-- Summary Cards - Collapsible Section -->
         <div class="collapsible-section mb-4" data-section="summary-cards">
             <div class="section-header d-flex justify-content-between align-items-center mb-3 cursor-pointer" onclick="toggleSection('summary-cards')">

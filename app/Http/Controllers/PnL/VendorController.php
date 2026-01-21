@@ -93,7 +93,7 @@ class VendorController extends Controller
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
             'business_name' => 'nullable|string|max:255',
-            'type' => 'required|string|in:' . implode(',', array_keys(PnlVendor::getTypes())),
+            'type' => 'required|string|max:100', // Changed: Accept any string, validate manually
             'phone_country_code' => 'nullable|string|max:10',
             'phone' => 'required|string|max:50',
             'email' => 'nullable|email|max:255',
@@ -122,6 +122,15 @@ class VendorController extends Controller
             'preferred_payment_cycle' => 'nullable|string|max:50',
             'is_active' => 'boolean',
         ]);
+
+        // Validate service type exists (system or user)
+        $serviceTypeExists = $this->validateServiceTypeExists($validated['type'], $userId);
+        if (!$serviceTypeExists) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['type' => 'The selected service type is invalid. Please select a valid type from the dropdown.']);
+        }
 
         // Check for duplicates
         $duplicateCheck = $this->checkDuplicateVendor($userId, $validated['full_name'], $validated['email'] ?? null);

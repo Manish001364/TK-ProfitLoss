@@ -1,4 +1,19 @@
 <?php
+/**
+ * Expense Category Controller
+ * 
+ * Manages user's custom expense categories.
+ * System default categories are read-only and managed separately.
+ * 
+ * Routes:
+ * - GET  /pnl/categories/create  -> create()
+ * - POST /pnl/categories         -> store()
+ * - GET  /pnl/categories/{id}/edit -> edit()
+ * - PUT  /pnl/categories/{id}    -> update()
+ * - DELETE /pnl/categories/{id}  -> destroy()
+ * 
+ * Note: index() redirects to combined Configuration page
+ */
 
 namespace App\Http\Controllers\PnL;
 
@@ -6,64 +21,28 @@ use App\Http\Controllers\Controller;
 use App\Models\PnL\PnlExpenseCategory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
 
 class ExpenseCategoryController extends Controller
 {
+    /**
+     * Redirect to combined Configuration page
+     */
     public function index()
     {
-        $userId = auth()->id();
-        
-        // Get system default categories (read-only)
-        $systemCategories = collect();
-        try {
-            $systemCategories = DB::table('pnl_expense_categories_system')
-                ->where('is_active', true)
-                ->orderBy('sort_order')
-                ->get()
-                ->map(function ($item) {
-                    $item->is_system = true;
-                    $item->expenses_count = DB::table('pnl_expenses')
-                        ->where('category_id', $item->id)
-                        ->count();
-                    return $item;
-                });
-        } catch (\Exception $e) {
-            // Table might not exist yet
-        }
-
-        // Get user's custom categories
-        $userCategories = PnlExpenseCategory::where('user_id', $userId)
-            ->withCount('expenses')
-            ->ordered()
-            ->get()
-            ->map(function ($item) {
-                $item->is_system = false;
-                return $item;
-            });
-
-        // Also get legacy categories with NULL user_id (system defaults from old schema)
-        $legacyDefaults = PnlExpenseCategory::whereNull('user_id')
-            ->where('is_active', true)
-            ->withCount('expenses')
-            ->ordered()
-            ->get()
-            ->map(function ($item) {
-                $item->is_system = true;
-                return $item;
-            });
-
-        // Combine all categories (system first, then user)
-        $categories = $systemCategories->merge($legacyDefaults)->merge($userCategories);
-
-        return view('pnl.categories.index', compact('categories', 'systemCategories', 'userCategories'));
+        return redirect()->route('pnl.configuration.index');
     }
 
+    /**
+     * Show form to create a new custom category
+     */
     public function create()
     {
         return view('pnl.categories.create');
     }
 
+    /**
+     * Store a new custom category
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -75,26 +54,47 @@ class ExpenseCategoryController extends Controller
             'icon' => 'nullable|string|max:50',
         ]);
 
-        $validated['user_id'] = auth()->id();
-        $validated['sort_order'] = PnlExpenseCategory::where('user_id', auth()->id())->max('sort_order') + 1;
+        $userId = auth()->id();
+        $validated['user_id'] = $userId;
+        $validated['sort_order'] = PnlExpenseCategory::where('user_id', $userId)->max('sort_order') + 1;
 
-        $category = PnlExpenseCategory::create($validated);
+        PnlExpenseCategory::create($validated);
 
         return redirect()
             ->route('pnl.configuration.index')
             ->with('success', 'Category created successfully!');
     }
 
+    /**
+     * Show form to edit a custom category
+     */
     public function edit(PnlExpenseCategory $category)
     {
         $this->authorize('update', $category);
         
+        // Cannot edit system categories
+        if ($category->user_id === null) {
+            return redirect()
+                ->route('pnl.configuration.index')
+                ->with('error', 'System categories cannot be edited.');
+        }
+
         return view('pnl.categories.edit', compact('category'));
     }
 
+    /**
+     * Update a custom category
+     */
     public function update(Request $request, PnlExpenseCategory $category)
     {
         $this->authorize('update', $category);
+        
+        // Cannot edit system categories
+        if ($category->user_id === null) {
+            return redirect()
+                ->route('pnl.configuration.index')
+                ->with('error', 'System categories cannot be edited.');
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -103,10 +103,7 @@ class ExpenseCategoryController extends Controller
             'default_budget_limit' => 'nullable|numeric|min:0',
             'color' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'icon' => 'nullable|string|max:50',
-            'is_active' => 'boolean',
         ]);
-
-        $validated['is_active'] = $request->boolean('is_active', true);
 
         $category->update($validated);
 
@@ -115,13 +112,25 @@ class ExpenseCategoryController extends Controller
             ->with('success', 'Category updated successfully!');
     }
 
+    /**
+     * Delete a custom category (only if not in use)
+     */
     public function destroy(PnlExpenseCategory $category)
     {
         $this->authorize('delete', $category);
+        
+        // Cannot delete system categories
+        if ($category->user_id === null) {
+            return redirect()
+                ->route('pnl.configuration.index')
+                ->with('error', 'System categories cannot be deleted.');
+        }
 
-        // Check if category has expenses
-        if ($category->expenses()->exists()) {
-            return back()->with('error', 'Cannot delete category with existing expenses.');
+        // Check if category is in use
+        if ($category->expenses()->count() > 0) {
+            return redirect()
+                ->route('pnl.configuration.index')
+                ->with('error', 'Cannot delete category - it has expenses assigned to it.');
         }
 
         $category->delete();
@@ -131,17 +140,23 @@ class ExpenseCategoryController extends Controller
             ->with('success', 'Category deleted successfully!');
     }
 
+    /**
+     * Reorder categories (AJAX)
+     */
     public function reorder(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'categories' => 'required|array',
-            'categories.*' => 'uuid|exists:pnl_expense_categories,id',
+            'categories.*.id' => 'required|string',
+            'categories.*.order' => 'required|integer',
         ]);
 
-        foreach ($request->categories as $index => $categoryId) {
-            PnlExpenseCategory::where('id', $categoryId)
-                ->where('user_id', auth()->id())
-                ->update(['sort_order' => $index]);
+        $userId = auth()->id();
+
+        foreach ($validated['categories'] as $item) {
+            PnlExpenseCategory::where('id', $item['id'])
+                ->where('user_id', $userId)
+                ->update(['sort_order' => $item['order']]);
         }
 
         return response()->json(['success' => true]);

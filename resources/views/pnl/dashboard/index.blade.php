@@ -754,5 +754,23 @@
             updateEventsPerPage();
             updateVendorsPerPage();
         });
+
+        // Chart period filter
+        function updateChartPeriod() {
+            const period = document.getElementById('chartPeriodSelect').value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('chart_period', period);
+            window.location.href = url.toString();
+        }
+
+        // Show walkthrough again
+        function showWalkthroughAgain() {
+            // Remove dismissed flag from localStorage
+            localStorage.removeItem('pnl_walkthrough_dismissed');
+            // Reload page with walkthrough parameter
+            const url = new URL(window.location.href);
+            url.searchParams.set('show_walkthrough', '1');
+            window.location.href = url.toString();
+        }
     </script>
 @endsection

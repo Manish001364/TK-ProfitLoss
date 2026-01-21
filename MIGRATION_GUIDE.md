@@ -6,7 +6,51 @@ If you have already installed a previous version of the P&L module, follow these
 
 ---
 
-## Version 2.6 Changes (January 2025) - LATEST
+## Version 2.7 Changes (January 2025) - LATEST
+
+### Bug Fixes
+- **CRITICAL: Cash Flow Profit/Loss Calculation Fixed** - Cash flow now correctly calculates profit/loss from actual ticket sales revenue minus expenses (not from `expected_revenue` estimates)
+- **Expense Currency Support** - Expenses now store currency code separately from events
+
+### Database Migration for v2.7
+
+Run this SQL to add the currency column to expenses:
+
+```sql
+-- ==============================================
+-- MIGRATION SCRIPT v2.7 - Expense Currency Fix
+-- ==============================================
+
+-- 1. Add currency column to pnl_expenses (if not exists)
+ALTER TABLE `pnl_expenses`
+    ADD COLUMN IF NOT EXISTS `currency` VARCHAR(3) DEFAULT 'GBP' COMMENT 'Currency code for this expense' AFTER `amount`;
+
+-- 2. Update existing expenses to use their event's currency (optional, maintains backward compatibility)
+-- This is optional - existing expenses will default to GBP if this is not run
+UPDATE `pnl_expenses` e
+    JOIN `pnl_events` ev ON e.event_id = ev.id
+    SET e.currency = COALESCE(ev.currency, 'GBP')
+    WHERE e.currency IS NULL OR e.currency = '';
+
+-- ==============================================
+-- END OF v2.7 MIGRATION
+-- ==============================================
+```
+
+### Important Notes for v2.7
+
+1. **Cash Flow Calculations**: The Cash Flow projections page now correctly shows:
+   - **Profit** when `total_revenue > total_expenses`
+   - **Loss** when `total_revenue < total_expenses`
+   - **Break-even** when they are equal
+   
+   Previously, it was incorrectly using `expected_revenue` (a manual estimate field) instead of actual calculated revenue.
+
+2. **Expense Currency**: Each expense can now have its own currency code. If not specified, it defaults to the user's default currency from settings.
+
+---
+
+## Version 2.6 Changes (January 2025)
 
 ### New Features
 - **Service Types Management** - System default + custom vendor service types (like expense categories)

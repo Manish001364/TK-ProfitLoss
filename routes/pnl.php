@@ -24,6 +24,7 @@ use App\Http\Controllers\PnL\ExportController;
 use App\Http\Controllers\PnL\AuditLogController;
 use App\Http\Controllers\PnL\SettingsController;
 use App\Http\Controllers\PnL\ServiceTypeController;
+use App\Http\Controllers\PnL\ConfigurationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
@@ -41,7 +42,10 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
     Route::get('vendors/export', [VendorController::class, 'export'])->name('vendors.export');
     Route::resource('vendors', VendorController::class);
 
-    // Expense Categories
+    // Configuration - Combined Categories & Service Types page
+    Route::get('configuration', [ConfigurationController::class, 'index'])->name('configuration.index');
+
+    // Expense Categories (keep individual routes for create/edit/delete)
     Route::post('categories/reorder', [ExpenseCategoryController::class, 'reorder'])->name('categories.reorder');
     Route::resource('categories', ExpenseCategoryController::class)->except(['show']);
 
@@ -60,7 +64,7 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
     // Revenue
     Route::resource('revenues', RevenueController::class);
 
-    // Service Types (Vendor Categories)
+    // Service Types (keep individual routes for create/edit/delete)
     Route::resource('service-types', ServiceTypeController::class)->except(['show']);
 
     // Attachments

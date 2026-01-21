@@ -214,27 +214,65 @@
                                 <th>Expense</th>
                                 <th>Amount</th>
                                 <th>Status</th>
-                                <th>Scheduled</th>
-                                <th>Paid Date</th>
+                                <th>Date</th>
+                                <th>Invoice</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($payments as $payment)
                                 <tr>
-                                    <td>{{ $payment->expense->event->name ?? 'N/A' }}</td>
-                                    <td>{{ $payment->expense->title ?? 'N/A' }}</td>
+                                    <td>{{ $payment->expense?->event?->name ?? 'N/A' }}</td>
+                                    <td>
+                                        @if($payment->expense)
+                                            <a href="{{ route('pnl.expenses.show', $payment->expense) }}" class="text-dark">
+                                                {{ $payment->expense->title }}
+                                            </a>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
                                     <td>£{{ number_format($payment->amount, 0) }}</td>
                                     <td>
                                         <span class="badge bg-{{ $payment->status === 'paid' ? 'success' : ($payment->status === 'scheduled' ? 'warning' : 'secondary') }}">
                                             {{ ucfirst($payment->status) }}
                                         </span>
                                     </td>
-                                    <td>{{ $payment->scheduled_date?->format('d M Y') ?? '-' }}</td>
-                                    <td>{{ $payment->actual_paid_date?->format('d M Y') ?? '-' }}</td>
+                                    <td>
+                                        @if($payment->status === 'paid' && $payment->actual_paid_date)
+                                            <small class="text-success"><i class="fas fa-check-circle me-1"></i>{{ $payment->actual_paid_date->format('d M Y') }}</small>
+                                        @elseif($payment->scheduled_date)
+                                            <small class="text-muted"><i class="fas fa-clock me-1"></i>{{ $payment->scheduled_date->format('d M Y') }}</small>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ $payment->expense?->invoice_number ?? '-' }}</small>
+                                    </td>
+                                    <td>
+                                        @if($payment->expense)
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ route('pnl.expenses.pdf', $payment->expense) }}" class="btn btn-outline-danger" title="Download PDF Invoice">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                                @if($vendor->email)
+                                                    <button type="button" class="btn btn-outline-primary" onclick="emailInvoice('{{ $payment->expense->id }}')" title="Email Invoice to {{ $vendor->email }}">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </button>
+                                                @endif
+                                                <a href="{{ route('pnl.expenses.show', $payment->expense) }}" class="btn btn-outline-secondary" title="View Expense Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </div>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">No payment history</td>
+                                    <td colspan="7" class="text-center text-muted py-4">No payment history</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -243,4 +281,37 @@
             </div>
         </div>
     </div>
+
+    <!-- Email Invoice Modal -->
+    <div class="modal fade" id="emailModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-0 bg-primary text-white">
+                    <h6 class="modal-title"><i class="fas fa-envelope me-1"></i> Email Invoice</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Send invoice to:</p>
+                    <p class="fw-bold">{{ $vendor->email ?? 'No email on file' }}</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="emailForm" method="POST" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-paper-plane me-1"></i> Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('customjs')
+    <script>
+        function emailInvoice(expenseId) {
+            document.getElementById('emailForm').action = '/pnl/expenses/' + expenseId + '/email';
+            var modal = new bootstrap.Modal(document.getElementById('emailModal'));
+            modal.show();
+        }
+    </script>
 @endsection

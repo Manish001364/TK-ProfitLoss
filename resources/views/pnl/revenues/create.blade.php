@@ -1,187 +1,167 @@
 @extends('layouts.organiser_layout')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container py-4" style="max-width: 900px;">
         <!-- Page Header -->
-        <div class="mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-plus-circle"></i> Add Revenue Entry</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Add Revenue Entry</h4>
+                <p class="text-muted small mb-0">Record ticket sales revenue</p>
+            </div>
+            <a href="{{ route('pnl.revenues.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
 
         <form action="{{ route('pnl.revenues.store') }}" method="POST">
             @csrf
             <div class="row">
                 <div class="col-md-8">
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">Revenue Details</h5>
+                    <!-- Revenue Details -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="mb-0"><i class="fas fa-ticket-alt me-2 text-danger"></i>Revenue Details</h6>
                         </div>
                         <div class="card-body">
-                            <div class="row">
+                            <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Event <span class="text-danger">*</span></label>
-                                        <select name="event_id" class="form-control @error('event_id') is-invalid @enderror" required>
-                                            <option value="">Select Event</option>
-                                            @foreach($events as $event)
-                                                <option value="{{ $event->id }}" {{ old('event_id', $selectedEventId) == $event->id ? 'selected' : '' }}>
-                                                    {{ $event->name }} ({{ $event->event_date->format('d M Y') }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('event_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
+                                    <label class="form-label small">Event <span class="text-danger">*</span></label>
+                                    <select name="event_id" class="form-select @error('event_id') is-invalid @enderror" required>
+                                        <option value="">Select Event</option>
+                                        @foreach($events as $event)
+                                            <option value="{{ $event->id }}" {{ old('event_id', $selectedEventId) == $event->id ? 'selected' : '' }}>
+                                                {{ $event->name }} ({{ $event->event_date->format('d M Y') }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('event_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Ticket Type <span class="text-danger">*</span></label>
-                                        <select name="ticket_type" class="form-control @error('ticket_type') is-invalid @enderror" required>
-                                            @foreach($ticketTypes as $key => $label)
-                                                <option value="{{ $key }}" {{ old('ticket_type') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('ticket_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
+                                    <label class="form-label small">Ticket Type <span class="text-danger">*</span></label>
+                                    <select name="ticket_type" class="form-select" required>
+                                        @foreach($ticketTypes as $key => $label)
+                                            <option value="{{ $key }}" {{ old('ticket_type') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label>Custom Ticket Name</label>
-                                <input type="text" name="ticket_name" class="form-control @error('ticket_name') is-invalid @enderror" 
-                                       value="{{ old('ticket_name') }}" placeholder="e.g., Gold Pass, Platinum VIP">
-                                @error('ticket_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="row">
+                                <div class="col-12">
+                                    <label class="form-label small">Custom Ticket Name</label>
+                                    <input type="text" name="ticket_name" class="form-control" value="{{ old('ticket_name') }}" placeholder="e.g., Gold Pass, Platinum VIP">
+                                </div>
                                 <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Ticket Price (₹) <span class="text-danger">*</span></label>
-                                        <input type="number" step="0.01" name="ticket_price" id="ticket_price" 
-                                               class="form-control @error('ticket_price') is-invalid @enderror" 
-                                               value="{{ old('ticket_price', 0) }}" required min="0">
-                                        @error('ticket_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <label class="form-label small">Ticket Price (£) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">£</span>
+                                        <input type="number" step="0.01" name="ticket_price" id="ticket_price" class="form-control" value="{{ old('ticket_price', 0) }}" required min="0">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Tickets Available <span class="text-danger">*</span></label>
-                                        <input type="number" name="tickets_available" id="tickets_available" 
-                                               class="form-control @error('tickets_available') is-invalid @enderror" 
-                                               value="{{ old('tickets_available', 0) }}" required min="0">
-                                        @error('tickets_available')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
+                                    <label class="form-label small">Tickets Available <span class="text-danger">*</span></label>
+                                    <input type="number" name="tickets_available" id="tickets_available" class="form-control" value="{{ old('tickets_available', 0) }}" required min="0">
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Tickets Sold <span class="text-danger">*</span></label>
-                                        <input type="number" name="tickets_sold" id="tickets_sold" 
-                                               class="form-control @error('tickets_sold') is-invalid @enderror" 
-                                               value="{{ old('tickets_sold', 0) }}" required min="0">
-                                        @error('tickets_sold')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
+                                    <label class="form-label small">Tickets Sold <span class="text-danger">*</span></label>
+                                    <input type="number" name="tickets_sold" id="tickets_sold" class="form-control" value="{{ old('tickets_sold', 0) }}" required min="0">
+                                    <small class="text-muted">You can update this later</small>
                                 </div>
-                            </div>
-
-                            <hr>
-                            <h5>Deductions</h5>
-
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Platform Fees (₹)</label>
-                                        <input type="number" step="0.01" name="platform_fees" id="platform_fees" 
-                                               class="form-control @error('platform_fees') is-invalid @enderror" 
-                                               value="{{ old('platform_fees', 0) }}" min="0">
-                                        @error('platform_fees')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                        <small class="text-muted">TicketKart commission</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Payment Gateway Fees (₹)</label>
-                                        <input type="number" step="0.01" name="payment_gateway_fees" id="gateway_fees" 
-                                               class="form-control @error('payment_gateway_fees') is-invalid @enderror" 
-                                               value="{{ old('payment_gateway_fees', 0) }}" min="0">
-                                        @error('payment_gateway_fees')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Taxes (₹)</label>
-                                        <input type="number" step="0.01" name="taxes" id="taxes" 
-                                               class="form-control @error('taxes') is-invalid @enderror" 
-                                               value="{{ old('taxes', 0) }}" min="0">
-                                        @error('taxes')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr>
-                            <h5>Refunds</h5>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Tickets Refunded</label>
-                                        <input type="number" name="tickets_refunded" id="tickets_refunded" 
-                                               class="form-control @error('tickets_refunded') is-invalid @enderror" 
-                                               value="{{ old('tickets_refunded', 0) }}" min="0">
-                                        @error('tickets_refunded')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Refund Amount (₹)</label>
-                                        <input type="number" step="0.01" name="refund_amount" id="refund_amount" 
-                                               class="form-control @error('refund_amount') is-invalid @enderror" 
-                                               value="{{ old('refund_amount', 0) }}" min="0">
-                                        @error('refund_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label>Notes</label>
-                                <textarea name="notes" class="form-control @error('notes') is-invalid @enderror" rows="2">{{ old('notes') }}</textarea>
-                                @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="col-md-4">
-                    <div class="card mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="card-title mb-0"><i class="fas fa-calculator"></i> Revenue Summary</h5>
+                    <!-- Deductions -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="mb-0"><i class="fas fa-minus-circle me-2 text-danger"></i>Deductions</h6>
                         </div>
                         <div class="card-body">
-                            <table class="table table-sm mb-0">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Platform Fees (£)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">£</span>
+                                        <input type="number" step="0.01" name="platform_fees" id="platform_fees" class="form-control" value="{{ old('platform_fees', 0) }}" min="0">
+                                    </div>
+                                    <small class="text-muted">TicketKart commission</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Gateway Fees (£)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">£</span>
+                                        <input type="number" step="0.01" name="payment_gateway_fees" id="gateway_fees" class="form-control" value="{{ old('payment_gateway_fees', 0) }}" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">VAT/Taxes (£)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">£</span>
+                                        <input type="number" step="0.01" name="taxes" id="taxes" class="form-control" value="{{ old('taxes', 0) }}" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Refunds -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h6 class="mb-0"><i class="fas fa-undo me-2 text-warning"></i>Refunds</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Tickets Refunded</label>
+                                    <input type="number" name="tickets_refunded" id="tickets_refunded" class="form-control" value="{{ old('tickets_refunded', 0) }}" min="0">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Refund Amount (£)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">£</span>
+                                        <input type="number" step="0.01" name="refund_amount" id="refund_amount" class="form-control" value="{{ old('refund_amount', 0) }}" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="form-label small">Notes</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="Additional notes...">{{ old('notes') }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Summary Sidebar -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+                        <div class="card-header bg-success text-white py-3">
+                            <h6 class="mb-0"><i class="fas fa-calculator me-1"></i> Revenue Summary</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
                                 <tr>
-                                    <td>Gross Revenue:</td>
-                                    <td class="text-end" id="gross_display">₹0</td>
+                                    <td class="small">Gross Revenue:</td>
+                                    <td class="text-end" id="gross_display">£0</td>
                                 </tr>
                                 <tr class="text-danger">
-                                    <td>- Platform Fees:</td>
-                                    <td class="text-end" id="platform_display">₹0</td>
+                                    <td class="small">- Platform Fees:</td>
+                                    <td class="text-end" id="platform_display">£0</td>
                                 </tr>
                                 <tr class="text-danger">
-                                    <td>- Gateway Fees:</td>
-                                    <td class="text-end" id="gateway_display">₹0</td>
+                                    <td class="small">- Gateway Fees:</td>
+                                    <td class="text-end" id="gateway_display">£0</td>
                                 </tr>
                                 <tr class="text-danger">
-                                    <td>- Taxes:</td>
-                                    <td class="text-end" id="taxes_display">₹0</td>
+                                    <td class="small">- VAT/Taxes:</td>
+                                    <td class="text-end" id="taxes_display">£0</td>
                                 </tr>
-                                <tr>
-                                    <td><strong>Net Revenue:</strong></td>
-                                    <td class="text-end text-success" id="net_display"><strong>₹0</strong></td>
+                                <tr class="border-top">
+                                    <td class="small"><strong>Net Revenue:</strong></td>
+                                    <td class="text-end text-success" id="net_display"><strong>£0</strong></td>
                                 </tr>
                                 <tr class="text-warning">
-                                    <td>- Refunds:</td>
-                                    <td class="text-end" id="refund_display">₹0</td>
+                                    <td class="small">- Refunds:</td>
+                                    <td class="text-end" id="refund_display">£0</td>
                                 </tr>
                                 <tr class="table-success">
-                                    <td><strong>Final Revenue:</strong></td>
-                                    <td class="text-end" id="final_display"><strong>₹0</strong></td>
+                                    <td class="small"><strong>Final Revenue:</strong></td>
+                                    <td class="text-end" id="final_display"><strong>£0</strong></td>
                                 </tr>
                             </table>
                         </div>
@@ -189,15 +169,10 @@
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-footer">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save"></i> Create Revenue Entry
-                    </button>
-                    <a href="{{ route('pnl.revenues.index') }}" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                </div>
+            <!-- Submit -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger"><i class="fas fa-save me-1"></i> Create Revenue Entry</button>
+                <a href="{{ route('pnl.revenues.index') }}" class="btn btn-outline-secondary">Cancel</a>
             </div>
         </form>
     </div>
@@ -207,7 +182,7 @@
     <script>
         $(document).ready(function() {
             function formatCurrency(value) {
-                return '₹' + parseFloat(value || 0).toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                return '£' + parseFloat(value || 0).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0});
             }
 
             function updateSummary() {

@@ -349,7 +349,7 @@
                         phoneInput.placeholder = example;
                     }
                     // Update example text below
-                    const exampleEl = this.closest('.col-md-6').querySelector('[id$="-example"]');
+                    const exampleEl = this.closest('.col-md-6, .col-md-4').querySelector('[id$="-example"]');
                     if (exampleEl && example) {
                         exampleEl.textContent = 'Example: ' + example;
                     }
@@ -402,40 +402,6 @@
                     updatePostcodePlaceholder(this, document.querySelector('input[name="home_postcode"]'));
                 });
             }
-        });
-    </script>
-@endsection
-                    section.style.display = this.checked ? '' : 'none';
-                }.bind(this));
-            });
-            
-            // Postcode patterns and placeholders per country
-            const postcodeConfig = {
-                'United Kingdom': { placeholder: 'SW1A 1AA', hint: 'UK format: SW1A 1AA' },
-                'United States': { placeholder: '12345', hint: 'US format: 12345 or 12345-6789' },
-                'Canada': { placeholder: 'A1A 1A1', hint: 'Canadian format: A1A 1A1' },
-                'India': { placeholder: '110001', hint: 'Indian format: 110001 (6 digits)' },
-                'Germany': { placeholder: '10115', hint: 'German format: 10115 (5 digits)' },
-                'France': { placeholder: '75001', hint: 'French format: 75001 (5 digits)' },
-                'Australia': { placeholder: '2000', hint: 'Australian format: 2000 (4 digits)' },
-                'Ireland': { placeholder: 'D02 Y006', hint: 'Irish Eircode: D02 Y006' },
-                'Netherlands': { placeholder: '1012 AB', hint: 'Dutch format: 1012 AB' },
-                'Spain': { placeholder: '28001', hint: 'Spanish format: 28001 (5 digits)' },
-                'Italy': { placeholder: '00100', hint: 'Italian format: 00100 (5 digits)' },
-                'United Arab Emirates': { placeholder: '', hint: 'UAE: No postcode required' },
-                'Singapore': { placeholder: '018956', hint: 'Singapore format: 018956 (6 digits)' },
-                'default': { placeholder: '', hint: 'Enter postcode/ZIP' }
-            };
-            
-            document.querySelector('#business_country').addEventListener('change', function() {
-                const country = this.value;
-                const postcodeInput = document.querySelector('#business_postcode');
-                const hint = document.querySelector('.postcode-hint');
-                
-                const config = postcodeConfig[country] || postcodeConfig['default'];
-                postcodeInput.placeholder = config.placeholder;
-                hint.textContent = config.hint;
-            });
         });
     </script>
 @endsection

@@ -122,7 +122,6 @@ class VendorController extends Controller
                 ->with('warning', $duplicateCheck);
         }
 
-        $validated['type'] = $validated['type'] ?? 'vendor';
         $validated['user_id'] = $userId;
         $validated['is_active'] = $request->boolean('is_active', true);
 

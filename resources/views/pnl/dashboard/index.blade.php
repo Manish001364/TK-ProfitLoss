@@ -220,7 +220,7 @@
                                             <strong class="small">{{ $payment->vendor?->display_name ?? 'Unknown Vendor' }}</strong>
                                             <span class="badge bg-danger">£{{ number_format($payment->amount, 0) }}</span>
                                         </div>
-                                        <small class="text-muted">{{ $payment->expense->title ?? 'N/A' }}</small>
+                                        <small class="text-muted">{{ $payment->expense?->title ?? 'No expense linked' }}</small>
                                         <br><small class="text-danger">Due: {{ $payment->scheduled_date ? $payment->scheduled_date->format('d M Y') : 'Not set' }}</small>
                                     </div>
                                 @empty
@@ -246,7 +246,7 @@
                                             <strong class="small">{{ $payment->vendor?->display_name ?? 'Unknown Vendor' }}</strong>
                                             <span class="badge bg-info">£{{ number_format($payment->amount, 0) }}</span>
                                         </div>
-                                        <small class="text-muted">{{ $payment->expense->title ?? 'Expense' }}</small>
+                                        <small class="text-muted">{{ $payment->expense?->title ?? 'No expense linked' }}</small>
                                         <br>
                                         <small>Due: {{ $payment->scheduled_date ? $payment->scheduled_date->format('d M Y') : 'Not set' }}
                                             @if($payment->days_until_due !== null)

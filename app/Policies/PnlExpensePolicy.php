@@ -14,7 +14,7 @@ class PnlExpensePolicy
 
     public function view(User $user, PnlExpense $expense): bool
     {
-        return $user->id === $expense->user_id;
+        return (int) $user->id === (int) $expense->user_id;
     }
 
     public function create(User $user): bool
@@ -24,11 +24,11 @@ class PnlExpensePolicy
 
     public function update(User $user, PnlExpense $expense): bool
     {
-        return $user->id === $expense->user_id;
+        return (int) $user->id === (int) $expense->user_id;
     }
 
     public function delete(User $user, PnlExpense $expense): bool
     {
-        return $user->id === $expense->user_id;
+        return (int) $user->id === (int) $expense->user_id;
     }
 }

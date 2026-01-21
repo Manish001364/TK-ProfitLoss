@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS `pnl_settings` (
     `company_name` VARCHAR(255) NULL COMMENT 'Company name for invoices',
     `company_address` TEXT NULL COMMENT 'Company address for invoices',
     `company_vat_number` VARCHAR(50) NULL COMMENT 'VAT registration number',
+    `walkthrough_dismissed` TINYINT(1) DEFAULT 0 COMMENT 'User dismissed the walkthrough',
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),

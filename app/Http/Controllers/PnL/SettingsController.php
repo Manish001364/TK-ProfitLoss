@@ -57,4 +57,24 @@ class SettingsController extends Controller
             ->route('pnl.settings.index')
             ->with('success', 'Invoice sequence reset to ' . $validated['start_number']);
     }
+
+    /**
+     * Dismiss the walkthrough modal
+     */
+    public function dismissWalkthrough(Request $request)
+    {
+        $dontShow = $request->input('dont_show', false);
+        
+        if ($dontShow) {
+            // Store permanently in user settings
+            $userId = auth()->id();
+            $settings = PnlSettings::getOrCreate($userId);
+            $settings->update(['walkthrough_dismissed' => true]);
+        }
+        
+        // Also set session
+        session(['pnl_walkthrough_seen' => true]);
+        
+        return response()->json(['success' => true]);
+    }
 }

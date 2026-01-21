@@ -164,7 +164,10 @@ class VendorController extends Controller
     {
         $this->authorize('view', $vendor);
 
-        $vendor->load(['expenses.event', 'payments', 'attachments']);
+        $vendor->load(['expenses.event', 'payments.expense.event', 'attachments']);
+
+        // Get all payments for this vendor
+        $payments = $vendor->payments()->with(['expense.event'])->orderBy('created_at', 'desc')->get();
 
         // Calculate vendor summary
         $summary = [
@@ -174,7 +177,7 @@ class VendorController extends Controller
             'events_count' => $vendor->expenses->pluck('event_id')->unique()->count(),
         ];
 
-        return view('pnl.vendors.show', compact('vendor', 'summary'));
+        return view('pnl.vendors.show', compact('vendor', 'summary', 'payments'));
     }
 
     public function edit(PnlVendor $vendor)

@@ -110,6 +110,37 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Email Notification Settings (shown when status changes to Paid) -->
+                            <div id="emailNotificationSection" class="mt-3" style="display: none;">
+                                <hr>
+                                <h5><i class="fas fa-envelope text-success me-2"></i>Payment Confirmation Emails</h5>
+                                <p class="text-muted small">When marking as paid, send confirmation emails to:</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="send_vendor_email" name="send_vendor_email" value="1" checked>
+                                            <label class="form-check-label" for="send_vendor_email">
+                                                <i class="fas fa-user-tie text-primary me-1"></i> Vendor
+                                                @if($payment->vendor && $payment->vendor->email)
+                                                    <br><small class="text-muted">{{ $payment->vendor->email }}</small>
+                                                @else
+                                                    <br><small class="text-danger">No email on file</small>
+                                                @endif
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="send_organiser_email" name="send_organiser_email" value="1" checked>
+                                            <label class="form-check-label" for="send_organiser_email">
+                                                <i class="fas fa-user text-success me-1"></i> Yourself (Organiser)
+                                                <br><small class="text-muted">{{ auth()->user()->email ?? 'Your email' }}</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-footer">
                             <button type="submit" class="btn btn-warning">
@@ -142,4 +173,27 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('customjs')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.querySelector('select[name="status"]');
+        const emailSection = document.getElementById('emailNotificationSection');
+        
+        function toggleEmailSection() {
+            if (statusSelect.value === 'paid') {
+                emailSection.style.display = 'block';
+            } else {
+                emailSection.style.display = 'none';
+            }
+        }
+        
+        // Initial check
+        toggleEmailSection();
+        
+        // On change
+        statusSelect.addEventListener('change', toggleEmailSection);
+    });
+</script>
 @endsection

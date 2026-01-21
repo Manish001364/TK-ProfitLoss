@@ -4,9 +4,10 @@
     $hasSeenWalkthrough = session('pnl_walkthrough_seen', false);
     $hasEvents = isset($events) ? $events->count() > 0 : false;
     $showWalkthrough = !$hasSeenWalkthrough && !$hasEvents;
+    $forceShow = request()->has('show_walkthrough');
 @endphp
 
-@if($showWalkthrough || request()->has('show_walkthrough'))
+{{-- Always include the modal, but control visibility with JS --}}
 <div class="modal fade" id="walkthroughModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -124,7 +125,7 @@
                                         <span class="badge bg-danger rounded-circle me-3 fs-6">1</span>
                                         <div>
                                             <strong>Configure Settings</strong>
-                                            <p class="small text-muted mb-0">Go to <strong>Settings</strong> to set your default VAT rate and invoice preferences.</p>
+                                            <p class="small text-muted mb-0">Go to <strong>Settings</strong> to set your default VAT rate, currency, and invoice preferences.</p>
                                         </div>
                                     </div>
                                     <div class="d-flex align-items-start p-3 bg-light rounded">
@@ -184,11 +185,26 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Show walkthrough modal on first visit
-    @if($showWalkthrough && !request()->has('hide_walkthrough'))
-    var walkthroughModal = new bootstrap.Modal(document.getElementById('walkthroughModal'));
-    walkthroughModal.show();
-    @endif
+    var walkthroughModal = document.getElementById('walkthroughModal');
+    if (!walkthroughModal) return;
+    
+    var modal = new bootstrap.Modal(walkthroughModal);
+    
+    // Check if we should show the walkthrough
+    var dismissed = localStorage.getItem('pnl_walkthrough_dismissed');
+    var forceShow = {{ $forceShow ? 'true' : 'false' }};
+    var shouldAutoShow = {{ ($showWalkthrough && !request()->has('hide_walkthrough')) ? 'true' : 'false' }};
+    
+    // Show if force requested or first time
+    if (forceShow || (shouldAutoShow && dismissed !== 'true')) {
+        modal.show();
+    }
+    
+    // Make showWalkthroughAgain available globally
+    window.showWalkthroughAgain = function() {
+        localStorage.removeItem('pnl_walkthrough_dismissed');
+        modal.show();
+    };
 });
 
 function dismissWalkthrough() {
@@ -209,10 +225,4 @@ function dismissWalkthrough() {
     var modal = bootstrap.Modal.getInstance(document.getElementById('walkthroughModal'));
     if (modal) modal.hide();
 }
-
-// Check localStorage on load
-if (localStorage.getItem('pnl_walkthrough_dismissed') === 'true') {
-    document.getElementById('walkthroughModal')?.remove();
-}
 </script>
-@endif

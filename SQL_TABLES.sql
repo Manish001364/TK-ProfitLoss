@@ -95,8 +95,71 @@ CREATE TABLE IF NOT EXISTS `pnl_vendors` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------
--- TABLE 3: pnl_expense_categories
+-- TABLE 3a: pnl_expense_categories_system (Read-only System Defaults)
 -- ---------------------------------------------
+-- These are system-wide default categories that all users can see
+-- Users CANNOT edit, delete, or modify these categories
+-- Only administrators can manage these through database
+CREATE TABLE IF NOT EXISTS `pnl_expense_categories_system` (
+    `id` CHAR(36) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `type` ENUM('fixed', 'variable') DEFAULT 'variable',
+    `description` TEXT NULL,
+    `color` VARCHAR(20) DEFAULT '#6366f1',
+    `icon` VARCHAR(50) DEFAULT 'fas fa-tag',
+    `default_budget_limit` DECIMAL(15, 2) NULL,
+    `sort_order` INT DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_pnl_expense_categories_system_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert default system categories
+INSERT INTO `pnl_expense_categories_system` (`id`, `name`, `type`, `description`, `color`, `icon`, `sort_order`) VALUES
+(UUID(), 'Artist Fees', 'fixed', 'Payments to artists and performers', '#dc3545', 'fas fa-music', 1),
+(UUID(), 'DJ Fees', 'fixed', 'Payments to DJs', '#6f42c1', 'fas fa-headphones', 2),
+(UUID(), 'Venue Hire', 'fixed', 'Venue rental and facility costs', '#0dcaf0', 'fas fa-building', 3),
+(UUID(), 'Catering', 'variable', 'Food and beverage expenses', '#fd7e14', 'fas fa-utensils', 4),
+(UUID(), 'Security', 'variable', 'Security personnel and services', '#6c757d', 'fas fa-shield-alt', 5),
+(UUID(), 'Equipment Hire', 'variable', 'Sound, lighting, and stage equipment', '#20c997', 'fas fa-cogs', 6),
+(UUID(), 'Marketing', 'variable', 'Advertising, promotions, and marketing', '#d63384', 'fas fa-bullhorn', 7),
+(UUID(), 'Staff', 'variable', 'Staff and volunteer expenses', '#198754', 'fas fa-users', 8),
+(UUID(), 'Transportation', 'variable', 'Transport and logistics', '#0d6efd', 'fas fa-truck', 9),
+(UUID(), 'Insurance', 'fixed', 'Event insurance and liability', '#ffc107', 'fas fa-file-contract', 10),
+(UUID(), 'Licensing', 'fixed', 'Music licensing and permits', '#17a2b8', 'fas fa-certificate', 11),
+(UUID(), 'Production', 'variable', 'Stage production and technical', '#6610f2', 'fas fa-theater-masks', 12),
+(UUID(), 'Other', 'variable', 'Miscellaneous expenses', '#adb5bd', 'fas fa-tag', 99);
+
+-- ---------------------------------------------
+-- TABLE 3b: pnl_expense_categories_user (User-Created Custom Categories)
+-- ---------------------------------------------
+-- These are custom categories created by individual users
+-- Users can CRUD their own categories
+CREATE TABLE IF NOT EXISTS `pnl_expense_categories_user` (
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `type` ENUM('fixed', 'variable') DEFAULT 'variable',
+    `description` TEXT NULL,
+    `color` VARCHAR(20) DEFAULT '#6366f1',
+    `icon` VARCHAR(50) DEFAULT 'fas fa-tag',
+    `default_budget_limit` DECIMAL(15, 2) NULL,
+    `sort_order` INT DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_pnl_expense_categories_user_user_id` (`user_id`),
+    INDEX `idx_pnl_expense_categories_user_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------
+-- TABLE 3 (LEGACY): pnl_expense_categories - KEPT FOR BACKWARD COMPATIBILITY
+-- ---------------------------------------------
+-- This table is kept for backward compatibility during migration
+-- New installations should use pnl_expense_categories_system and pnl_expense_categories_user
 CREATE TABLE IF NOT EXISTS `pnl_expense_categories` (
     `id` CHAR(36) NOT NULL,
     `user_id` BIGINT UNSIGNED NULL COMMENT 'NULL for system defaults',

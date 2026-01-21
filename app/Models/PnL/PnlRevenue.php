@@ -22,51 +22,37 @@ class PnlRevenue extends Model
         'tickets_available',
         'tickets_sold',
         'ticket_price',
-        'gross_revenue',
         'platform_fees',
         'payment_gateway_fees',
         'taxes',
-        'net_revenue',
         'tickets_refunded',
         'refund_amount',
-        'net_revenue_after_refunds',
         'notes',
     ];
 
     protected $casts = [
         'ticket_price' => 'decimal:2',
-        'gross_revenue' => 'decimal:2',
         'platform_fees' => 'decimal:2',
         'payment_gateway_fees' => 'decimal:2',
         'taxes' => 'decimal:2',
-        'net_revenue' => 'decimal:2',
         'refund_amount' => 'decimal:2',
-        'net_revenue_after_refunds' => 'decimal:2',
+        'tickets_available' => 'integer',
+        'tickets_sold' => 'integer',
+        'tickets_refunded' => 'integer',
     ];
 
     // Ticket type options
     public static function getTicketTypes(): array
     {
         return [
-            'regular' => 'Regular',
+            'general' => 'General',
             'vip' => 'VIP',
             'early_bird' => 'Early Bird',
             'group' => 'Group',
-            'complimentary' => 'Complimentary',
-            'other' => 'Other',
+            'premium' => 'Premium',
+            'student' => 'Student',
+            'custom' => 'Custom',
         ];
-    }
-
-    // Auto-calculate revenues
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::saving(function ($revenue) {
-            $revenue->gross_revenue = $revenue->tickets_sold * $revenue->ticket_price;
-            $revenue->net_revenue = $revenue->gross_revenue - $revenue->platform_fees - $revenue->payment_gateway_fees - $revenue->taxes;
-            $revenue->net_revenue_after_refunds = $revenue->net_revenue - $revenue->refund_amount;
-        });
     }
 
     // Relationships
@@ -80,7 +66,22 @@ class PnlRevenue extends Model
         return $this->belongsTo(\App\Models\User::class);
     }
 
-    // Calculated Attributes
+    // Calculated Attributes (computed, not stored)
+    public function getGrossRevenueAttribute(): float
+    {
+        return (float) ($this->tickets_sold * $this->ticket_price);
+    }
+
+    public function getNetRevenueAttribute(): float
+    {
+        return $this->gross_revenue - $this->platform_fees - $this->payment_gateway_fees - $this->taxes;
+    }
+
+    public function getNetRevenueAfterRefundsAttribute(): float
+    {
+        return $this->net_revenue - $this->refund_amount;
+    }
+
     public function getSellThroughRateAttribute(): float
     {
         if ($this->tickets_available <= 0) return 0;

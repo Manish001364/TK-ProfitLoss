@@ -125,7 +125,10 @@ class EventController extends Controller
     {
         $this->authorize('update', $event);
         
-        return view('pnl.events.edit', compact('event'));
+        $settings = \App\Models\PnL\PnlSettings::getOrCreate(auth()->id());
+        $currencies = \App\Models\PnL\PnlSettings::getCurrencies();
+        
+        return view('pnl.events.edit', compact('event', 'settings', 'currencies'));
     }
 
     public function update(Request $request, PnlEvent $event)
@@ -140,6 +143,8 @@ class EventController extends Controller
             'event_date' => 'required|date',
             'event_time' => 'nullable|date_format:H:i',
             'budget' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|max:3',
+            'expected_revenue' => 'nullable|numeric|min:0',
             'status' => ['required', Rule::in(['draft', 'planning', 'active', 'completed', 'cancelled'])],
         ]);
 

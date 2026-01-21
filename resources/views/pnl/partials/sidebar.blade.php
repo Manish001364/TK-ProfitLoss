@@ -117,6 +117,21 @@
     font-size: 14px;
 }
 
+.pnl-nav-divider {
+    height: 1px;
+    background: #e9ecef;
+    margin: 10px 15px;
+}
+
+.pnl-nav-label {
+    display: block;
+    padding: 5px 20px;
+    color: #6c757d;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 /* Mobile - Horizontal scrollable menu */
 @media (max-width: 991px) {
     .pnl-sidebar {

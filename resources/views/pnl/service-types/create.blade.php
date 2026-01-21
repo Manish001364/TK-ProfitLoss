@@ -75,7 +75,7 @@
                         <button type="submit" class="btn btn-danger">
                             <i class="fas fa-save me-1"></i> Create Service Type
                         </button>
-                        <a href="{{ route('pnl.service-types.index') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="{{ route('pnl.configuration.index') }}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </div>
             </form>

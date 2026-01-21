@@ -1,5 +1,5 @@
 # P&L Module Installation Guide for TicketKart
-## Version 2.1 - With Sidebar Integration & TicketKart Events
+## Version 2.2 - With Sidebar Integration & TicketKart Events
 
 Follow these steps to add the P&L module to your Laravel project.
 
@@ -34,6 +34,7 @@ Extract the zip and copy these folders/files to your Laravel project:
 | `app/Console/Commands/SendPaymentReminders.php` | `your-project/app/Console/Commands/SendPaymentReminders.php` |
 | `resources/views/pnl/` | `your-project/resources/views/pnl/` |
 | `routes/pnl.php` | `your-project/routes/pnl.php` |
+| `public/css/pnl-sidebar.css` | `your-project/public/css/pnl-sidebar.css` |
 
 ---
 
@@ -94,71 +95,101 @@ mysql -u your_username -p your_database < SQL_TABLES.sql
 
 ---
 
-## Step 6: Add P&L Module to Sidebar Navigation
+## Step 6: Add P&L Sidebar CSS
 
-Edit your sidebar file (typically `resources/views/customer/sidemenu.blade.php` or similar) and add the following code:
+### 6.1 Copy the CSS File
 
-### Option A: Dropdown Menu (Recommended - Full P&L Module Links)
+Copy `public/css/pnl-sidebar.css` to your project:
+```
+your-project/public/css/pnl-sidebar.css
+```
+
+### 6.2 Include CSS in Your Layout
+
+Open your main layout file (e.g., `resources/views/layouts/organiser_layout.blade.php`) and add this line in the `<head>` section:
 
 ```html
-<!-- P&L Module Dropdown Menu -->
+<head>
+    <!-- ... existing CSS ... -->
+    
+    <!-- P&L Sidebar Styles -->
+    <link rel="stylesheet" href="{{ asset('css/pnl-sidebar.css') }}">
+</head>
+```
+
+---
+
+## Step 7: Add P&L Menu to Sidebar
+
+### 7.1 Find Your Sidebar File
+
+Your sidebar is likely in one of these locations:
+- `resources/views/customer/sidemenu.blade.php`
+- `resources/views/layouts/sidebar.blade.php`
+- `resources/views/partials/sidebar.blade.php`
+
+### 7.2 Add the P&L Menu Code
+
+Copy and paste this code into your sidebar file. Place it where you want the P&L menu to appear (e.g., after Events):
+
+```html
+{{-- P&L Module Menu --}}
 @php
     $pnlActive = request()->is('pnl/*') || request()->routeIs('pnl.*');
 @endphp
 
-<li class="menuLi {{ $pnlActive ? 'leftMenuActive' : '' }}">
-    <a href="#pnlSubmenu" data-bs-toggle="collapse" class="d-flex align-items-center icon-color gap-2 {{ $pnlActive ? '' : 'collapsed' }}" aria-expanded="{{ $pnlActive ? 'true' : 'false' }}">
-        <i class="fi fi-rr-chart-line icon-color menuIcon fs-5"></i>
-        <span class="menuCon d-flex justify-content-between align-items-center gap-2 flex-grow-1">
-            <span>P&L</span>
-            <i class="fas fa-chevron-down small transition-icon"></i>
-        </span>
+<li class="pnl-menu-item {{ $pnlActive ? 'active' : '' }}">
+    <a href="#pnlSubmenu" data-bs-toggle="collapse" class="{{ $pnlActive ? '' : 'collapsed' }}" aria-expanded="{{ $pnlActive ? 'true' : 'false' }}">
+        <i class="fas fa-chart-line pnl-menu-icon"></i>
+        <span class="pnl-menu-text">P&L</span>
+        <i class="fas fa-chevron-down pnl-chevron"></i>
     </a>
-    <ul class="collapse submenu list-unstyled {{ $pnlActive ? 'show' : '' }}" id="pnlSubmenu">
-        <li class="{{ request()->routeIs('pnl.dashboard') || request()->routeIs('pnl.dashboard.index') ? 'active' : '' }}">
-            <a href="{{ route('pnl.dashboard') }}" class="d-flex align-items-center gap-2">
+    
+    <ul class="collapse pnl-submenu {{ $pnlActive ? 'show' : '' }}" id="pnlSubmenu">
+        <li class="{{ request()->routeIs('pnl.dashboard') ? 'active' : '' }}">
+            <a href="{{ route('pnl.dashboard') }}">
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
             </a>
         </li>
         <li class="{{ request()->routeIs('pnl.events.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.events.index') }}" class="d-flex align-items-center gap-2">
+            <a href="{{ route('pnl.events.index') }}">
                 <i class="fas fa-calendar-alt"></i>
                 <span>Events</span>
             </a>
         </li>
         <li class="{{ request()->routeIs('pnl.vendors.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.vendors.index') }}" class="d-flex align-items-center gap-2">
+            <a href="{{ route('pnl.vendors.index') }}">
                 <i class="fas fa-users"></i>
                 <span>Vendors & Artists</span>
             </a>
         </li>
         <li class="{{ request()->routeIs('pnl.expenses.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.expenses.index') }}" class="d-flex align-items-center gap-2">
+            <a href="{{ route('pnl.expenses.index') }}">
                 <i class="fas fa-receipt"></i>
                 <span>Expenses</span>
             </a>
         </li>
         <li class="{{ request()->routeIs('pnl.revenues.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.revenues.index') }}" class="d-flex align-items-center gap-2">
+            <a href="{{ route('pnl.revenues.index') }}">
                 <i class="fas fa-pound-sign"></i>
                 <span>Revenue</span>
             </a>
         </li>
         <li class="{{ request()->routeIs('pnl.payments.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.payments.index') }}" class="d-flex align-items-center gap-2">
+            <a href="{{ route('pnl.payments.index') }}">
                 <i class="fas fa-credit-card"></i>
                 <span>Payments</span>
             </a>
         </li>
         <li class="{{ request()->routeIs('pnl.categories.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.categories.index') }}" class="d-flex align-items-center gap-2">
+            <a href="{{ route('pnl.categories.index') }}">
                 <i class="fas fa-tags"></i>
                 <span>Categories</span>
             </a>
         </li>
         <li class="{{ request()->routeIs('pnl.settings.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.settings.index') }}" class="d-flex align-items-center gap-2">
+            <a href="{{ route('pnl.settings.index') }}">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
             </a>
@@ -167,111 +198,19 @@ Edit your sidebar file (typically `resources/views/customer/sidemenu.blade.php` 
 </li>
 ```
 
-### Option B: Simple Flat Menu Links (Alternative)
+### 7.3 Alternative: Use Blade Include
 
-If you prefer flat menu items without dropdown:
+Instead of copying the code, you can use a Blade include. 
 
-```html
-<!-- P&L Dashboard -->
-<li class="menuLi d-flex align-items-center {{ request()->routeIs('pnl.dashboard') ? 'leftMenuActive' : '' }}">
-    <a href="{{ route('pnl.dashboard') }}" class="d-flex icon-color gap-2">
-        <i class="fi fi-rr-chart-line icon-color menuIcon fs-5"></i>
-        <span class="menuCon">P&L Dashboard</span>
-    </a>
-</li>
+Copy `resources/views/pnl/partials/sidebar-menu.blade.php` to your project, then add this line to your sidebar:
 
-<!-- P&L Events -->
-<li class="menuLi d-flex align-items-center {{ request()->routeIs('pnl.events.*') ? 'leftMenuActive' : '' }}">
-    <a href="{{ route('pnl.events.index') }}" class="d-flex icon-color gap-2">
-        <i class="fi fi-rr-calendar icon-color menuIcon fs-5"></i>
-        <span class="menuCon">P&L Events</span>
-    </a>
-</li>
-
-<!-- P&L Vendors -->
-<li class="menuLi d-flex align-items-center {{ request()->routeIs('pnl.vendors.*') ? 'leftMenuActive' : '' }}">
-    <a href="{{ route('pnl.vendors.index') }}" class="d-flex icon-color gap-2">
-        <i class="fi fi-rr-users icon-color menuIcon fs-5"></i>
-        <span class="menuCon">Vendors & Artists</span>
-    </a>
-</li>
-
-<!-- P&L Expenses -->
-<li class="menuLi d-flex align-items-center {{ request()->routeIs('pnl.expenses.*') ? 'leftMenuActive' : '' }}">
-    <a href="{{ route('pnl.expenses.index') }}" class="d-flex icon-color gap-2">
-        <i class="fi fi-rr-document icon-color menuIcon fs-5"></i>
-        <span class="menuCon">Expenses</span>
-    </a>
-</li>
-
-<!-- P&L Revenue -->
-<li class="menuLi d-flex align-items-center {{ request()->routeIs('pnl.revenues.*') ? 'leftMenuActive' : '' }}">
-    <a href="{{ route('pnl.revenues.index') }}" class="d-flex icon-color gap-2">
-        <i class="fi fi-rr-sack-dollar icon-color menuIcon fs-5"></i>
-        <span class="menuCon">Revenue</span>
-    </a>
-</li>
-
-<!-- P&L Payments -->
-<li class="menuLi d-flex align-items-center {{ request()->routeIs('pnl.payments.*') ? 'leftMenuActive' : '' }}">
-    <a href="{{ route('pnl.payments.index') }}" class="d-flex icon-color gap-2">
-        <i class="fi fi-rr-credit-card icon-color menuIcon fs-5"></i>
-        <span class="menuCon">Payments</span>
-    </a>
-</li>
-
-<!-- P&L Settings -->
-<li class="menuLi d-flex align-items-center {{ request()->routeIs('pnl.settings.*') ? 'leftMenuActive' : '' }}">
-    <a href="{{ route('pnl.settings.index') }}" class="d-flex icon-color gap-2">
-        <i class="fi fi-rr-settings icon-color menuIcon fs-5"></i>
-        <span class="menuCon">P&L Settings</span>
-    </a>
-</li>
-```
-
-### CSS for Submenu (Add to your stylesheet if not present)
-
-```css
-/* P&L Submenu Styles */
-.submenu {
-    padding-left: 25px;
-    margin-top: 5px;
-}
-
-.submenu li {
-    padding: 8px 15px;
-    border-radius: 5px;
-    margin: 2px 0;
-}
-
-.submenu li a {
-    color: #666;
-    text-decoration: none;
-    font-size: 0.9rem;
-}
-
-.submenu li:hover,
-.submenu li.active {
-    background-color: rgba(220, 53, 69, 0.1);
-}
-
-.submenu li.active a,
-.submenu li:hover a {
-    color: #dc3545;
-}
-
-.transition-icon {
-    transition: transform 0.3s ease;
-}
-
-[aria-expanded="true"] .transition-icon {
-    transform: rotate(180deg);
-}
+```php
+@include('pnl.partials.sidebar-menu')
 ```
 
 ---
 
-## Step 7: Setup Payment Reminders (Optional)
+## Step 8: Setup Payment Reminders (Optional)
 
 Edit `app/Console/Kernel.php`, add to the `schedule` method:
 
@@ -285,7 +224,7 @@ protected function schedule(Schedule $schedule)
 
 ---
 
-## Step 8: Clear Cache
+## Step 9: Clear Cache
 
 ```bash
 php artisan config:clear
@@ -297,114 +236,57 @@ composer dump-autoload
 
 ---
 
-## Step 9: Test
+## Step 10: Test
 
 Visit: `your-domain.com/pnl/dashboard`
 
-You should see the P&L Dashboard!
+You should see the P&L Dashboard and the sidebar menu!
 
 ---
 
-## Step 10: Configure Settings
+## Files Summary
 
-Visit: `your-domain.com/pnl/settings`
+After installation, you should have these P&L files:
 
-Configure:
-- **Default Tax Rate** - Set your VAT % (UK default: 20%)
-- **Invoice Prefix** - Customize prefix (e.g., INV, TK)
-- **Company Details** - For invoice headers
-- **Email Notifications** - When to notify vendors
-
----
-
-## TicketKart Integration (Optional)
-
-To link P&L events with your existing TicketKart events table:
-
-### Option 1: Manual Link
-When creating a P&L event, manually enter the same event name and date as your TicketKart event.
-
-### Option 2: Database Link (Advanced)
-Add a `ticketkart_event_id` column to link P&L events with your `events` table:
-
-```sql
-ALTER TABLE pnl_events ADD COLUMN ticketkart_event_id BIGINT UNSIGNED NULL AFTER user_id;
-ALTER TABLE pnl_events ADD INDEX idx_pnl_events_tk_id (ticketkart_event_id);
 ```
-
-Then modify `EventController@create` to fetch TicketKart events:
-```php
-// In EventController@create
-$ticketkartEvents = \DB::table('events')
-    ->where('user_id', auth()->id())
-    ->orWhere('organiser_id', auth()->id())
-    ->orderBy('created_at', 'desc')
-    ->get();
+your-project/
+├── app/
+│   ├── Console/Commands/SendPaymentReminders.php
+│   ├── Exports/ (3 files)
+│   ├── Http/Controllers/PnL/ (11 controllers)
+│   ├── Mail/ (2 files)
+│   ├── Models/PnL/ (9 models)
+│   ├── Policies/ (5 files)
+│   ├── Providers/PnLServiceProvider.php
+│   └── Traits/HasAuditLog.php
+├── public/
+│   └── css/
+│       └── pnl-sidebar.css  ← CSS for sidebar menu
+├── resources/views/
+│   └── pnl/
+│       └── partials/
+│           └── sidebar-menu.blade.php  ← Sidebar menu code
+├── routes/
+│   └── pnl.php
+└── SQL_TABLES.sql
 ```
-
-### Option 3: Auto-Import Revenue from `eventtickets`
-Create a command to import ticket sales:
-
-```php
-// app/Console/Commands/ImportTicketSales.php
-// This would query eventtickets table and create PnlRevenue entries
-```
-
----
-
-## Features
-
-### Tax/VAT System
-- Per-organiser default VAT rate
-- Toggle taxable/non-taxable per expense
-- Tax calculated automatically
-- Shown on PDF invoices
-
-### Invoice Numbers
-- Format: `INV-YYYYMM-XXX` (e.g., INV-202501-001)
-- Auto-generated
-- Editable by user
-- Configurable prefix
-
-### Revenue Tracking
-- Ticket sales by type
-- Quick-add buttons for more tickets sold
-- Automatic calculations:
-  - Gross Revenue = Ticket Price × Tickets Sold
-  - Net Revenue = Gross - Fees - Taxes
-  - Final Revenue = Net - Refunds
-
-### Email Notifications
-- Send invoice to vendor
-- Notify on payment status change
-- Enable/disable per expense
-
-### Dashboard Features (New in v2.1)
-- **Collapsible Sections**: Click section headers to collapse/expand. State is saved in browser.
-- **Pagination Controls**: Show 5/10/25 rows per table
-- **Mobile-Friendly Charts**: Smaller, responsive chart sizes
-- **Searchable Vendor Table**: Quick filter vendors
-
----
-
-## Available Routes
-
-| Route | URL | Description |
-|-------|-----|-------------|
-| `pnl.dashboard` | `/pnl/dashboard` | Main Dashboard |
-| `pnl.settings.index` | `/pnl/settings` | Settings |
-| `pnl.events.index` | `/pnl/events` | Events List |
-| `pnl.vendors.index` | `/pnl/vendors` | Vendors List |
-| `pnl.expenses.index` | `/pnl/expenses` | Expenses List |
-| `pnl.revenues.index` | `/pnl/revenues` | Revenue List |
-| `pnl.payments.index` | `/pnl/payments` | Payments List |
-| `pnl.payments.upcoming` | `/pnl/payments/upcoming` | Upcoming Payments |
-| `pnl.categories.index` | `/pnl/categories` | Expense Categories |
-| `pnl.audit.index` | `/pnl/audit` | Audit Logs |
 
 ---
 
 ## Troubleshooting
+
+### Sidebar not showing?
+
+1. **Check CSS is loaded**: View page source and search for `pnl-sidebar.css`
+2. **Check menu code**: Make sure the P&L menu code is inside your `<ul>` element
+3. **Clear cache**: Run `php artisan view:clear`
+4. **Check Bootstrap**: The menu uses Bootstrap's collapse. Ensure Bootstrap JS is loaded.
+
+### Menu styling doesn't match?
+
+The `pnl-sidebar.css` uses its own class names (`.pnl-menu-item`, `.pnl-submenu`) to avoid conflicts with your existing styles. You can customize the CSS file to match your theme.
+
+### Other Issues
 
 | Issue | Solution |
 |-------|----------|
@@ -414,54 +296,33 @@ Create a command to import ticket sales:
 | Permission denied | `chmod -R 775 storage bootstrap/cache` |
 | PDF not generating | Ensure `barryvdh/laravel-dompdf` installed |
 | Email not sending | Check mail config in `.env` |
-| Sidebar not showing | Clear view cache, check menu file path |
-
----
-
-## Files Structure
-
-```
-├── app/
-│   ├── Console/Commands/SendPaymentReminders.php
-│   ├── Exports/ (3 export classes)
-│   ├── Http/Controllers/PnL/ (11 controllers)
-│   ├── Mail/ (2 mailable classes)
-│   ├── Models/PnL/ (9 models)
-│   ├── Policies/
-│   ├── Providers/PnLServiceProvider.php
-│   └── Traits/HasAuditLog.php
-├── resources/views/pnl/ (all blade views)
-├── routes/pnl.php
-├── SQL_TABLES.sql
-├── INSTALLATION_GUIDE.md
-└── MIGRATION_GUIDE.md
-```
 
 ---
 
 ## Version History
 
-### v2.1 (Current)
-- Collapsible dashboard sections with state persistence
+### v2.2 (Current)
+- Separate CSS file for sidebar (`pnl-sidebar.css`)
+- Sidebar menu partial blade file
+- Clearer installation instructions
+
+### v2.1
+- Collapsible dashboard sections
 - Pagination controls on all tables
-- Fixed currency symbol (£ consistently)
-- Expense edit form now matches create form
-- Disabled editing for paid expenses
-- Improved mobile responsiveness
-- Smaller, cleaner charts
+- Fixed currency symbol (£)
+- Expense edit form improvements
 
 ### v2.0
 - Per-organiser VAT/tax system
 - Invoice number format: INV-YYYYMM-XXX
 - PDF invoice generation
 - Email notifications
-- Multi-tenancy with user_id scoping
 
 ---
 
 ## Done!
 
-Your P&L module is ready. 
+Your P&L module is ready with a dedicated sidebar menu.
 
 **Quick Start:**
 1. Go to `/pnl/settings` - Set your VAT rate

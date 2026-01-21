@@ -272,6 +272,7 @@ CREATE TABLE IF NOT EXISTS `pnl_expenses` (
     `title` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
     `amount` DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    `currency` VARCHAR(3) DEFAULT 'GBP' COMMENT 'Currency code for this expense',
     `tax_rate` DECIMAL(5, 2) DEFAULT 0.00 COMMENT 'Tax/VAT rate %',
     `tax_amount` DECIMAL(15, 2) DEFAULT 0.00,
     `total_amount` DECIMAL(15, 2) DEFAULT 0.00 COMMENT 'Amount + Tax',

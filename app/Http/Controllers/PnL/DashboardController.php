@@ -171,6 +171,7 @@ class DashboardController extends Controller
             'upcomingPayments',
             'overduePayments',
             'recentEvents',
+            'vendorSummary',
             'trendData',
             'eventId',
             'dateFrom',

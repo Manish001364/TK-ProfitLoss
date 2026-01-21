@@ -19,60 +19,18 @@ composer require barryvdh/laravel-dompdf
 
 Copy these folders/files from this package to your project:
 
-### Models
-```
-app/Models/PnL/  →  your-project/app/Models/PnL/
-```
-
-### Controllers
-```
-app/Http/Controllers/PnL/  →  your-project/app/Http/Controllers/PnL/
-```
-
-### Exports
-```
-app/Exports/  →  your-project/app/Exports/
-```
-
-### Mail
-```
-app/Mail/PaymentReminderMail.php  →  your-project/app/Mail/PaymentReminderMail.php
-```
-
-### Policies
-```
-app/Policies/  →  your-project/app/Policies/
-```
-
-### Service Provider
-```
-app/Providers/PnLServiceProvider.php  →  your-project/app/Providers/PnLServiceProvider.php
-```
-
-### Traits
-```
-app/Traits/  →  your-project/app/Traits/
-```
-
-### Console Commands
-```
-app/Console/Commands/SendPaymentReminders.php  →  your-project/app/Console/Commands/SendPaymentReminders.php
-```
-
-### Migrations
-```
-database/migrations/*  →  your-project/database/migrations/
-```
-
-### Views
-```
-resources/views/pnl/  →  your-project/resources/views/pnl/
-```
-
-### Routes
-```
-routes/pnl.php  →  your-project/routes/pnl.php
-```
+| Source | Destination |
+|--------|-------------|
+| `app/Models/PnL/` | `your-project/app/Models/PnL/` |
+| `app/Http/Controllers/PnL/` | `your-project/app/Http/Controllers/PnL/` |
+| `app/Exports/` | `your-project/app/Exports/` |
+| `app/Mail/PaymentReminderMail.php` | `your-project/app/Mail/PaymentReminderMail.php` |
+| `app/Policies/` | `your-project/app/Policies/` |
+| `app/Providers/PnLServiceProvider.php` | `your-project/app/Providers/PnLServiceProvider.php` |
+| `app/Traits/` | `your-project/app/Traits/` |
+| `app/Console/Commands/SendPaymentReminders.php` | `your-project/app/Console/Commands/SendPaymentReminders.php` |
+| `resources/views/pnl/` | `your-project/resources/views/pnl/` |
+| `routes/pnl.php` | `your-project/routes/pnl.php` |
 
 ---
 
@@ -101,46 +59,40 @@ require __DIR__.'/pnl.php';
 
 ---
 
-## Step 5: Run Migrations (SAFE - Creates NEW Tables Only)
+## Step 5: Create Database Tables
 
-All P&L tables are prefixed with `pnl_` so they will NOT touch your existing tables.
+### Option A: Run Raw SQL (Recommended - No Migration Conflicts)
 
-### Check what migrations will run (preview only):
+Copy the contents of `SQL_TABLES.sql` and run directly in your MySQL database (via phpMyAdmin, MySQL Workbench, or command line).
+
 ```bash
-php artisan migrate:status
+mysql -u your_username -p your_database < SQL_TABLES.sql
 ```
 
-### Run only the P&L migrations:
+Or copy-paste the SQL directly into phpMyAdmin's SQL tab.
+
+### Option B: Use Laravel Migrations
+
+Copy `database/migrations/*` to your project's migrations folder, then run:
+
 ```bash
 php artisan migrate
 ```
 
-### New tables created (8 total):
+### Tables Created (8 total - all prefixed with `pnl_`):
 
-| Table Name | Description | Touches Existing? |
-|------------|-------------|-------------------|
-| `pnl_events` | Event details | ❌ NO |
-| `pnl_vendors` | Artists/DJs/Vendors | ❌ NO |
-| `pnl_expense_categories` | Expense categories | ❌ NO |
-| `pnl_expenses` | Individual expenses | ❌ NO |
-| `pnl_payments` | Payment tracking | ❌ NO |
-| `pnl_revenues` | Ticket sales | ❌ NO |
-| `pnl_attachments` | File uploads | ❌ NO |
-| `pnl_audit_logs` | Change history | ❌ NO |
+| Table | Description |
+|-------|-------------|
+| `pnl_events` | Event details |
+| `pnl_vendors` | Artists/DJs/Vendors |
+| `pnl_expense_categories` | Expense categories |
+| `pnl_expenses` | Individual expenses |
+| `pnl_payments` | Payment tracking |
+| `pnl_revenues` | Ticket sales |
+| `pnl_attachments` | File uploads |
+| `pnl_audit_logs` | Change history |
 
-**Note:** These migrations only CREATE new tables. They do NOT modify any existing tables in your database.
-
-### If you want to rollback P&L tables only:
-```bash
-php artisan migrate:rollback --step=8
-```
-
-### Verify tables created:
-```bash
-php artisan tinker
->>> Schema::hasTable('pnl_events')
-=> true
-```
+**Note:** All tables are prefixed with `pnl_` - they will NOT touch your existing tables.
 
 ---
 
@@ -169,7 +121,7 @@ Find a suitable location in the `<ul class="menuUl">` section (e.g., after the F
 </li>
 ```
 
-**Alternative simple version** (if you don't want the tooltip):
+**Simple version** (without tooltip):
 
 ```php
 <li class="menuLi d-flex align-items-center {{ request()->is('pnl/*') ? 'leftMenuActive' : '' }}">
@@ -178,20 +130,6 @@ Find a suitable location in the `<ul class="menuUl">` section (e.g., after the F
         <span class="menuCon d-flex justify-content-between align-items-center gap-2">
             <span>P&L Management</span>
         </span>
-    </a>
-</li>
-```
-
-### For Mobile Menu (Optional)
-
-If you want to add P&L to the mobile bottom menu, find the mobile section in `sidemenu.blade.php` and add it to the dropdown menu:
-
-```php
-<li>
-    <a href="{{ route('pnl.dashboard') }}"
-        class="d-flex gap-2 align-items-center dropdown-item py-2 {{ request()->is('pnl/*') ? 'leftMenuActive' : '' }}">
-        <i class="{{ request()->is('pnl/*') ? 'fi fi-sr-chart-line' : 'fi fi-rr-chart-line' }} fs-5 menuIcon icon-color"></i>
-        <span style="color: {{ request()->is('pnl/*') ? '#FD0404' : '#8d8d8d' }};">P&L</span>
     </a>
 </li>
 ```
@@ -219,6 +157,7 @@ php artisan config:clear
 php artisan cache:clear
 php artisan route:clear
 php artisan view:clear
+composer dump-autoload
 ```
 
 ---
@@ -231,45 +170,13 @@ You should see the P&L Dashboard!
 
 ---
 
-## Layout Information
+## Currency Configuration
 
-The P&L module views are configured to use your existing organiser layout:
-- **Layout file:** `resources/views/layouts/organiser_layout.blade.php`
-- **Content section:** `@yield('content')`
-- **Custom JS section:** `@yield('customjs')`
+The module uses **GBP (£)** as the default currency. All monetary values are displayed with the £ symbol.
 
-The module uses Bootstrap 5 classes and integrates with your existing jQuery and Select2 setup.
-
----
-
-## Troubleshooting
-
-### Class not found error
-```bash
-composer dump-autoload
-```
-
-### View not found error
-```bash
-php artisan view:clear
-```
-
-### Route not found error
-```bash
-php artisan route:clear
-```
-
-### Permission denied error
-```bash
-chmod -R 775 storage
-chmod -R 775 bootstrap/cache
-```
-
-### Modal not working
-Make sure Bootstrap 5 JS is loaded. The P&L views use `bootstrap.Modal` for confirmation dialogs.
-
-### Icons not showing
-The P&L module uses FontAwesome icons (`fas fa-*`). Make sure FontAwesome is included in your layout.
+If you need to change the currency:
+1. Search and replace `£` in the view files (`resources/views/pnl/`)
+2. Update the locale in the JavaScript functions (search for `en-GB`)
 
 ---
 
@@ -279,7 +186,9 @@ The P&L module uses FontAwesome icons (`fas fa-*`). Make sure FontAwesome is inc
 |-------|-----|-------------|
 | `pnl.dashboard` | `/pnl/dashboard` | Main P&L Dashboard |
 | `pnl.events.index` | `/pnl/events` | Events List |
+| `pnl.events.create` | `/pnl/events/create` | Create Event |
 | `pnl.vendors.index` | `/pnl/vendors` | Vendors & Artists |
+| `pnl.vendors.create` | `/pnl/vendors/create` | Add Vendor/Artist |
 | `pnl.expenses.index` | `/pnl/expenses` | Expenses List |
 | `pnl.revenues.index` | `/pnl/revenues` | Revenue Tracking |
 | `pnl.payments.index` | `/pnl/payments` | Payment Tracking |
@@ -287,6 +196,41 @@ The P&L module uses FontAwesome icons (`fas fa-*`). Make sure FontAwesome is inc
 
 ---
 
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Class not found | `composer dump-autoload` |
+| View not found | `php artisan view:clear` |
+| Route not found | `php artisan route:clear` |
+| Permission denied | `chmod -R 775 storage bootstrap/cache` |
+| Modal not working | Ensure Bootstrap 5 JS is loaded |
+| Icons not showing | Ensure FontAwesome is loaded |
+
+---
+
+## Files Included
+
+```
+├── app/
+│   ├── Console/Commands/SendPaymentReminders.php
+│   ├── Exports/ (3 export classes)
+│   ├── Http/Controllers/PnL/ (10 controllers)
+│   ├── Mail/PaymentReminderMail.php
+│   ├── Models/PnL/ (8 models)
+│   ├── Policies/ (policy classes)
+│   ├── Providers/PnLServiceProvider.php
+│   └── Traits/HasAuditLog.php
+├── database/migrations/ (8 migrations)
+├── resources/views/pnl/ (all blade views)
+├── routes/pnl.php
+├── SQL_TABLES.sql (⭐ Raw SQL - use this to avoid migration conflicts)
+├── INSTALLATION_GUIDE.md (this file)
+└── README.md
+```
+
+---
+
 ## Done!
 
-Your P&L module is now integrated with your TicketKart project.
+Your P&L module is now integrated with TicketKart.

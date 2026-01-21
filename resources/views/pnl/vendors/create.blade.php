@@ -295,20 +295,54 @@
     <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/intlTelInput.min.js"></script>
     
     <style>
+        /* Fix intl-tel-input width and styling */
         .iti { width: 100%; }
         .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags.png"); }
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
             .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags@2x.png"); }
         }
+        /* Ensure dropdown appears properly */
+        .iti__country-list {
+            z-index: 9999;
+            max-height: 250px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .iti--separate-dial-code .iti__selected-flag {
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        .iti--separate-dial-code input {
+            padding-left: 100px !important;
+        }
+        .phone-example { font-size: 11px; }
     </style>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Phone format examples per country
+            const phoneExamples = {
+                'gb': '7911 123456',
+                'us': '(201) 555-0123',
+                'in': '98765 43210',
+                'de': '1512 3456789',
+                'fr': '6 12 34 56 78',
+                'es': '612 34 56 78',
+                'it': '312 345 6789',
+                'nl': '6 12345678',
+                'ie': '85 123 4567',
+                'au': '412 345 678',
+                'ca': '(506) 234-5678',
+                'ae': '50 123 4567',
+                'sg': '8123 4567'
+            };
+
             // Initialize intl-tel-input for all phone fields
             const phoneInputs = [
-                { input: document.querySelector('#phone'), hidden: document.querySelector('#phone_country_code'), validMsg: '.phone-valid-msg', invalidMsg: '.phone-invalid-msg' },
-                { input: document.querySelector('#alternate_phone'), hidden: document.querySelector('#alternate_phone_country_code'), validMsg: '.alt-phone-valid-msg', invalidMsg: '.alt-phone-invalid-msg' },
-                { input: document.querySelector('#emergency_phone'), hidden: document.querySelector('#emergency_phone_country_code'), validMsg: null, invalidMsg: null }
+                { input: document.querySelector('#phone'), hidden: document.querySelector('#phone_country_code'), validMsg: '.phone-valid-msg', invalidMsg: '.phone-invalid-msg', exampleId: 'phone-example' },
+                { input: document.querySelector('#alternate_phone'), hidden: document.querySelector('#alternate_phone_country_code'), validMsg: '.alt-phone-valid-msg', invalidMsg: '.alt-phone-invalid-msg', exampleId: 'alt-phone-example' },
+                { input: document.querySelector('#emergency_phone'), hidden: document.querySelector('#emergency_phone_country_code'), validMsg: null, invalidMsg: null, exampleId: null }
             ];
             
             const itiInstances = [];
@@ -328,13 +362,22 @@
                 
                 itiInstances.push({ iti: iti, config: config });
                 
-                // Update hidden field when country changes
+                // Update hidden field and show example when country changes
                 config.input.addEventListener('countrychange', function() {
                     const countryData = iti.getSelectedCountryData();
                     config.hidden.value = '+' + countryData.dialCode;
+                    
+                    // Update example text
+                    if (config.exampleId) {
+                        const exampleEl = document.getElementById(config.exampleId);
+                        if (exampleEl) {
+                            const example = phoneExamples[countryData.iso2] || '';
+                            exampleEl.textContent = example ? `Example: +${countryData.dialCode} ${example}` : '';
+                        }
+                    }
                 });
                 
-                // Validate on blur
+                // Validate on blur with specific error message
                 config.input.addEventListener('blur', function() {
                     const countryData = iti.getSelectedCountryData();
                     config.hidden.value = '+' + countryData.dialCode;
@@ -352,6 +395,10 @@
                             } else {
                                 validMsg.classList.add('d-none');
                                 invalidMsg.classList.remove('d-none');
+                                // Show specific error with example
+                                const example = phoneExamples[countryData.iso2] || '';
+                                const countryName = countryData.name || 'selected country';
+                                invalidMsg.innerHTML = `<i class="fas fa-times"></i> Invalid format for ${countryName}. ${example ? 'Example: +' + countryData.dialCode + ' ' + example : ''}`;
                                 config.input.classList.add('is-invalid');
                                 config.input.classList.remove('is-valid');
                             }
@@ -363,9 +410,16 @@
                     }
                 });
                 
-                // Set initial value
+                // Set initial value and trigger initial example
                 const countryData = iti.getSelectedCountryData();
                 config.hidden.value = '+' + countryData.dialCode;
+                if (config.exampleId) {
+                    const exampleEl = document.getElementById(config.exampleId);
+                    if (exampleEl) {
+                        const example = phoneExamples[countryData.iso2] || '';
+                        exampleEl.textContent = example ? `Example: +${countryData.dialCode} ${example}` : '';
+                    }
+                }
             });
             
             // Form submit - get national number only
@@ -386,16 +440,22 @@
                 }.bind(this));
             });
             
-            // Postcode validation based on country
-            const postcodePatterns = {
-                'United Kingdom': { pattern: /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i, hint: 'UK format: SW1A 1AA' },
-                'United States': { pattern: /^\d{5}(-\d{4})?$/, hint: 'US format: 12345 or 12345-6789' },
-                'Canada': { pattern: /^[A-Z]\d[A-Z]\s*\d[A-Z]\d$/i, hint: 'Canadian format: A1A 1A1' },
-                'India': { pattern: /^\d{6}$/, hint: 'Indian format: 110001' },
-                'Germany': { pattern: /^\d{5}$/, hint: 'German format: 10115' },
-                'France': { pattern: /^\d{5}$/, hint: 'French format: 75001' },
-                'Australia': { pattern: /^\d{4}$/, hint: 'Australian format: 2000' },
-                'default': { pattern: /^.+$/, hint: 'Enter postcode' }
+            // Postcode patterns and placeholders per country
+            const postcodeConfig = {
+                'United Kingdom': { placeholder: 'SW1A 1AA', hint: 'UK format: SW1A 1AA' },
+                'United States': { placeholder: '12345', hint: 'US format: 12345 or 12345-6789' },
+                'Canada': { placeholder: 'A1A 1A1', hint: 'Canadian format: A1A 1A1' },
+                'India': { placeholder: '110001', hint: 'Indian format: 110001 (6 digits)' },
+                'Germany': { placeholder: '10115', hint: 'German format: 10115 (5 digits)' },
+                'France': { placeholder: '75001', hint: 'French format: 75001 (5 digits)' },
+                'Australia': { placeholder: '2000', hint: 'Australian format: 2000 (4 digits)' },
+                'Ireland': { placeholder: 'D02 Y006', hint: 'Irish Eircode: D02 Y006' },
+                'Netherlands': { placeholder: '1012 AB', hint: 'Dutch format: 1012 AB' },
+                'Spain': { placeholder: '28001', hint: 'Spanish format: 28001 (5 digits)' },
+                'Italy': { placeholder: '00100', hint: 'Italian format: 00100 (5 digits)' },
+                'United Arab Emirates': { placeholder: '', hint: 'UAE: No postcode required' },
+                'Singapore': { placeholder: '018956', hint: 'Singapore format: 018956 (6 digits)' },
+                'default': { placeholder: '', hint: 'Enter postcode/ZIP' }
             };
             
             document.querySelector('#business_country').addEventListener('change', function() {
@@ -403,8 +463,9 @@
                 const postcodeInput = document.querySelector('#business_postcode');
                 const hint = document.querySelector('.postcode-hint');
                 
-                const patternConfig = postcodePatterns[country] || postcodePatterns['default'];
-                hint.textContent = patternConfig.hint;
+                const config = postcodeConfig[country] || postcodeConfig['default'];
+                postcodeInput.placeholder = config.placeholder;
+                hint.textContent = config.hint;
             });
         });
     </script>

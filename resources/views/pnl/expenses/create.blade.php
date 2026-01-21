@@ -325,11 +325,21 @@
 @section('customjs')
     <script>
         $(document).ready(function() {
+            // Currency change handler
+            $('#expense_currency').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                const symbol = selectedOption.data('symbol') || '£';
+                
+                // Update all currency symbols
+                $('.currency-symbol').text(symbol);
+            });
+
             // Tax toggle and calculation
             function updateTaxDisplay() {
                 const isTaxable = $('#is_taxable').is(':checked');
                 const amount = parseFloat($('#amount').val()) || 0;
                 const taxRate = parseFloat($('#tax_rate').val()) || 0;
+                const symbol = $('#expense_currency option:selected').data('symbol') || '£';
                 
                 if (isTaxable) {
                     // Show tax section, hide non-taxable message
@@ -351,12 +361,13 @@
                     
                     // No tax
                     $('#tax_amount').val('0.00');
-                    $('#non_taxable_total').text('£' + amount.toFixed(2));
+                    $('#non_taxable_total').text(symbol + amount.toFixed(2));
                 }
             }
 
             $('#amount, #tax_rate').on('input', updateTaxDisplay);
             $('#is_taxable').on('change', updateTaxDisplay);
+            $('#expense_currency').on('change', updateTaxDisplay);
             
             // Initial state
             updateTaxDisplay();

@@ -357,4 +357,45 @@ class ExpenseController extends Controller
             \Log::error('Failed to send payment notification: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Validate that a category exists in either system or user tables
+     */
+    private function validateCategoryExists($categoryId, $userId): bool
+    {
+        // Check in legacy pnl_expense_categories table
+        $exists = \DB::table('pnl_expense_categories')
+            ->where('id', $categoryId)
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                      ->orWhereNull('user_id'); // System defaults
+            })
+            ->exists();
+        
+        if ($exists) return true;
+
+        // Check in new system categories table
+        try {
+            $exists = \DB::table('pnl_expense_categories_system')
+                ->where('id', $categoryId)
+                ->where('is_active', true)
+                ->exists();
+            if ($exists) return true;
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        // Check in new user categories table
+        try {
+            $exists = \DB::table('pnl_expense_categories_user')
+                ->where('id', $categoryId)
+                ->where('user_id', $userId)
+                ->exists();
+            if ($exists) return true;
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        return false;
+    }
 }

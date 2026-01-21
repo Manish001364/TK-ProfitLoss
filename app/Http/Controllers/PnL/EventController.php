@@ -72,11 +72,8 @@ class EventController extends Controller
 
         $event = PnlEvent::create($validated);
 
-        // Create default expense categories for user if not exists
-        $existingCategories = PnlExpenseCategory::forUser(auth()->id())->count();
-        if ($existingCategories === 0) {
-            PnlExpenseCategory::createDefaultsForUser(auth()->id());
-        }
+        // Note: Default expense categories are now handled by the system categories table
+        // No need to create per-user defaults anymore
 
         return redirect()
             ->route('pnl.events.show', $event)

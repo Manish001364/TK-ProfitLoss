@@ -109,7 +109,7 @@ class ExpenseController extends Controller
     {
         $validated = $request->validate([
             'event_id' => 'required|exists:pnl_events,id',
-            'category_id' => 'required|exists:pnl_expense_categories,id',
+            'category_id' => 'required|string', // Changed: Accept any string, validate manually
             'vendor_id' => 'nullable|exists:pnl_vendors,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -130,10 +130,18 @@ class ExpenseController extends Controller
             // Notification settings
             'send_email_to_vendor' => 'boolean',
         ]);
+
+        // Manually validate category_id exists in either system or user tables
+        $userId = auth()->id();
+        $categoryId = $validated['category_id'];
+        $categoryExists = $this->validateCategoryExists($categoryId, $userId);
+        if (!$categoryExists) {
+            return back()->withInput()->withErrors(['category_id' => 'The selected expense category is invalid.']);
+        }
         
         // Set currency - default to user's default currency if not provided
         if (empty($validated['currency'])) {
-            $settings = PnlSettings::getOrCreate(auth()->id());
+            $settings = PnlSettings::getOrCreate($userId);
             $validated['currency'] = $settings->default_currency ?? 'GBP';
         }
 

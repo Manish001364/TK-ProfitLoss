@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `pnl_vendors` (
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`),
+    INDEX `idx_pnl_vendors_user_id` (`user_id`),
     INDEX `idx_pnl_vendors_type` (`type`),
     INDEX `idx_pnl_vendors_email` (`email`),
     INDEX `idx_pnl_vendors_is_active` (`is_active`)
@@ -94,6 +95,7 @@ CREATE TABLE IF NOT EXISTS `pnl_vendors` (
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_expense_categories` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NULL,
     `name` VARCHAR(255) NOT NULL,
     `type` ENUM('fixed', 'variable') DEFAULT 'variable',
     `description` TEXT NULL,
@@ -105,6 +107,7 @@ CREATE TABLE IF NOT EXISTS `pnl_expense_categories` (
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
+    INDEX `idx_pnl_expense_categories_user_id` (`user_id`),
     INDEX `idx_pnl_expense_categories_sort_order` (`sort_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

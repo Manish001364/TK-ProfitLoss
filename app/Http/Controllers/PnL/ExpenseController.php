@@ -8,6 +8,7 @@ use App\Models\PnL\PnlExpenseCategory;
 use App\Models\PnL\PnlEvent;
 use App\Models\PnL\PnlPayment;
 use App\Models\PnL\PnlVendor;
+use App\Models\PnL\PnlSettings;
 use App\Mail\InvoiceMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -15,9 +16,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ExpenseController extends Controller
 {
-    // Default VAT rate (can be made configurable)
-    const DEFAULT_TAX_RATE = 20;
-
     public function index(Request $request)
     {
         $userId = auth()->id();
@@ -62,35 +60,47 @@ class ExpenseController extends Controller
         $vendors = PnlVendor::forUser($userId)->active()->orderBy('full_name')->get();
         
         $selectedEventId = $request->get('event_id');
-        $defaultTaxRate = self::DEFAULT_TAX_RATE;
         
-        // Generate next invoice number
+        // Get user settings for default tax rate
+        $settings = PnlSettings::getOrCreate($userId);
+        $defaultTaxRate = $settings->default_tax_rate;
+        
+        // Generate next invoice number using new format: INV-YYYYMM-XXX
         $nextInvoiceNumber = $this->generateNextInvoiceNumber($userId);
 
         return view('pnl.expenses.create', compact(
             'events', 'categories', 'vendors', 'selectedEventId', 
-            'defaultTaxRate', 'nextInvoiceNumber'
+            'defaultTaxRate', 'nextInvoiceNumber', 'settings'
         ));
     }
 
     /**
-     * Generate next invoice number
+     * Generate next invoice number in format: INV-YYYYMM-XXX
+     * E.g., INV-202501-001
      */
     private function generateNextInvoiceNumber($userId)
     {
+        $yearMonth = now()->format('Ym');
+        $prefix = 'INV';
+        
+        // Get the settings or create default
+        $settings = PnlSettings::getOrCreate($userId);
+        $prefix = $settings->invoice_prefix ?? 'INV';
+        
+        // Find the last invoice for this month to determine sequence
         $lastExpense = PnlExpense::where('user_id', $userId)
             ->whereNotNull('invoice_number')
-            ->where('invoice_number', 'like', 'INV-%')
+            ->where('invoice_number', 'like', $prefix . '-' . $yearMonth . '-%')
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if ($lastExpense && preg_match('/INV-(\d+)/', $lastExpense->invoice_number, $matches)) {
+        if ($lastExpense && preg_match('/-(\d+)$/', $lastExpense->invoice_number, $matches)) {
             $nextNumber = intval($matches[1]) + 1;
         } else {
-            $nextNumber = 1;
+            $nextNumber = $settings->invoice_next_number ?? 1;
         }
 
-        return 'INV-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        return $prefix . '-' . $yearMonth . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
     }
 
     public function store(Request $request)
@@ -125,19 +135,26 @@ class ExpenseController extends Controller
         if (!$request->boolean('is_taxable')) {
             $validated['tax_amount'] = 0;
             $validated['tax_rate'] = 0;
+            $validated['is_taxable'] = false;
         } else {
-            $validated['tax_amount'] = $validated['tax_amount'] ?? 0;
-            $validated['tax_rate'] = $validated['tax_rate'] ?? self::DEFAULT_TAX_RATE;
+            $validated['is_taxable'] = true;
+            $validated['tax_rate'] = $validated['tax_rate'] ?? 20;
+            $validated['tax_amount'] = $validated['tax_amount'] ?? ($validated['amount'] * $validated['tax_rate'] / 100);
         }
 
-        // Auto-generate invoice number if empty
+        // Auto-generate invoice number if empty using new format
         if (empty($validated['invoice_number'])) {
             $validated['invoice_number'] = $this->generateNextInvoiceNumber($userId);
         }
 
+        // Calculate total
+        $validated['total_amount'] = $validated['amount'] + $validated['tax_amount'];
+
         $expense = PnlExpense::create($validated);
 
         // Create payment record if requested
+        $sendEmailToVendor = $request->boolean('send_email_to_vendor', true);
+        
         if ($request->boolean('create_payment', true)) {
             $payment = PnlPayment::create([
                 'expense_id' => $expense->id,
@@ -149,11 +166,11 @@ class ExpenseController extends Controller
                 'payment_method' => $validated['payment_method'] ?? null,
                 'reminder_enabled' => $request->boolean('reminder_enabled', true),
                 'reminder_days_before' => $validated['reminder_days_before'] ?? 3,
-                'send_email_to_vendor' => $request->boolean('send_email_to_vendor', true),
+                'send_email_to_vendor' => $sendEmailToVendor,
             ]);
 
             // Send email notification to vendor if enabled
-            if ($request->boolean('send_email_to_vendor', true) && $expense->vendor && $expense->vendor->email) {
+            if ($sendEmailToVendor && $expense->vendor && $expense->vendor->email) {
                 $this->sendPaymentNotification($expense, $payment, 'created');
             }
         }
@@ -180,7 +197,10 @@ class ExpenseController extends Controller
         $events = PnlEvent::forUser($userId)->orderBy('event_date', 'desc')->get();
         $categories = PnlExpenseCategory::forUser($userId)->active()->ordered()->get();
         $vendors = PnlVendor::forUser($userId)->active()->orderBy('full_name')->get();
-        $defaultTaxRate = self::DEFAULT_TAX_RATE;
+        
+        // Get user settings
+        $settings = PnlSettings::getOrCreate($userId);
+        $defaultTaxRate = $settings->default_tax_rate;
 
         $expense->load('payment');
 
@@ -209,9 +229,14 @@ class ExpenseController extends Controller
         if (!$request->boolean('is_taxable')) {
             $validated['tax_amount'] = 0;
             $validated['tax_rate'] = 0;
+            $validated['is_taxable'] = false;
         } else {
+            $validated['is_taxable'] = true;
             $validated['tax_amount'] = $validated['tax_amount'] ?? 0;
         }
+
+        // Calculate total
+        $validated['total_amount'] = $validated['amount'] + $validated['tax_amount'];
 
         $expense->update($validated);
 
@@ -248,8 +273,11 @@ class ExpenseController extends Controller
         $this->authorize('view', $expense);
 
         $expense->load(['event', 'category', 'vendor', 'payment']);
+        
+        // Get user settings for company info
+        $settings = PnlSettings::getOrCreate(auth()->id());
 
-        $pdf = Pdf::loadView('pnl.exports.invoice-pdf', compact('expense'));
+        $pdf = Pdf::loadView('pnl.exports.invoice-pdf', compact('expense', 'settings'));
         
         $filename = 'Invoice_' . ($expense->invoice_number ?? $expense->id) . '.pdf';
 
@@ -288,6 +316,20 @@ class ExpenseController extends Controller
         }
 
         if (!$expense->vendor || !$expense->vendor->email) {
+            return;
+        }
+
+        // Check user settings for this action type
+        $settings = PnlSettings::getOrCreate(auth()->id());
+        
+        $shouldSend = match($action) {
+            'created' => $settings->send_email_on_payment_created,
+            'paid' => $settings->send_email_on_payment_paid,
+            'scheduled' => $settings->send_email_on_payment_scheduled,
+            default => true,
+        };
+
+        if (!$shouldSend) {
             return;
         }
 

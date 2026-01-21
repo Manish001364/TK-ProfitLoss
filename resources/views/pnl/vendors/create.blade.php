@@ -86,7 +86,8 @@
                             <input type="hidden" name="phone_country_code" id="phone_country_code" value="{{ old('phone_country_code', '+44') }}">
                             @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             <small class="text-muted phone-valid-msg d-none text-success"><i class="fas fa-check"></i> Valid number</small>
-                            <small class="text-muted phone-invalid-msg d-none text-danger"><i class="fas fa-times"></i> Invalid number format</small>
+                            <small class="text-muted phone-invalid-msg d-none text-danger"></small>
+                            <small class="text-muted phone-example d-block" id="phone-example">Example: +44 7911 123456</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small">Secondary Phone</label>
@@ -94,7 +95,8 @@
                                    value="{{ old('alternate_phone') }}">
                             <input type="hidden" name="alternate_phone_country_code" id="alternate_phone_country_code" value="{{ old('alternate_phone_country_code', '+44') }}">
                             <small class="text-muted alt-phone-valid-msg d-none text-success"><i class="fas fa-check"></i> Valid number</small>
-                            <small class="text-muted alt-phone-invalid-msg d-none text-danger"><i class="fas fa-times"></i> Invalid number format</small>
+                            <small class="text-muted alt-phone-invalid-msg d-none text-danger"></small>
+                            <small class="text-muted phone-example d-block" id="alt-phone-example">Example: +44 7911 123456</small>
                         </div>
                     </div>
                 </div>

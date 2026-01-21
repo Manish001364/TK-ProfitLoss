@@ -1,5 +1,6 @@
 -- ==============================================
 -- P&L MODULE - SQL DATABASE TABLES
+-- Version: 2.0 (Fresh Install)
 -- ==============================================
 -- Run these SQL statements directly in your MySQL database
 -- All tables are prefixed with 'pnl_' to avoid conflicts
@@ -31,8 +32,8 @@ CREATE TABLE IF NOT EXISTS `pnl_settings` (
 -- TABLE 1: pnl_events
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_events` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `user_id` BIGINT UNSIGNED NULL,
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
     `venue` VARCHAR(255) NULL,
@@ -55,8 +56,8 @@ CREATE TABLE IF NOT EXISTS `pnl_events` (
 -- TABLE 2: pnl_vendors (Artists, DJs, Caterers, etc.)
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_vendors` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `user_id` BIGINT UNSIGNED NULL,
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
     `type` ENUM('artist', 'dj', 'vendor', 'caterer', 'security', 'equipment', 'venue', 'marketing', 'staff', 'other') DEFAULT 'vendor',
     `full_name` VARCHAR(255) NOT NULL,
     `business_name` VARCHAR(255) NULL,
@@ -94,8 +95,8 @@ CREATE TABLE IF NOT EXISTS `pnl_vendors` (
 -- TABLE 3: pnl_expense_categories
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_expense_categories` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `user_id` BIGINT UNSIGNED NULL,
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NULL COMMENT 'NULL for system defaults',
     `name` VARCHAR(255) NOT NULL,
     `type` ENUM('fixed', 'variable') DEFAULT 'variable',
     `description` TEXT NULL,
@@ -111,26 +112,15 @@ CREATE TABLE IF NOT EXISTS `pnl_expense_categories` (
     INDEX `idx_pnl_expense_categories_sort_order` (`sort_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Insert default expense categories
-INSERT INTO `pnl_expense_categories` (`name`, `type`, `color`, `icon`, `sort_order`) VALUES
-('Artist Fee', 'fixed', '#dc3545', 'fas fa-music', 1),
-('Venue', 'fixed', '#fd7e14', 'fas fa-building', 2),
-('Staff', 'variable', '#28a745', 'fas fa-users', 3),
-('Marketing', 'variable', '#17a2b8', 'fas fa-bullhorn', 4),
-('Equipment', 'variable', '#6f42c1', 'fas fa-cogs', 5),
-('Catering', 'variable', '#ffc107', 'fas fa-utensils', 6),
-('Security', 'variable', '#343a40', 'fas fa-shield-alt', 7),
-('Miscellaneous', 'variable', '#6c757d', 'fas fa-ellipsis-h', 8);
-
 -- ---------------------------------------------
 -- TABLE 4: pnl_expenses
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_expenses` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `user_id` BIGINT UNSIGNED NULL,
-    `event_id` BIGINT UNSIGNED NOT NULL,
-    `category_id` BIGINT UNSIGNED NOT NULL,
-    `vendor_id` BIGINT UNSIGNED NULL,
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `event_id` CHAR(36) NOT NULL,
+    `category_id` CHAR(36) NOT NULL,
+    `vendor_id` CHAR(36) NULL,
     `title` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
     `amount` DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
@@ -150,20 +140,17 @@ CREATE TABLE IF NOT EXISTS `pnl_expenses` (
     INDEX `idx_pnl_expenses_category_id` (`category_id`),
     INDEX `idx_pnl_expenses_vendor_id` (`vendor_id`),
     INDEX `idx_pnl_expenses_expense_date` (`expense_date`),
-    INDEX `idx_pnl_expenses_invoice_number` (`invoice_number`),
-    CONSTRAINT `fk_pnl_expenses_event` FOREIGN KEY (`event_id`) REFERENCES `pnl_events` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_pnl_expenses_category` FOREIGN KEY (`category_id`) REFERENCES `pnl_expense_categories` (`id`) ON DELETE RESTRICT,
-    CONSTRAINT `fk_pnl_expenses_vendor` FOREIGN KEY (`vendor_id`) REFERENCES `pnl_vendors` (`id`) ON DELETE SET NULL
+    INDEX `idx_pnl_expenses_invoice_number` (`invoice_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------
 -- TABLE 5: pnl_payments
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_payments` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `user_id` BIGINT UNSIGNED NULL,
-    `expense_id` BIGINT UNSIGNED NOT NULL,
-    `vendor_id` BIGINT UNSIGNED NULL,
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `expense_id` CHAR(36) NOT NULL,
+    `vendor_id` CHAR(36) NULL,
     `amount` DECIMAL(15, 2) NOT NULL,
     `status` ENUM('pending', 'scheduled', 'paid', 'cancelled') DEFAULT 'pending',
     `payment_method` VARCHAR(50) NULL COMMENT 'bank_transfer, cash, cheque, card',
@@ -185,18 +172,16 @@ CREATE TABLE IF NOT EXISTS `pnl_payments` (
     INDEX `idx_pnl_payments_expense_id` (`expense_id`),
     INDEX `idx_pnl_payments_vendor_id` (`vendor_id`),
     INDEX `idx_pnl_payments_status` (`status`),
-    INDEX `idx_pnl_payments_scheduled_date` (`scheduled_date`),
-    CONSTRAINT `fk_pnl_payments_expense` FOREIGN KEY (`expense_id`) REFERENCES `pnl_expenses` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_pnl_payments_vendor` FOREIGN KEY (`vendor_id`) REFERENCES `pnl_vendors` (`id`) ON DELETE SET NULL
+    INDEX `idx_pnl_payments_scheduled_date` (`scheduled_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------
 -- TABLE 6: pnl_revenues (Ticket Sales)
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_revenues` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `user_id` BIGINT UNSIGNED NULL,
-    `event_id` BIGINT UNSIGNED NOT NULL,
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `event_id` CHAR(36) NOT NULL,
     `ticket_type` ENUM('general', 'vip', 'early_bird', 'group', 'premium', 'student', 'custom') DEFAULT 'general',
     `ticket_name` VARCHAR(255) NULL COMMENT 'Custom ticket name',
     `ticket_price` DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
@@ -214,22 +199,21 @@ CREATE TABLE IF NOT EXISTS `pnl_revenues` (
     PRIMARY KEY (`id`),
     INDEX `idx_pnl_revenues_user_id` (`user_id`),
     INDEX `idx_pnl_revenues_event_id` (`event_id`),
-    INDEX `idx_pnl_revenues_ticket_type` (`ticket_type`),
-    CONSTRAINT `fk_pnl_revenues_event` FOREIGN KEY (`event_id`) REFERENCES `pnl_events` (`id`) ON DELETE CASCADE
+    INDEX `idx_pnl_revenues_ticket_type` (`ticket_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------
 -- TABLE 7: pnl_attachments (For invoices, contracts)
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_attachments` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `attachable_id` BIGINT UNSIGNED NOT NULL,
-    `attachable_type` VARCHAR(255) NOT NULL COMMENT 'expense, vendor, event',
+    `id` CHAR(36) NOT NULL,
+    `attachable_type` VARCHAR(255) NOT NULL,
+    `attachable_id` CHAR(36) NOT NULL,
     `filename` VARCHAR(255) NOT NULL,
     `original_filename` VARCHAR(255) NOT NULL,
-    `file_path` VARCHAR(500) NOT NULL,
-    `file_size` INT NULL,
     `mime_type` VARCHAR(100) NULL,
+    `size` BIGINT UNSIGNED NULL,
+    `path` VARCHAR(500) NOT NULL,
     `uploaded_by` BIGINT UNSIGNED NULL,
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -238,23 +222,22 @@ CREATE TABLE IF NOT EXISTS `pnl_attachments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------
--- TABLE 8: pnl_audit_logs (Change history)
+-- TABLE 8: pnl_audit_logs
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_audit_logs` (
-    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id` CHAR(36) NOT NULL,
     `user_id` BIGINT UNSIGNED NULL,
-    `loggable_id` BIGINT UNSIGNED NOT NULL,
-    `loggable_type` VARCHAR(255) NOT NULL,
-    `action` ENUM('created', 'updated', 'deleted') NOT NULL,
+    `auditable_type` VARCHAR(255) NOT NULL,
+    `auditable_id` CHAR(36) NOT NULL,
+    `action` VARCHAR(50) NOT NULL COMMENT 'created, updated, deleted, status_changed',
     `old_values` JSON NULL,
     `new_values` JSON NULL,
     `ip_address` VARCHAR(45) NULL,
     `user_agent` TEXT NULL,
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    INDEX `idx_pnl_audit_logs_loggable` (`loggable_type`, `loggable_id`),
+    INDEX `idx_pnl_audit_logs_auditable` (`auditable_type`, `auditable_id`),
     INDEX `idx_pnl_audit_logs_user_id` (`user_id`),
-    INDEX `idx_pnl_audit_logs_action` (`action`),
     INDEX `idx_pnl_audit_logs_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -263,13 +246,13 @@ CREATE TABLE IF NOT EXISTS `pnl_audit_logs` (
 -- ==============================================
 -- 
 -- NOTES:
--- 1. All tables are prefixed with 'pnl_' to avoid conflicts with existing tables
--- 2. Default currency is GBP (£) - store values as decimal
--- 3. Foreign keys ensure data integrity
--- 4. Soft deletes enabled on main tables (deleted_at column)
--- 5. Default expense categories are inserted automatically
--- 6. pnl_settings stores per-organiser VAT defaults and invoice settings
--- 7. Invoice numbers use format: INV-YYYYMM-XXX (e.g., INV-202501-001)
+-- 1. All tables are prefixed with 'pnl_' to avoid conflicts
+-- 2. Default currency is GBP (£)
+-- 3. All primary keys use UUID (CHAR(36)) for better distribution
+-- 4. user_id links to your existing users table
+-- 5. Revenue calculations (gross_revenue, net_revenue) are computed in PHP, not stored
+-- 6. Invoice numbers use format: INV-YYYYMM-XXX (e.g., INV-202501-001)
+-- 7. Default VAT rate is 20% (UK standard)
 -- 
 -- To drop all P&L tables (CAREFUL - deletes all data!):
 -- DROP TABLE IF EXISTS pnl_audit_logs, pnl_attachments, pnl_revenues, pnl_payments, pnl_expenses, pnl_expense_categories, pnl_vendors, pnl_events, pnl_settings;

@@ -11,6 +11,7 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - **Framework:** Laravel 10+
 - **Database:** MySQL
 - **UI Framework:** Bootstrap 5
+- **Currency:** GBP (£)
 - **Layout System:** Custom organiser layout (`layouts.organiser_layout`)
 - **Sidebar:** Custom (`customer/sidemenu.blade.php`)
 
@@ -19,127 +20,86 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 ## Core Features Implemented
 
 ### 1. Vendor/Artist Management ✅
-- Full contact management (Name, Email, Phone, Addresses)
-- Bank details storage (for reference only)
-- Tax information (PAN, GST, VAT)
-- Emergency contact details
-- Payment history tracking
+- Comprehensive form with service type (DJ, Caterer, Artist, etc.)
+- Only vendor name is mandatory - all other fields optional
+- Contact details: email, phone, secondary phone, addresses
+- Emergency contact information
+- Bank details (collapsible section)
+- Tax information: UTR, VAT Number, Company Number
+- Service area / specialization field
+- Notes and description
 - Export to Excel
 
 ### 2. Payment Tracking ✅
-- Manual payment tracking with statuses: Pending, Scheduled, Paid
-- Scheduled payment dates
-- Payment methods: Bank Transfer, Cash, Cheque, UPI
-- Transaction reference tracking
+- Payment statuses: Pending, Scheduled, Paid
+- Scheduled payment dates with "days until due" display
+- Payment methods: Bank Transfer (BACS), Cash, Cheque, Card
 - Mark as Paid functionality
-- Overdue payment alerts
+- Overdue payment alerts (highlighted in red)
+- Fixed "N/A" display - now shows "Not assigned" or "Not set"
 
 ### 3. Automated Email Reminders ✅
 - Payment reminder console command
 - Configurable reminder days before due date
-- Reminder on due date option
 - Email template for reminders
 
 ### 4. Expense Management ✅
 - Expense categories with types (Fixed/Variable)
 - Budget limits per category
-- Full expense tracking with vendor assignment
-- Tax amount tracking
+- Link to add new vendor from expense form
+- Tax/VAT amount tracking
 - Invoice number recording
 
 ### 5. Revenue Tracking ✅
 - Ticket sales tracking by type
+- **"+ Add more tickets sold" button** next to sold count
 - Gross/Net revenue calculations
-- Platform fees, gateway fees, tax deductions
+- Platform fees, gateway fees, VAT deductions
 - Refund tracking
 - Per-event breakdown
 
 ### 6. P&L Dashboard ✅
-- Total Revenue, Total Expenses, Net Profit/Loss
-- Visual charts (Chart.js)
-- Event filter and date range filter
+- Summary cards with left-colored borders (matching TicketKart style)
+- **Smaller pie chart** for expense breakdown
+- **Date range picker** (single calendar for range selection)
+- **Auto-filter on dropdown selection**
+- Visual bar charts (Chart.js)
 - Recent events performance table
 - Upcoming and overdue payments widgets
 
-### 7. Exporting ✅
-- Vendor contacts to Excel
-- P&L Summary to Excel/PDF
-- Event P&L to Excel
+### 7. Currency ✅
+- **All values now in GBP (£)** instead of ₹
+- Consistent throughout all views
 
-### 8. Audit Log ✅
-- Track all changes (create, update, delete)
-- Old/new value comparison
-- User tracking
-- Filterable by action and date
+### 8. UI/UX Improvements ✅
+- **Narrower layout** (max-width: 900-1200px) matching TicketKart style
+- Clean cards with subtle shadows
+- Smaller fonts and better spacing
+- Collapsible sections for bank/tax details
+- Status badges with subtle background colors
 
 ---
 
-## Database Schema (8 Tables)
+## Database Options
+
+### Option A: Raw SQL (Recommended)
+Use `SQL_TABLES.sql` - run directly in MySQL to avoid migration conflicts.
+
+### Option B: Laravel Migrations
+Use files in `database/migrations/` folder.
+
+### Tables (8 total - all prefixed with `pnl_`):
 
 | Table | Purpose |
 |-------|---------|
 | `pnl_events` | Event details, budget, dates |
-| `pnl_vendors` | Vendor/artist contact info |
+| `pnl_vendors` | Vendor/artist contact info, service type |
 | `pnl_expense_categories` | Category definitions |
 | `pnl_expenses` | Individual expenses |
 | `pnl_payments` | Payment tracking |
 | `pnl_revenues` | Ticket sales revenue |
 | `pnl_attachments` | File attachments (polymorphic) |
 | `pnl_audit_logs` | Change history |
-
-All tables prefixed with `pnl_` - does NOT touch existing tables.
-
----
-
-## Technical Architecture
-
-### Directory Structure
-```
-app/
-├── Console/Commands/SendPaymentReminders.php
-├── Exports/
-│   ├── EventPnlExport.php
-│   ├── PnlSummaryExport.php
-│   └── VendorsExport.php
-├── Http/Controllers/PnL/
-│   ├── DashboardController.php
-│   ├── EventController.php
-│   ├── VendorController.php
-│   ├── ExpenseController.php
-│   ├── PaymentController.php
-│   ├── RevenueController.php
-│   └── ...
-├── Mail/PaymentReminderMail.php
-├── Models/PnL/
-│   ├── PnlEvent.php
-│   ├── PnlVendor.php
-│   ├── PnlExpense.php
-│   └── ...
-├── Providers/PnLServiceProvider.php
-└── Traits/HasAuditLog.php
-
-database/migrations/
-└── 2024_01_01_000001-8_create_pnl_*.php
-
-resources/views/pnl/
-├── dashboard/
-├── events/
-├── vendors/
-├── expenses/
-├── payments/
-├── revenues/
-├── categories/
-└── audit/
-
-routes/pnl.php
-```
-
-### Layout Integration
-- Views extend `layouts.organiser_layout`
-- Content goes in `@section('content')`
-- JavaScript goes in `@section('customjs')`
-- Uses Bootstrap 5 classes
-- Compatible with existing jQuery and Select2
 
 ---
 
@@ -148,39 +108,52 @@ routes/pnl.php
 ### December 2025 - Initial Build
 - Created complete P&L module from scratch
 - Built 8 migration files, 8 models, 10 controllers
-- Created all Blade views with AdminLTE layout (initial)
+- Created all Blade views
 
-### December 2025 - Layout Fix
-- **Issue:** Module views used AdminLTE layout which user doesn't have
-- **Solution:** Updated all 21 Blade views to use `layouts.organiser_layout`
-- Updated INSTALLATION_GUIDE.md with correct sidebar menu instructions
-- Re-packaged module into `ticketkart-pnl-module.zip`
+### January 2025 - Layout & Design Fix
+- Updated all views to use `layouts.organiser_layout`
+- Changed currency from ₹ to £ (GBP)
+- **Smaller pie chart** on event show page
+- **Date range picker** for dashboard filters
+- **Auto-filter** on dropdown selection
+- Fixed "N/A" display in upcoming payments
+- Improved vendor form with:
+  - Only name mandatory
+  - Service type/specialization field
+  - Collapsible bank & tax sections
+- Added "+ Add more tickets" button to revenue display
+- **Created SQL_TABLES.sql** as alternative to migrations
+- Narrowed UI to match TicketKart's event creation page
+- Updated INSTALLATION_GUIDE.md
 
 ---
 
 ## Deliverables
 
 1. **ticketkart-pnl-module.zip** - Complete module package
-2. **INSTALLATION_GUIDE.md** - Step-by-step installation instructions
-3. **README.md** - Module overview
+2. **SQL_TABLES.sql** - Raw SQL for direct database creation
+3. **INSTALLATION_GUIDE.md** - Step-by-step instructions
+4. **README.md** - Module overview
 
 ---
 
-## Next Steps (For User)
+## Installation Summary
 
-1. Download `ticketkart-pnl-module.zip`
-2. Follow INSTALLATION_GUIDE.md step-by-step
-3. Add menu link to `sidemenu.blade.php`
-4. Run migrations
-5. Test at `/pnl/dashboard`
+1. Copy module files to Laravel project
+2. Register `PnLServiceProvider` in `config/app.php`
+3. Add routes in `routes/web.php`
+4. Run `SQL_TABLES.sql` in MySQL (or use migrations)
+5. Add menu link to `sidemenu.blade.php`
+6. Clear cache and test at `/pnl/dashboard`
 
 ---
 
 ## Future Enhancements (Backlog)
 
-- [ ] File upload for invoices/contracts (infrastructure ready)
+- [ ] File upload for invoices/contracts
 - [ ] Cash flow projections view
 - [ ] Budget vs Actual comparison charts
 - [ ] Multi-currency support
 - [ ] API endpoints for mobile app
 - [ ] Integration with TicketKart's existing ticket sales data
+- [ ] Currency settings page

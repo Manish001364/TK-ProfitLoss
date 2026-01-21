@@ -6,7 +6,75 @@ If you have already installed a previous version of the P&L module, follow these
 
 ---
 
-## Version 2.4 Changes (January 2025) - LATEST
+## Version 2.5 Changes (January 2025) - LATEST
+
+### New Features
+- **International Phone Numbers** - Phone fields now use intl-tel-input with country flags and validation
+- **Address Enhancements** - Country dropdown and postcode fields with country-specific validation
+- **Multi-Currency Support** - Set default currency and define custom exchange rates
+- **Cash Flow Projections** - New dedicated page for visualising upcoming payments and expected revenue
+- **Exchange Rate Management** - User-defined conversion rates for multi-currency events
+
+### Database Migration for v2.5
+
+Run this SQL to add new columns to existing tables:
+
+```sql
+-- ==============================================
+-- MIGRATION SCRIPT v2.5 - Phone, Address & Currency
+-- ==============================================
+
+-- 1. Add phone country code columns to pnl_vendors
+ALTER TABLE `pnl_vendors`
+    ADD COLUMN IF NOT EXISTS `phone_country_code` VARCHAR(10) DEFAULT '+44' AFTER `email`,
+    ADD COLUMN IF NOT EXISTS `alternate_phone_country_code` VARCHAR(10) DEFAULT '+44' AFTER `alternate_phone`,
+    ADD COLUMN IF NOT EXISTS `business_country` VARCHAR(100) DEFAULT 'United Kingdom' AFTER `business_address`,
+    ADD COLUMN IF NOT EXISTS `business_postcode` VARCHAR(20) NULL AFTER `business_country`,
+    ADD COLUMN IF NOT EXISTS `home_country` VARCHAR(100) NULL AFTER `home_address`,
+    ADD COLUMN IF NOT EXISTS `home_postcode` VARCHAR(20) NULL AFTER `home_country`,
+    ADD COLUMN IF NOT EXISTS `emergency_contact_phone_country_code` VARCHAR(10) DEFAULT '+44' AFTER `emergency_contact_name`,
+    ADD COLUMN IF NOT EXISTS `specialization` VARCHAR(255) NULL AFTER `preferred_payment_cycle`;
+
+-- 2. Add currency columns to pnl_settings
+ALTER TABLE `pnl_settings`
+    ADD COLUMN IF NOT EXISTS `default_currency` VARCHAR(3) DEFAULT 'GBP' AFTER `default_tax_rate`;
+
+-- 3. Add currency column to pnl_events
+ALTER TABLE `pnl_events`
+    ADD COLUMN IF NOT EXISTS `currency` VARCHAR(3) DEFAULT 'GBP' AFTER `budget`,
+    ADD COLUMN IF NOT EXISTS `expected_revenue` DECIMAL(15, 2) NULL AFTER `currency`;
+
+-- 4. Create pnl_currency_rates table
+CREATE TABLE IF NOT EXISTS `pnl_currency_rates` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `from_currency` VARCHAR(3) NOT NULL DEFAULT 'GBP',
+    `to_currency` VARCHAR(3) NOT NULL,
+    `rate` DECIMAL(15, 6) NOT NULL COMMENT 'Conversion rate',
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `idx_pnl_currency_rates_user_pair` (`user_id`, `from_currency`, `to_currency`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==============================================
+-- END OF v2.5 MIGRATION
+-- ==============================================
+```
+
+### Important Notes for v2.5
+
+1. **Phone Number Format**: Phone numbers are now stored as national format (without country code). The country code is stored separately in `phone_country_code` columns.
+
+2. **Currency Support**: Events can now have individual currencies. Use the Settings page to define your default currency and exchange rates.
+
+3. **Cash Flow Page**: Access the new Cash Flow Projections page from the sidebar navigation.
+
+4. **Address Fields**: The new country and postcode fields use JavaScript validation for common formats (UK, US, India, etc.).
+
+---
+
+## Version 2.4 Changes (January 2025)
 
 ### New Features
 - **Split Expense Categories** - System categories (read-only) separated from user categories (editable)

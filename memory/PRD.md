@@ -123,6 +123,7 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - **Built-in P&L sidebar in all module pages**
 - **Light-themed sidebar matching TicketKart style**
 - **Cash Flow link added** (NEW v2.5)
+- **Combined Categories & Services page** (NEW v2.7) - Single page with both Expense Categories and Service Types
 - **All P&L links accessible from sidebar**
 - **CSS styling included**
 

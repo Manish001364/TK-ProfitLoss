@@ -148,10 +148,10 @@
                             @foreach($expenseByCategory as $cat)
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="small">
-                                        <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: {{ $cat['color'] }};"></span>
-                                        {{ $cat['name'] }}
+                                        <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: {{ $cat->color }};"></span>
+                                        {{ $cat->name }}
                                     </span>
-                                    <span class="small fw-bold">£{{ number_format($cat['total'], 0) }}</span>
+                                    <span class="small fw-bold">£{{ number_format($cat->total, 0) }}</span>
                                 </div>
                             @endforeach
                         </div>

@@ -47,7 +47,7 @@ class ExpenseController extends Controller
 
         $expenses = $query->paginate(15)->withQueryString();
         $events = PnlEvent::forUser($userId)->orderBy('event_date', 'desc')->get();
-        $categories = PnlExpenseCategory::forUser($userId)->active()->ordered()->get();
+        $categories = PnlExpenseCategory::getAllForUser($userId); // Use getAllForUser to include system categories
 
         return view('pnl.expenses.index', compact('expenses', 'events', 'categories'));
     }

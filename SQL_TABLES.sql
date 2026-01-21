@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `pnl_settings` (
 CREATE TABLE IF NOT EXISTS `pnl_events` (
     `id` CHAR(36) NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
+    `ticketkart_event_id` BIGINT UNSIGNED NULL COMMENT 'Links to main TicketKart events table',
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
     `venue` VARCHAR(255) NULL,
@@ -49,7 +50,8 @@ CREATE TABLE IF NOT EXISTS `pnl_events` (
     PRIMARY KEY (`id`),
     INDEX `idx_pnl_events_user_id` (`user_id`),
     INDEX `idx_pnl_events_status` (`status`),
-    INDEX `idx_pnl_events_event_date` (`event_date`)
+    INDEX `idx_pnl_events_event_date` (`event_date`),
+    INDEX `idx_pnl_events_tk_event` (`ticketkart_event_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------

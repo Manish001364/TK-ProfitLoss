@@ -33,9 +33,17 @@
             <i class="fas fa-credit-card"></i>
             <span>Payments</span>
         </a>
+        
+        <div class="pnl-nav-divider"></div>
+        <small class="pnl-nav-label">Configuration</small>
+        
         <a href="{{ route('pnl.categories.index') }}" class="pnl-nav-link {{ request()->routeIs('pnl.categories.*') ? 'active' : '' }}">
             <i class="fas fa-tags"></i>
-            <span>Categories</span>
+            <span>Expense Categories</span>
+        </a>
+        <a href="{{ route('pnl.service-types.index') }}" class="pnl-nav-link {{ request()->routeIs('pnl.service-types.*') ? 'active' : '' }}">
+            <i class="fas fa-user-tag"></i>
+            <span>Service Types</span>
         </a>
         <a href="{{ route('pnl.settings.index') }}" class="pnl-nav-link {{ request()->routeIs('pnl.settings.*') ? 'active' : '' }}">
             <i class="fas fa-cog"></i>

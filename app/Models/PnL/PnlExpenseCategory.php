@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class PnlExpenseCategory extends Model
 {
@@ -31,7 +32,55 @@ class PnlExpenseCategory extends Model
         'is_active' => 'boolean',
     ];
 
-    // Default categories for new users
+    // Flag to identify if category is a system default
+    protected $appends = ['is_system'];
+
+    public function getIsSystemAttribute(): bool
+    {
+        return $this->user_id === null;
+    }
+
+    /**
+     * Get all categories (system defaults + user created) for a user
+     * System categories are read-only, user categories can be edited
+     */
+    public static function getAllForUser($userId)
+    {
+        // First, try to get from the new split tables if they exist
+        try {
+            $systemCategories = DB::table('pnl_expense_categories_system')
+                ->select('id', DB::raw('NULL as user_id'), 'name', 'type', 'description', 'color', 'icon', 'default_budget_limit', 'sort_order', 'is_active', 'created_at', 'updated_at')
+                ->where('is_active', true)
+                ->get()
+                ->map(function ($item) {
+                    $item->is_system = true;
+                    return $item;
+                });
+
+            $userCategories = DB::table('pnl_expense_categories_user')
+                ->select('id', 'user_id', 'name', 'type', 'description', 'color', 'icon', 'default_budget_limit', 'sort_order', 'is_active', 'created_at', 'updated_at')
+                ->where('user_id', $userId)
+                ->where('is_active', true)
+                ->get()
+                ->map(function ($item) {
+                    $item->is_system = false;
+                    return $item;
+                });
+
+            return $systemCategories->merge($userCategories)->sortBy('sort_order')->values();
+        } catch (\Exception $e) {
+            // Fallback to legacy table
+            return self::where(function ($query) use ($userId) {
+                $query->where('user_id', $userId)
+                      ->orWhereNull('user_id');
+            })
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+        }
+    }
+
+    // Default categories for new users (legacy - kept for backward compatibility)
     public static function getDefaultCategories(): array
     {
         return [
@@ -78,7 +127,22 @@ class PnlExpenseCategory extends Model
     // Scopes
     public function scopeForUser($query, $userId)
     {
+        // Include both system defaults (NULL user_id) and user's own categories
+        return $query->where(function ($q) use ($userId) {
+            $q->where('user_id', $userId)
+              ->orWhereNull('user_id');
+        });
+    }
+
+    public function scopeUserOwned($query, $userId)
+    {
+        // Only user's own categories (not system defaults)
         return $query->where('user_id', $userId);
+    }
+
+    public function scopeSystemDefaults($query)
+    {
+        return $query->whereNull('user_id');
     }
 
     public function scopeActive($query)
@@ -89,5 +153,13 @@ class PnlExpenseCategory extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
+    }
+
+    /**
+     * Check if this category can be modified by the user
+     */
+    public function canBeModified(): bool
+    {
+        return $this->user_id !== null;
     }
 }

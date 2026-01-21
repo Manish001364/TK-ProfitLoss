@@ -316,6 +316,8 @@ class DashboardController extends Controller
             });
 
         // Get upcoming events with expected revenue
+        // NOTE: Profit/Loss is calculated from ACTUAL total_revenue - total_expenses
+        // NOT from expected_revenue which is just a manual estimate
         $upcomingEvents = PnlEvent::forUser($userId)
             ->upcoming()
             ->with(['revenues', 'expenses'])
@@ -323,14 +325,19 @@ class DashboardController extends Controller
             ->limit(10)
             ->get()
             ->map(function ($event) {
+                $actualRevenue = $event->total_revenue; // Calculated from ticket sales
+                $actualExpenses = $event->total_expenses; // Sum of expenses
+                $actualProfit = $actualRevenue - $actualExpenses;
+                
                 return [
                     'id' => $event->id,
                     'name' => $event->name,
                     'date' => $event->event_date,
-                    'expected_revenue' => $event->expected_revenue ?? 0,
-                    'current_revenue' => $event->total_revenue,
-                    'total_expenses' => $event->total_expenses,
-                    'projected_profit' => ($event->expected_revenue ?? $event->total_revenue) - $event->total_expenses,
+                    'expected_revenue' => $actualRevenue, // Use actual revenue for display
+                    'current_revenue' => $actualRevenue,
+                    'total_expenses' => $actualExpenses,
+                    'projected_profit' => $actualProfit, // FIXED: Use actual profit calculation
+                    'profit_status' => $event->profit_status, // Include profit status
                     'days_until' => now()->diffInDays($event->event_date, false),
                 ];
             });

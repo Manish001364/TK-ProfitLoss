@@ -114,6 +114,7 @@ class ExpenseController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'amount' => 'required|numeric|min:0',
+            'currency' => 'nullable|string|max:3', // Currency code (GBP, USD, EUR, etc.)
             'tax_rate' => 'nullable|numeric|min:0|max:100',
             'tax_amount' => 'nullable|numeric|min:0',
             'is_taxable' => 'boolean',
@@ -129,6 +130,12 @@ class ExpenseController extends Controller
             // Notification settings
             'send_email_to_vendor' => 'boolean',
         ]);
+        
+        // Set currency - default to user's default currency if not provided
+        if (empty($validated['currency'])) {
+            $settings = PnlSettings::getOrCreate(auth()->id());
+            $validated['currency'] = $settings->default_currency ?? 'GBP';
+        }
 
         $userId = auth()->id();
         $validated['user_id'] = $userId;

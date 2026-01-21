@@ -75,9 +75,13 @@
                                     <td class="border-0"><strong><a href="{{ route('pnl.expenses.show', $expense) }}" class="text-dark">{{ $expense->title }}</a></strong></td>
                                     <td class="border-0 small"><a href="{{ route('pnl.events.show', $expense->event) }}">{{ $expense->event->name }}</a></td>
                                     <td class="border-0">
-                                        <span class="badge" style="background-color: {{ $expense->category->color }}20; color: {{ $expense->category->color }}">
-                                            {{ $expense->category->name }}
-                                        </span>
+                                        @if($expense->category)
+                                            <span class="badge" style="background-color: {{ $expense->category->color ?? '#6c757d' }}20; color: {{ $expense->category->color ?? '#6c757d' }}">
+                                                {{ $expense->category->name }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary">-</span>
+                                        @endif
                                     </td>
                                     <td class="border-0 small">{{ $expense->vendor?->display_name ?? '-' }}</td>
                                     <td class="border-0 small">{{ $expense->expense_date->format('d M Y') }}</td>

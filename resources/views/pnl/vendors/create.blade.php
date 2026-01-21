@@ -205,8 +205,19 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small">Contact Phone</label>
-                            <input type="tel" name="emergency_contact_phone" id="emergency_phone" class="form-control" value="{{ old('emergency_contact_phone') }}">
-                            <input type="hidden" name="emergency_contact_phone_country_code" id="emergency_phone_country_code" value="{{ old('emergency_contact_phone_country_code', '+44') }}">
+                            <div class="input-group">
+                                <select name="emergency_contact_phone_country_code" class="form-select phone-country-select" style="max-width: 110px;">
+                                    <option value="+44" {{ old('emergency_contact_phone_country_code', '+44') == '+44' ? 'selected' : '' }}>🇬🇧 +44</option>
+                                    <option value="+1" {{ old('emergency_contact_phone_country_code') == '+1' ? 'selected' : '' }}>🇺🇸 +1</option>
+                                    <option value="+91" {{ old('emergency_contact_phone_country_code') == '+91' ? 'selected' : '' }}>🇮🇳 +91</option>
+                                    <option value="+49" {{ old('emergency_contact_phone_country_code') == '+49' ? 'selected' : '' }}>🇩🇪 +49</option>
+                                    <option value="+33" {{ old('emergency_contact_phone_country_code') == '+33' ? 'selected' : '' }}>🇫🇷 +33</option>
+                                    <option value="+353" {{ old('emergency_contact_phone_country_code') == '+353' ? 'selected' : '' }}>🇮🇪 +353</option>
+                                    <option value="+61" {{ old('emergency_contact_phone_country_code') == '+61' ? 'selected' : '' }}>🇦🇺 +61</option>
+                                    <option value="+971" {{ old('emergency_contact_phone_country_code') == '+971' ? 'selected' : '' }}>🇦🇪 +971</option>
+                                </select>
+                                <input type="tel" name="emergency_contact_phone" class="form-control" value="{{ old('emergency_contact_phone') }}" placeholder="Phone number">
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small">Relation/Role</label>

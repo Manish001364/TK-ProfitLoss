@@ -1,5 +1,5 @@
 # P&L Module Installation Guide for TicketKart
-## Version 2.2 - With Sidebar Integration & TicketKart Events
+## Version 2.3 - With Built-in Sidebar Navigation
 
 Follow these steps to add the P&L module to your Laravel project.
 
@@ -34,7 +34,6 @@ Extract the zip and copy these folders/files to your Laravel project:
 | `app/Console/Commands/SendPaymentReminders.php` | `your-project/app/Console/Commands/SendPaymentReminders.php` |
 | `resources/views/pnl/` | `your-project/resources/views/pnl/` |
 | `routes/pnl.php` | `your-project/routes/pnl.php` |
-| `public/css/pnl-sidebar.css` | `your-project/public/css/pnl-sidebar.css` |
 
 ---
 
@@ -95,122 +94,27 @@ mysql -u your_username -p your_database < SQL_TABLES.sql
 
 ---
 
-## Step 6: Add P&L Sidebar CSS
+## Step 6: Add P&L Link to Main Sidebar (Optional)
 
-### 6.1 Copy the CSS File
+The P&L module has its own **built-in sidebar navigation** that appears on all P&L pages. However, you may want to add a single link to your main TicketKart sidebar for easy access.
 
-Copy `public/css/pnl-sidebar.css` to your project:
-```
-your-project/public/css/pnl-sidebar.css
-```
-
-### 6.2 Include CSS in Your Layout
-
-Open your main layout file (e.g., `resources/views/layouts/organiser_layout.blade.php`) and add this line in the `<head>` section:
+Open your sidebar file (`resources/views/customer/sidemenu.blade.php`) and add:
 
 ```html
-<head>
-    <!-- ... existing CSS ... -->
-    
-    <!-- P&L Sidebar Styles -->
-    <link rel="stylesheet" href="{{ asset('css/pnl-sidebar.css') }}">
-</head>
-```
-
----
-
-## Step 7: Add P&L Menu to Sidebar
-
-### 7.1 Find Your Sidebar File
-
-Your sidebar is likely in one of these locations:
-- `resources/views/customer/sidemenu.blade.php`
-- `resources/views/layouts/sidebar.blade.php`
-- `resources/views/partials/sidebar.blade.php`
-
-### 7.2 Add the P&L Menu Code
-
-Copy and paste this code into your sidebar file. Place it where you want the P&L menu to appear (e.g., after Events):
-
-```html
-{{-- P&L Module Menu --}}
-@php
-    $pnlActive = request()->is('pnl/*') || request()->routeIs('pnl.*');
-@endphp
-
-<li class="pnl-menu-item {{ $pnlActive ? 'active' : '' }}">
-    <a href="#pnlSubmenu" data-bs-toggle="collapse" class="{{ $pnlActive ? '' : 'collapsed' }}" aria-expanded="{{ $pnlActive ? 'true' : 'false' }}">
-        <i class="fas fa-chart-line pnl-menu-icon"></i>
-        <span class="pnl-menu-text">P&L</span>
-        <i class="fas fa-chevron-down pnl-chevron"></i>
+<!-- P&L Module Link -->
+<li class="menuLi d-flex align-items-center {{ request()->is('pnl/*') ? 'leftMenuActive' : '' }}">
+    <a href="{{ route('pnl.dashboard') }}" class="d-flex icon-color gap-2">
+        <i class="fi fi-rr-chart-line icon-color menuIcon fs-5"></i>
+        <span class="menuCon">P&L</span>
     </a>
-    
-    <ul class="collapse pnl-submenu {{ $pnlActive ? 'show' : '' }}" id="pnlSubmenu">
-        <li class="{{ request()->routeIs('pnl.dashboard') ? 'active' : '' }}">
-            <a href="{{ route('pnl.dashboard') }}">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Dashboard</span>
-            </a>
-        </li>
-        <li class="{{ request()->routeIs('pnl.events.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.events.index') }}">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Events</span>
-            </a>
-        </li>
-        <li class="{{ request()->routeIs('pnl.vendors.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.vendors.index') }}">
-                <i class="fas fa-users"></i>
-                <span>Vendors & Artists</span>
-            </a>
-        </li>
-        <li class="{{ request()->routeIs('pnl.expenses.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.expenses.index') }}">
-                <i class="fas fa-receipt"></i>
-                <span>Expenses</span>
-            </a>
-        </li>
-        <li class="{{ request()->routeIs('pnl.revenues.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.revenues.index') }}">
-                <i class="fas fa-pound-sign"></i>
-                <span>Revenue</span>
-            </a>
-        </li>
-        <li class="{{ request()->routeIs('pnl.payments.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.payments.index') }}">
-                <i class="fas fa-credit-card"></i>
-                <span>Payments</span>
-            </a>
-        </li>
-        <li class="{{ request()->routeIs('pnl.categories.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.categories.index') }}">
-                <i class="fas fa-tags"></i>
-                <span>Categories</span>
-            </a>
-        </li>
-        <li class="{{ request()->routeIs('pnl.settings.*') ? 'active' : '' }}">
-            <a href="{{ route('pnl.settings.index') }}">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
-            </a>
-        </li>
-    </ul>
 </li>
 ```
 
-### 7.3 Alternative: Use Blade Include
-
-Instead of copying the code, you can use a Blade include. 
-
-Copy `resources/views/pnl/partials/sidebar-menu.blade.php` to your project, then add this line to your sidebar:
-
-```php
-@include('pnl.partials.sidebar-menu')
-```
+**Note:** This is optional. Users can always access the P&L module directly at `/pnl/dashboard`.
 
 ---
 
-## Step 8: Setup Payment Reminders (Optional)
+## Step 7: Setup Payment Reminders (Optional)
 
 Edit `app/Console/Kernel.php`, add to the `schedule` method:
 
@@ -224,7 +128,7 @@ protected function schedule(Schedule $schedule)
 
 ---
 
-## Step 9: Clear Cache
+## Step 8: Clear Cache
 
 ```bash
 php artisan config:clear
@@ -236,17 +140,34 @@ composer dump-autoload
 
 ---
 
-## Step 10: Test
+## Step 9: Test
 
 Visit: `your-domain.com/pnl/dashboard`
 
-You should see the P&L Dashboard and the sidebar menu!
+You should see the P&L Dashboard with the built-in sidebar navigation!
 
 ---
 
-## Files Summary
+## Built-in Sidebar Navigation
 
-After installation, you should have these P&L files:
+**NEW in v2.3:** The P&L module now includes its own sidebar navigation on every page:
+
+- 📊 **Dashboard** - Overview of all P&L data
+- 📅 **Events** - Manage event P&L
+- 👥 **Vendors & Artists** - Manage vendors, artists, DJs
+- 🧾 **Expenses** - Track all expenses
+- 💷 **Revenue** - Track ticket sales
+- 💳 **Payments** - Payment tracking & status
+- 🏷️ **Categories** - Expense categories
+- ⚙️ **Settings** - VAT, invoice settings
+
+The sidebar automatically highlights the current section and is mobile-responsive.
+
+---
+
+## Files Structure
+
+After installation, you should have:
 
 ```
 your-project/
@@ -259,34 +180,46 @@ your-project/
 │   ├── Policies/ (5 files)
 │   ├── Providers/PnLServiceProvider.php
 │   └── Traits/HasAuditLog.php
-├── public/
-│   └── css/
-│       └── pnl-sidebar.css  ← CSS for sidebar menu
-├── resources/views/
-│   └── pnl/
-│       └── partials/
-│           └── sidebar-menu.blade.php  ← Sidebar menu code
-├── routes/
-│   └── pnl.php
-└── SQL_TABLES.sql
+├── resources/views/pnl/
+│   ├── layouts/
+│   │   └── app.blade.php          ← P&L layout with sidebar
+│   ├── partials/
+│   │   └── sidebar.blade.php      ← Built-in sidebar navigation
+│   ├── dashboard/
+│   ├── events/
+│   ├── vendors/
+│   ├── expenses/
+│   ├── revenues/
+│   ├── payments/
+│   ├── categories/
+│   ├── settings/
+│   ├── audit/
+│   ├── exports/
+│   └── emails/
+└── routes/pnl.php
 ```
 
 ---
 
+## Available Routes
+
+| Route | URL | Description |
+|-------|-----|-------------|
+| `pnl.dashboard` | `/pnl/dashboard` | Main Dashboard |
+| `pnl.events.index` | `/pnl/events` | Events List |
+| `pnl.vendors.index` | `/pnl/vendors` | Vendors List |
+| `pnl.expenses.index` | `/pnl/expenses` | Expenses List |
+| `pnl.revenues.index` | `/pnl/revenues` | Revenue List |
+| `pnl.payments.index` | `/pnl/payments` | Payments List |
+| `pnl.payments.upcoming` | `/pnl/payments/upcoming` | Upcoming Payments |
+| `pnl.payments.overdue` | `/pnl/payments/overdue` | Overdue Payments |
+| `pnl.categories.index` | `/pnl/categories` | Expense Categories |
+| `pnl.settings.index` | `/pnl/settings` | Settings |
+| `pnl.audit.index` | `/pnl/audit` | Audit Logs |
+
+---
+
 ## Troubleshooting
-
-### Sidebar not showing?
-
-1. **Check CSS is loaded**: View page source and search for `pnl-sidebar.css`
-2. **Check menu code**: Make sure the P&L menu code is inside your `<ul>` element
-3. **Clear cache**: Run `php artisan view:clear`
-4. **Check Bootstrap**: The menu uses Bootstrap's collapse. Ensure Bootstrap JS is loaded.
-
-### Menu styling doesn't match?
-
-The `pnl-sidebar.css` uses its own class names (`.pnl-menu-item`, `.pnl-submenu`) to avoid conflicts with your existing styles. You can customize the CSS file to match your theme.
-
-### Other Issues
 
 | Issue | Solution |
 |-------|----------|
@@ -296,15 +229,21 @@ The `pnl-sidebar.css` uses its own class names (`.pnl-menu-item`, `.pnl-submenu`
 | Permission denied | `chmod -R 775 storage bootstrap/cache` |
 | PDF not generating | Ensure `barryvdh/laravel-dompdf` installed |
 | Email not sending | Check mail config in `.env` |
+| Sidebar not showing | Ensure `pnl/layouts/app.blade.php` and `pnl/partials/sidebar.blade.php` are copied |
 
 ---
 
 ## Version History
 
-### v2.2 (Current)
-- Separate CSS file for sidebar (`pnl-sidebar.css`)
+### v2.3 (Current)
+- **Built-in sidebar navigation** on all P&L pages
+- No need to manually add sidebar code to main TicketKart menu
+- Self-contained P&L layout system
+- Mobile-responsive sidebar
+
+### v2.2
+- Separate CSS file for sidebar
 - Sidebar menu partial blade file
-- Clearer installation instructions
 
 ### v2.1
 - Collapsible dashboard sections
@@ -322,12 +261,12 @@ The `pnl-sidebar.css` uses its own class names (`.pnl-menu-item`, `.pnl-submenu`
 
 ## Done!
 
-Your P&L module is ready with a dedicated sidebar menu.
+Your P&L module is ready with built-in navigation.
 
 **Quick Start:**
-1. Go to `/pnl/settings` - Set your VAT rate
-2. Go to `/pnl/events` - Create your first event
-3. Go to `/pnl/vendors` - Add vendors/artists
-4. Go to `/pnl/expenses` - Track expenses
-5. Go to `/pnl/revenues` - Track ticket sales
-6. Go to `/pnl/dashboard` - View your P&L summary
+1. Go to `/pnl/dashboard` - View your P&L summary
+2. Go to `/pnl/settings` - Set your VAT rate
+3. Go to `/pnl/events` - Create your first event
+4. Go to `/pnl/vendors` - Add vendors/artists
+5. Go to `/pnl/expenses` - Track expenses
+6. Go to `/pnl/revenues` - Track ticket sales

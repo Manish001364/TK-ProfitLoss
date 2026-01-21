@@ -68,7 +68,7 @@
                         </thead>
                         <tbody>
                             @forelse($vendors as $vendor)
-                                <tr>
+                                <tr data-type="{{ $vendor->type }}" data-status="{{ $vendor->is_active ? 'active' : 'inactive' }}">
                                     <td class="border-0">
                                         <strong><a href="{{ route('pnl.vendors.show', $vendor) }}" class="text-dark">{{ $vendor->display_name }}</a></strong>
                                         @if($vendor->business_name && $vendor->full_name !== $vendor->business_name)

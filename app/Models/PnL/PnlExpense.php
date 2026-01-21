@@ -24,6 +24,7 @@ class PnlExpense extends Model
         'title',
         'description',
         'amount',
+        'currency',
         'tax_rate',
         'tax_amount',
         'total_amount',

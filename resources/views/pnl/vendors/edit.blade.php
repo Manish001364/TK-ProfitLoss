@@ -69,9 +69,21 @@
                         <div class="col-md-6"></div>
                         <div class="col-md-6">
                             <label class="form-label small">Primary Phone <span class="text-danger">*</span></label>
-                            <input type="tel" name="phone" id="phone" class="form-control @error('phone') is-invalid @enderror" required 
-                                   value="{{ old('phone', $vendor->phone) }}" data-initial-country="{{ $vendor->phone_country_code ?? '+44' }}">
-                            <input type="hidden" name="phone_country_code" id="phone_country_code" value="{{ old('phone_country_code', $vendor->phone_country_code ?? '+44') }}">
+                            <div class="input-group">
+                                <select name="phone_country_code" class="form-select phone-country-select" style="max-width: 140px;">
+                                    <option value="+44" {{ old('phone_country_code', $vendor->phone_country_code ?? '+44') == '+44' ? 'selected' : '' }}>🇬🇧 +44</option>
+                                    <option value="+1" {{ old('phone_country_code', $vendor->phone_country_code) == '+1' ? 'selected' : '' }}>🇺🇸 +1</option>
+                                    <option value="+91" {{ old('phone_country_code', $vendor->phone_country_code) == '+91' ? 'selected' : '' }}>🇮🇳 +91</option>
+                                    <option value="+49" {{ old('phone_country_code', $vendor->phone_country_code) == '+49' ? 'selected' : '' }}>🇩🇪 +49</option>
+                                    <option value="+33" {{ old('phone_country_code', $vendor->phone_country_code) == '+33' ? 'selected' : '' }}>🇫🇷 +33</option>
+                                    <option value="+353" {{ old('phone_country_code', $vendor->phone_country_code) == '+353' ? 'selected' : '' }}>🇮🇪 +353</option>
+                                    <option value="+61" {{ old('phone_country_code', $vendor->phone_country_code) == '+61' ? 'selected' : '' }}>🇦🇺 +61</option>
+                                    <option value="+971" {{ old('phone_country_code', $vendor->phone_country_code) == '+971' ? 'selected' : '' }}>🇦🇪 +971</option>
+                                    <option value="+65" {{ old('phone_country_code', $vendor->phone_country_code) == '+65' ? 'selected' : '' }}>🇸🇬 +65</option>
+                                </select>
+                                <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror" required 
+                                       value="{{ old('phone', $vendor->phone) }}" placeholder="7911 123456">
+                            </div>
                             @error('phone')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">

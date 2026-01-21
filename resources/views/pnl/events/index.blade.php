@@ -1,89 +1,75 @@
 @extends('layouts.organiser_layout')
 
 @section('content')
-    <div class="container-fluid py-4">
+    <div class="container py-4" style="max-width: 1200px;">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-calendar-alt"></i> Events</h1>
-            <a href="{{ route('pnl.events.create') }}" class="btn btn-primary">
+            <h4 class="mb-0">Events</h4>
+            <a href="{{ route('pnl.events.create') }}" class="btn btn-danger btn-sm">
                 <i class="fas fa-plus"></i> Create Event
             </a>
         </div>
 
         <!-- Filters -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form method="GET" action="{{ route('pnl.events.index') }}" class="row align-items-end">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <form method="GET" action="{{ route('pnl.events.index') }}" id="filterForm" class="row g-3 align-items-end">
                     <div class="col-md-3">
-                        <div class="form-group mb-2 mb-md-0">
-                            <label>Search</label>
-                            <input type="text" name="search" class="form-control" placeholder="Event name..." value="{{ request('search') }}">
-                        </div>
+                        <label class="form-label small text-muted mb-1">Search</label>
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Event name..." value="{{ request('search') }}">
                     </div>
                     <div class="col-md-2">
-                        <div class="form-group mb-2 mb-md-0">
-                            <label>Status</label>
-                            <select name="status" class="form-control">
-                                <option value="">All Status</option>
-                                <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
-                                <option value="planning" {{ request('status') === 'planning' ? 'selected' : '' }}>Planning</option>
-                                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
-                                <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
-                                <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                            </select>
-                        </div>
+                        <label class="form-label small text-muted mb-1">Status</label>
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">All Status</option>
+                            <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                            <option value="planning" {{ request('status') === 'planning' ? 'selected' : '' }}>Planning</option>
+                            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                        </select>
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group mb-2 mb-md-0">
-                            <label>From Date</label>
-                            <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="form-group mb-2 mb-md-0">
-                            <label>To Date</label>
-                            <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                        </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted mb-1">Date Range</label>
+                        <input type="text" name="date_range" id="dateRangePicker" class="form-control form-control-sm" placeholder="Select date range">
+                        <input type="hidden" name="date_from" id="date_from" value="{{ request('date_from') }}">
+                        <input type="hidden" name="date_to" id="date_to" value="{{ request('date_to') }}">
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Filter
-                        </button>
-                        <a href="{{ route('pnl.events.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Clear
-                        </a>
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i> Filter</button>
+                        <a href="{{ route('pnl.events.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i></a>
                     </div>
                 </form>
             </div>
         </div>
 
         <!-- Events Table -->
-        <div class="card">
+        <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Event Name</th>
-                                <th>Date</th>
-                                <th>Venue</th>
-                                <th>Status</th>
-                                <th class="text-end">Budget</th>
-                                <th class="text-end">Revenue</th>
-                                <th class="text-end">Expenses</th>
-                                <th class="text-end">P&L</th>
-                                <th width="150">Actions</th>
+                                <th class="border-0">Event Name</th>
+                                <th class="border-0">Date</th>
+                                <th class="border-0">Venue</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0 text-end">Budget</th>
+                                <th class="border-0 text-end">Revenue</th>
+                                <th class="border-0 text-end">Expenses</th>
+                                <th class="border-0 text-end">P&L</th>
+                                <th class="border-0" width="120">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($events as $event)
                                 <tr>
-                                    <td>
-                                        <strong><a href="{{ route('pnl.events.show', $event) }}">{{ $event->name }}</a></strong>
+                                    <td class="border-0">
+                                        <strong><a href="{{ route('pnl.events.show', $event) }}" class="text-dark">{{ $event->name }}</a></strong>
                                     </td>
-                                    <td>{{ $event->event_date->format('d M Y') }}</td>
-                                    <td>{{ $event->venue ?? '-' }}</td>
-                                    <td>
+                                    <td class="border-0">{{ $event->event_date->format('d M Y') }}</td>
+                                    <td class="border-0 small">{{ $event->venue ?? '-' }}</td>
+                                    <td class="border-0">
                                         @php
                                             $statusColors = [
                                                 'draft' => 'secondary',
@@ -93,35 +79,28 @@
                                                 'cancelled' => 'danger',
                                             ];
                                         @endphp
-                                        <span class="badge bg-{{ $statusColors[$event->status] ?? 'secondary' }}">
+                                        <span class="badge bg-{{ $statusColors[$event->status] ?? 'secondary' }}-subtle text-{{ $statusColors[$event->status] ?? 'secondary' }}">
                                             {{ ucfirst($event->status) }}
                                         </span>
                                     </td>
-                                    <td class="text-end">₹{{ number_format($event->budget, 0) }}</td>
-                                    <td class="text-end text-success">₹{{ number_format($event->total_revenue, 0) }}</td>
-                                    <td class="text-end text-danger">₹{{ number_format($event->total_expenses, 0) }}</td>
-                                    <td class="text-end">
+                                    <td class="border-0 text-end">£{{ number_format($event->budget, 0) }}</td>
+                                    <td class="border-0 text-end text-success">£{{ number_format($event->total_revenue, 0) }}</td>
+                                    <td class="border-0 text-end text-danger">£{{ number_format($event->total_expenses, 0) }}</td>
+                                    <td class="border-0 text-end">
                                         @php $profit = $event->net_profit; @endphp
                                         <span class="{{ $profit >= 0 ? 'text-success' : 'text-danger' }} fw-bold">
-                                            {{ $profit >= 0 ? '' : '-' }}₹{{ number_format(abs($profit), 0) }}
+                                            {{ $profit >= 0 ? '' : '-' }}£{{ number_format(abs($profit), 0) }}
                                         </span>
                                     </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{{ route('pnl.events.show', $event) }}" class="btn btn-sm btn-outline-primary" title="View">
+                                    <td class="border-0">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('pnl.events.show', $event) }}" class="btn btn-outline-secondary" title="View">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ route('pnl.events.edit', $event) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                            <a href="{{ route('pnl.events.edit', $event) }}" class="btn btn-outline-secondary" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <form action="{{ route('pnl.events.duplicate', $event) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-info" title="Duplicate">
-                                                    <i class="fas fa-copy"></i>
-                                                </button>
-                                            </form>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    onclick="confirmDelete('{{ route('pnl.events.destroy', $event) }}')" title="Delete">
+                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete('{{ route('pnl.events.destroy', $event) }}')" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -129,10 +108,10 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-5">
-                                        <i class="fas fa-calendar-plus fa-4x text-muted mb-3"></i>
+                                    <td colspan="9" class="text-center py-5 border-0">
+                                        <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
                                         <h5 class="text-muted">No events found</h5>
-                                        <a href="{{ route('pnl.events.create') }}" class="btn btn-primary mt-2">
+                                        <a href="{{ route('pnl.events.create') }}" class="btn btn-danger btn-sm mt-2">
                                             <i class="fas fa-plus"></i> Create Your First Event
                                         </a>
                                     </td>
@@ -143,29 +122,24 @@
                 </div>
             </div>
             @if($events->hasPages())
-                <div class="card-footer">
-                    {{ $events->links() }}
-                </div>
+                <div class="card-footer bg-white border-0">{{ $events->links() }}</div>
             @endif
         </div>
 
-        <!-- Delete Confirmation Modal -->
+        <!-- Delete Modal -->
         <div class="modal fade" id="deleteModal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-sm">
                 <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <div class="modal-header border-0">
+                        <h6 class="modal-title">Confirm Delete</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete this event? This action cannot be undone.
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <div class="modal-body">Are you sure you want to delete this event?</div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <form id="deleteForm" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger">Delete</button>
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                         </form>
                     </div>
                 </div>
@@ -175,11 +149,34 @@
 @endsection
 
 @section('customjs')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script>
+        $(document).ready(function() {
+            $('#dateRangePicker').daterangepicker({
+                autoUpdateInput: false,
+                locale: { cancelLabel: 'Clear', format: 'YYYY-MM-DD' },
+                opens: 'left'
+            });
+
+            $('#dateRangePicker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('DD MMM YYYY') + ' - ' + picker.endDate.format('DD MMM YYYY'));
+                $('#date_from').val(picker.startDate.format('YYYY-MM-DD'));
+                $('#date_to').val(picker.endDate.format('YYYY-MM-DD'));
+            });
+
+            $('#dateRangePicker').on('cancel.daterangepicker', function() {
+                $(this).val('');
+                $('#date_from').val('');
+                $('#date_to').val('');
+            });
+        });
+
         function confirmDelete(url) {
             document.getElementById('deleteForm').action = url;
-            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            deleteModal.show();
+            var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
         }
     </script>
 @endsection

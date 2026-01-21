@@ -5,9 +5,13 @@
         <span>P&L Module</span>
     </div>
     <nav class="pnl-nav">
-        <a href="{{ route('pnl.dashboard') }}" class="pnl-nav-link {{ request()->routeIs('pnl.dashboard') ? 'active' : '' }}">
+        <a href="{{ route('pnl.dashboard') }}" class="pnl-nav-link {{ request()->routeIs('pnl.dashboard') || request()->routeIs('pnl.dashboard.index') ? 'active' : '' }}">
             <i class="fas fa-tachometer-alt"></i>
             <span>Dashboard</span>
+        </a>
+        <a href="{{ route('pnl.dashboard.cashflow') }}" class="pnl-nav-link {{ request()->routeIs('pnl.dashboard.cashflow') ? 'active' : '' }}">
+            <i class="fas fa-chart-area"></i>
+            <span>Cash Flow</span>
         </a>
         <a href="{{ route('pnl.events.index') }}" class="pnl-nav-link {{ request()->routeIs('pnl.events.*') ? 'active' : '' }}">
             <i class="fas fa-calendar-alt"></i>

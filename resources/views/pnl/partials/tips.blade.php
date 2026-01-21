@@ -10,18 +10,25 @@
     // Determine status
     $isProfitable = $netProfit >= 0;
     $isOverBudget = $budgetUtilisation > 100;
-    $isUnderBudget = $budgetUtilisation < 70;
-    $hasLowRevenue = $totalRevenue < $totalExpenses;
+    $isUnderBudget = $budgetUtilisation < 70 && $totalBudget > 0;
+    $hasLowRevenue = $totalRevenue < $totalExpenses && $totalRevenue > 0;
 @endphp
 
-@if($totalExpenses > 0 || $totalRevenue > 0)
+@if($totalExpenses > 0 || $totalRevenue > 0 || $totalBudget > 0)
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-gradient text-white border-0 py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Smart Tips & Insights</h6>
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Smart Tips & Insights</h6>
+            @if($totalBudget > 0)
+                <span class="badge bg-white text-dark">
+                    Budget Utilisation: {{ number_format($budgetUtilisation, 0) }}%
+                </span>
+            @endif
+        </div>
     </div>
     <div class="card-body">
         <div class="row g-3">
-            @if(!$isProfitable)
+            @if(!$isProfitable && $totalRevenue > 0)
             <!-- Loss Warning & Tips -->
             <div class="col-12">
                 <div class="alert alert-warning mb-0">
@@ -40,7 +47,7 @@
                     </div>
                 </div>
             </div>
-            @else
+            @elseif($isProfitable && $totalRevenue > 0)
             <!-- Profit Celebration -->
             <div class="col-12">
                 <div class="alert alert-success mb-0">
@@ -60,7 +67,7 @@
             <div class="col-md-6">
                 <div class="alert alert-danger mb-0 h-100">
                     <h6 class="alert-heading"><i class="fas fa-chart-line me-2"></i>Over Budget ({{ number_format($budgetUtilisation, 0) }}%)</h6>
-                    <p class="small mb-2">You've exceeded your allocated budget. Consider:</p>
+                    <p class="small mb-2">You've exceeded your allocated budget by £{{ number_format($totalExpenses - $totalBudget, 0) }}. Consider:</p>
                     <ul class="small mb-0">
                         <li>Reviewing and cutting non-essential expenses</li>
                         <li>Postponing discretionary spending</li>
@@ -69,12 +76,12 @@
                     </ul>
                 </div>
             </div>
-            @elseif($isUnderBudget && $budgetUtilisation > 0)
+            @elseif($isUnderBudget)
             <!-- Under Budget - Opportunity -->
             <div class="col-md-6">
                 <div class="alert alert-info mb-0 h-100">
                     <h6 class="alert-heading"><i class="fas fa-piggy-bank me-2"></i>Under Budget ({{ number_format($budgetUtilisation, 0) }}%)</h6>
-                    <p class="small mb-2">You have budget headroom! Consider investing in:</p>
+                    <p class="small mb-2">You have £{{ number_format($totalBudget - $totalExpenses, 0) }} budget headroom! Consider investing in:</p>
                     <ul class="small mb-0">
                         <li><strong>Marketing:</strong> Boost ticket sales with paid advertising</li>
                         <li><strong>Production:</strong> Enhance stage, lighting, or sound</li>
@@ -85,7 +92,7 @@
             </div>
             @endif
 
-            @if($hasLowRevenue && $totalRevenue > 0)
+            @if($hasLowRevenue)
             <!-- Revenue Tips -->
             <div class="col-md-6">
                 <div class="alert alert-light border mb-0 h-100">

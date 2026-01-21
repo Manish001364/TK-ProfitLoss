@@ -260,10 +260,15 @@
             <span>Subtotal</span>
             <span>£{{ number_format($expense->amount, 2) }}</span>
         </div>
-        @if($expense->tax_amount > 0)
+        @if($expense->is_taxable && $expense->tax_amount > 0)
         <div class="totals-row">
             <span>VAT ({{ $expense->tax_rate ?? 20 }}%)</span>
             <span>£{{ number_format($expense->tax_amount, 2) }}</span>
+        </div>
+        @else
+        <div class="totals-row" style="color: #666; font-style: italic;">
+            <span>VAT</span>
+            <span>Non-Taxable</span>
         </div>
         @endif
         <div class="totals-row grand-total">

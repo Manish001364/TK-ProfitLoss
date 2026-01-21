@@ -44,6 +44,8 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
     Route::resource('categories', ExpenseCategoryController::class)->except(['show']);
 
     // Expenses
+    Route::get('expenses/{expense}/pdf', [ExpenseController::class, 'generatePdf'])->name('expenses.pdf');
+    Route::post('expenses/{expense}/email', [ExpenseController::class, 'sendInvoiceEmail'])->name('expenses.email');
     Route::resource('expenses', ExpenseController::class);
 
     // Payments

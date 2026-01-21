@@ -1,11 +1,20 @@
 @extends('pnl.layouts.app')
 
 @section('pnl_content')
+    {{-- Include Walkthrough Modal for First-Time Users --}}
+    @include('pnl.partials.walkthrough')
+
     <div class="container-fluid" style="max-width: 1200px;">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="mb-0" style="color: #dc3545;">P&L Dashboard</h4>
+            <div>
+                <h4 class="mb-0" style="color: #dc3545;">P&L Dashboard</h4>
+                <small class="text-muted">Track your event profitability</small>
+            </div>
             <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-info btn-sm" onclick="showWalkthroughAgain()" title="Show Guide">
+                    <i class="fas fa-question-circle"></i>
+                </button>
                 <a href="{{ route('pnl.settings.index') }}" class="btn btn-outline-secondary btn-sm" title="Settings">
                     <i class="fas fa-cog"></i>
                 </a>

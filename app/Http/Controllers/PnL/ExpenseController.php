@@ -366,19 +366,14 @@ class ExpenseController extends Controller
 
     /**
      * Validate that a category exists in either system or user tables
+     * Similar approach to VendorController::validateServiceTypeExists()
      */
     private function validateCategoryExists($categoryId, $userId): bool
     {
-        // Check in legacy pnl_expense_categories table
-        $exists = \DB::table('pnl_expense_categories')
-            ->where('id', $categoryId)
-            ->where(function($query) use ($userId) {
-                $query->where('user_id', $userId)
-                      ->orWhereNull('user_id'); // System defaults
-            })
-            ->exists();
-        
-        if ($exists) return true;
+        // Check for hardcoded defaults first (id starts with 'default_')
+        if (str_starts_with($categoryId, 'default_')) {
+            return true;
+        }
 
         // Check in new system categories table
         try {
@@ -396,6 +391,21 @@ class ExpenseController extends Controller
             $exists = \DB::table('pnl_expense_categories_user')
                 ->where('id', $categoryId)
                 ->where('user_id', $userId)
+                ->where('is_active', true)
+                ->exists();
+            if ($exists) return true;
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        // Check in legacy pnl_expense_categories table
+        try {
+            $exists = \DB::table('pnl_expense_categories')
+                ->where('id', $categoryId)
+                ->where(function($query) use ($userId) {
+                    $query->where('user_id', $userId)
+                          ->orWhereNull('user_id'); // System defaults
+                })
                 ->exists();
             if ($exists) return true;
         } catch (\Exception $e) {

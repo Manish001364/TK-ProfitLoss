@@ -14,7 +14,7 @@ class PnlVendorPolicy
 
     public function view(User $user, PnlVendor $vendor): bool
     {
-        return $user->id === $vendor->user_id;
+        return (int) $user->id === (int) $vendor->user_id;
     }
 
     public function create(User $user): bool
@@ -24,11 +24,11 @@ class PnlVendorPolicy
 
     public function update(User $user, PnlVendor $vendor): bool
     {
-        return $user->id === $vendor->user_id;
+        return (int) $user->id === (int) $vendor->user_id;
     }
 
     public function delete(User $user, PnlVendor $vendor): bool
     {
-        return $user->id === $vendor->user_id;
+        return (int) $user->id === (int) $vendor->user_id;
     }
 }

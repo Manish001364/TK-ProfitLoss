@@ -14,7 +14,7 @@ class PnlPaymentPolicy
 
     public function view(User $user, PnlPayment $payment): bool
     {
-        return $user->id === $payment->user_id;
+        return (int) $user->id === (int) $payment->user_id;
     }
 
     public function create(User $user): bool
@@ -24,11 +24,11 @@ class PnlPaymentPolicy
 
     public function update(User $user, PnlPayment $payment): bool
     {
-        return $user->id === $payment->user_id;
+        return (int) $user->id === (int) $payment->user_id;
     }
 
     public function delete(User $user, PnlPayment $payment): bool
     {
-        return $user->id === $payment->user_id;
+        return (int) $user->id === (int) $payment->user_id;
     }
 }

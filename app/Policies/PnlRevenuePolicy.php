@@ -14,7 +14,7 @@ class PnlRevenuePolicy
 
     public function view(User $user, PnlRevenue $revenue): bool
     {
-        return $user->id === $revenue->user_id;
+        return (int) $user->id === (int) $revenue->user_id;
     }
 
     public function create(User $user): bool
@@ -24,11 +24,11 @@ class PnlRevenuePolicy
 
     public function update(User $user, PnlRevenue $revenue): bool
     {
-        return $user->id === $revenue->user_id;
+        return (int) $user->id === (int) $revenue->user_id;
     }
 
     public function delete(User $user, PnlRevenue $revenue): bool
     {
-        return $user->id === $revenue->user_id;
+        return (int) $user->id === (int) $revenue->user_id;
     }
 }

@@ -1,4 +1,13 @@
 <?php
+/**
+ * PnlExpenseCategory Model
+ * 
+ * Represents expense categories for the P&L module.
+ * 
+ * Table: pnl_expense_categories
+ * - user_id = NULL: System default categories (read-only)
+ * - user_id = {id}: User's custom categories (editable)
+ */
 
 namespace App\Models\PnL;
 
@@ -32,117 +41,98 @@ class PnlExpenseCategory extends Model
         'is_active' => 'boolean',
     ];
 
-    // Flag to identify if category is a system default
-    protected $appends = ['is_system'];
-
+    /**
+     * Check if this is a system category (user_id = NULL)
+     */
     public function getIsSystemAttribute(): bool
     {
         return $this->user_id === null;
     }
 
     /**
-     * Get all categories (system defaults + user created) for a user
-     * System categories are read-only, user categories can be edited
+     * Get ALL categories for expense dropdown (system + user custom)
+     * Used when creating/editing expenses
      */
     public static function getAllForUser($userId)
     {
-        $allCategories = collect();
-        
-        // 1. First get system defaults from legacy table (user_id = NULL)
-        $legacySystemCategories = self::whereNull('user_id')
+        // Get system categories (user_id = NULL) + user's custom categories (user_id = $userId)
+        $categories = self::where(function($query) use ($userId) {
+                $query->whereNull('user_id')           // System defaults
+                      ->orWhere('user_id', $userId);   // User's custom
+            })
             ->where('is_active', true)
             ->orderBy('sort_order')
-            ->get()
-            ->map(function ($item) {
-                $item->is_system = true;
-                return $item;
-            });
-        $allCategories = $allCategories->merge($legacySystemCategories);
+            ->orderBy('name')
+            ->get();
         
-        // 2. Try to get from new system table (if exists)
-        try {
-            $newSystemCategories = DB::table('pnl_expense_categories_system')
-                ->where('is_active', true)
-                ->orderBy('sort_order')
-                ->get()
-                ->map(function ($item) {
-                    $item->is_system = true;
-                    return $item;
-                });
-            $allCategories = $allCategories->merge($newSystemCategories);
-        } catch (\Exception $e) {
-            // Table doesn't exist - that's okay
+        // If no categories found, return hardcoded defaults
+        if ($categories->isEmpty()) {
+            return self::getHardcodedDefaults();
         }
         
-        // 3. Get user's custom categories from legacy table
-        $userCategories = self::where('user_id', $userId)
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get()
-            ->map(function ($item) {
-                $item->is_system = false;
-                return $item;
-            });
-        $allCategories = $allCategories->merge($userCategories);
-        
-        // 4. Try to get from new user table (if exists)
-        try {
-            $newUserCategories = DB::table('pnl_expense_categories_user')
-                ->where('user_id', $userId)
-                ->where('is_active', true)
-                ->orderBy('sort_order')
-                ->get()
-                ->map(function ($item) {
-                    $item->is_system = false;
-                    return $item;
-                });
-            $allCategories = $allCategories->merge($newUserCategories);
-        } catch (\Exception $e) {
-            // Table doesn't exist - that's okay
-        }
-        
-        // 5. If still empty, return hardcoded defaults
-        if ($allCategories->isEmpty()) {
-            $defaults = self::getDefaultCategories();
-            foreach ($defaults as $index => $cat) {
-                $allCategories->push((object)[
-                    'id' => 'default_' . ($index + 1),
-                    'name' => $cat['name'],
-                    'type' => $cat['type'],
-                    'color' => $cat['color'],
-                    'icon' => $cat['icon'],
-                    'is_system' => true,
-                ]);
-            }
-        }
-        
-        // Remove duplicates by name (prefer user categories over system)
-        return $allCategories->unique('name')->sortBy('sort_order')->values();
+        return $categories;
     }
 
-    // Default categories for new users (legacy - kept for backward compatibility)
+    /**
+     * Get only user's CUSTOM categories (for management page)
+     * Used on Configuration page
+     */
+    public static function getUserCategories($userId)
+    {
+        return self::where('user_id', $userId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    /**
+     * Get only SYSTEM categories (for reference display)
+     * Used on Configuration page
+     */
+    public static function getSystemCategories()
+    {
+        return self::whereNull('user_id')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    /**
+     * Hardcoded default categories (fallback)
+     */
+    private static function getHardcodedDefaults()
+    {
+        return collect([
+            (object)['id' => 'default_1', 'name' => 'Artist/Performer Fee', 'type' => 'fixed', 'color' => '#dc3545', 'icon' => 'fas fa-microphone'],
+            (object)['id' => 'default_2', 'name' => 'DJ Fee', 'type' => 'fixed', 'color' => '#6f42c1', 'icon' => 'fas fa-headphones'],
+            (object)['id' => 'default_3', 'name' => 'Venue Hire', 'type' => 'fixed', 'color' => '#0d6efd', 'icon' => 'fas fa-building'],
+            (object)['id' => 'default_4', 'name' => 'Equipment Rental', 'type' => 'variable', 'color' => '#198754', 'icon' => 'fas fa-sliders-h'],
+            (object)['id' => 'default_5', 'name' => 'Catering', 'type' => 'variable', 'color' => '#fd7e14', 'icon' => 'fas fa-utensils'],
+            (object)['id' => 'default_6', 'name' => 'Security', 'type' => 'fixed', 'color' => '#6c757d', 'icon' => 'fas fa-shield-alt'],
+            (object)['id' => 'default_7', 'name' => 'Marketing', 'type' => 'variable', 'color' => '#e91e8c', 'icon' => 'fas fa-bullhorn'],
+            (object)['id' => 'default_8', 'name' => 'Staff Wages', 'type' => 'variable', 'color' => '#17a2b8', 'icon' => 'fas fa-users'],
+        ]);
+    }
+
+    /**
+     * Default categories definition (for seeding/migration)
+     */
     public static function getDefaultCategories(): array
     {
         return [
-            ['name' => 'Artist Fee', 'type' => 'fixed', 'color' => '#ef4444', 'icon' => 'fas fa-music', 'sort_order' => 1],
-            ['name' => 'Venue', 'type' => 'fixed', 'color' => '#f97316', 'icon' => 'fas fa-building', 'sort_order' => 2],
-            ['name' => 'Marketing', 'type' => 'variable', 'color' => '#eab308', 'icon' => 'fas fa-bullhorn', 'sort_order' => 3],
-            ['name' => 'Staff', 'type' => 'variable', 'color' => '#22c55e', 'icon' => 'fas fa-users', 'sort_order' => 4],
-            ['name' => 'Equipment & Tech', 'type' => 'variable', 'color' => '#3b82f6', 'icon' => 'fas fa-cogs', 'sort_order' => 5],
-            ['name' => 'Catering', 'type' => 'variable', 'color' => '#8b5cf6', 'icon' => 'fas fa-utensils', 'sort_order' => 6],
-            ['name' => 'Security', 'type' => 'fixed', 'color' => '#ec4899', 'icon' => 'fas fa-shield-alt', 'sort_order' => 7],
-            ['name' => 'Miscellaneous', 'type' => 'variable', 'color' => '#6b7280', 'icon' => 'fas fa-ellipsis-h', 'sort_order' => 8],
+            ['name' => 'Artist/Performer Fee', 'type' => 'fixed', 'color' => '#dc3545', 'icon' => 'fas fa-microphone'],
+            ['name' => 'DJ Fee', 'type' => 'fixed', 'color' => '#6f42c1', 'icon' => 'fas fa-headphones'],
+            ['name' => 'Venue Hire', 'type' => 'fixed', 'color' => '#0d6efd', 'icon' => 'fas fa-building'],
+            ['name' => 'Equipment Rental', 'type' => 'variable', 'color' => '#198754', 'icon' => 'fas fa-sliders-h'],
+            ['name' => 'Catering', 'type' => 'variable', 'color' => '#fd7e14', 'icon' => 'fas fa-utensils'],
+            ['name' => 'Security', 'type' => 'fixed', 'color' => '#6c757d', 'icon' => 'fas fa-shield-alt'],
+            ['name' => 'Marketing', 'type' => 'variable', 'color' => '#e91e8c', 'icon' => 'fas fa-bullhorn'],
+            ['name' => 'Staff Wages', 'type' => 'variable', 'color' => '#17a2b8', 'icon' => 'fas fa-users'],
         ];
     }
 
-    public static function createDefaultsForUser($userId): void
-    {
-        foreach (self::getDefaultCategories() as $category) {
-            self::create(array_merge($category, ['user_id' => $userId]));
-        }
-    }
+    // ===== RELATIONSHIPS =====
 
-    // Relationships
     public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class);
@@ -153,30 +143,20 @@ class PnlExpenseCategory extends Model
         return $this->hasMany(PnlExpense::class, 'category_id');
     }
 
-    // Calculated Attributes
-    public function getTotalSpentAttribute(): float
+    // ===== SCOPES =====
+
+    public function scopeOrdered($query)
     {
-        return $this->expenses()->sum('total_amount');
+        return $query->orderBy('sort_order');
     }
 
-    public function getTotalSpentForEventAttribute($eventId): float
+    public function scopeActive($query)
     {
-        return $this->expenses()->where('event_id', $eventId)->sum('total_amount');
+        return $query->where('is_active', true);
     }
 
-    // Scopes
     public function scopeForUser($query, $userId)
     {
-        // Include both system defaults (NULL user_id) and user's own categories
-        return $query->where(function ($q) use ($userId) {
-            $q->where('user_id', $userId)
-              ->orWhereNull('user_id');
-        });
-    }
-
-    public function scopeUserOwned($query, $userId)
-    {
-        // Only user's own categories (not system defaults)
         return $query->where('user_id', $userId);
     }
 
@@ -185,20 +165,9 @@ class PnlExpenseCategory extends Model
         return $query->whereNull('user_id');
     }
 
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
+    // ===== HELPERS =====
 
-    public function scopeOrdered($query)
-    {
-        return $query->orderBy('sort_order');
-    }
-
-    /**
-     * Check if this category can be modified by the user
-     */
-    public function canBeModified(): bool
+    public function isCustom(): bool
     {
         return $this->user_id !== null;
     }

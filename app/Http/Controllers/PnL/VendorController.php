@@ -4,6 +4,7 @@ namespace App\Http\Controllers\PnL;
 
 use App\Http\Controllers\Controller;
 use App\Models\PnL\PnlVendor;
+use App\Models\PnL\PnlServiceType;
 use App\Exports\VendorsExport;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,14 +35,15 @@ class VendorController extends Controller
         $query->orderBy($sortBy, $sortDir);
 
         $vendors = $query->paginate(15)->withQueryString();
-        $vendorTypes = PnlVendor::getTypes();
+        $vendorTypes = PnlServiceType::getTypesForDropdown($userId);
 
         return view('pnl.vendors.index', compact('vendors', 'vendorTypes'));
     }
 
     public function create()
     {
-        $vendorTypes = PnlVendor::getTypes();
+        $userId = auth()->id();
+        $vendorTypes = PnlServiceType::getTypesForDropdown($userId);
         $countries = PnlVendor::getCountries();
         return view('pnl.vendors.create', compact('vendorTypes', 'countries'));
     }

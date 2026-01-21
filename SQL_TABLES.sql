@@ -232,6 +232,7 @@ CREATE TABLE IF NOT EXISTS `pnl_audit_logs` (
     `action` VARCHAR(50) NOT NULL COMMENT 'created, updated, deleted, status_changed',
     `old_values` JSON NULL,
     `new_values` JSON NULL,
+    `reason` VARCHAR(500) NULL COMMENT 'Reason for the change',
     `ip_address` VARCHAR(45) NULL,
     `user_agent` TEXT NULL,
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,

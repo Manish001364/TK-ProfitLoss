@@ -236,7 +236,7 @@ class ExpenseController extends Controller
 
         $validated = $request->validate([
             'event_id' => 'required|exists:pnl_events,id',
-            'category_id' => 'required|exists:pnl_expense_categories,id',
+            'category_id' => 'required|string', // Accept any string, validate manually
             'vendor_id' => 'nullable|exists:pnl_vendors,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -247,6 +247,14 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
             'invoice_number' => 'nullable|string|max:100',
         ]);
+
+        // Manually validate category_id exists
+        $userId = auth()->id();
+        $categoryId = $validated['category_id'];
+        $categoryExists = $this->validateCategoryExists($categoryId, $userId);
+        if (!$categoryExists) {
+            return back()->withInput()->withErrors(['category_id' => 'The selected expense category is invalid.']);
+        }
 
         // Handle tax
         if (!$request->boolean('is_taxable')) {

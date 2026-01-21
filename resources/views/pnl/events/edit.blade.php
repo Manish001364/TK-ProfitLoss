@@ -100,7 +100,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group mb-3">
-                                        <label for="budget">Budget (₹)</label>
+                                        <label for="budget">Budget (£)</label>
                                         <input type="number" step="0.01" class="form-control @error('budget') is-invalid @enderror" 
                                                id="budget" name="budget" value="{{ old('budget', $event->budget) }}" min="0">
                                         @error('budget')

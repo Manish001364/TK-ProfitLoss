@@ -93,7 +93,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small">Net Amount (£) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">£</span>
@@ -102,36 +102,65 @@
                             </div>
                             @error('amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small d-flex justify-content-between align-items-center">
-                                <span>VAT/Tax</span>
-                                <div class="form-check form-switch mb-0">
-                                    <input type="checkbox" class="form-check-input" id="is_taxable" name="is_taxable" value="1" 
-                                           {{ old('is_taxable', true) ? 'checked' : '' }}>
-                                    <label class="form-check-label small" for="is_taxable">Taxable</label>
-                                </div>
-                            </label>
-                            <div class="input-group" id="tax_input_group">
-                                <input type="number" step="0.01" name="tax_rate" id="tax_rate" class="form-control" 
-                                       value="{{ old('tax_rate', $defaultTaxRate ?? 20) }}" min="0" max="100" style="max-width: 80px;">
-                                <span class="input-group-text">%</span>
-                                <span class="input-group-text">=</span>
-                                <span class="input-group-text">£</span>
-                                <input type="number" step="0.01" name="tax_amount" id="tax_amount" class="form-control" 
-                                       value="{{ old('tax_amount', 0) }}" min="0" readonly>
-                            </div>
-                            <small class="text-muted">Default: {{ $defaultTaxRate ?? 20 }}% VAT</small>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small">Total Amount (Gross)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">£</span>
-                                <input type="text" class="form-control bg-light fw-bold" id="total_display" readonly>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small">Expense Date <span class="text-danger">*</span></label>
                             <input type="date" name="expense_date" class="form-control" value="{{ old('expense_date', date('Y-m-d')) }}" required>
+                        </div>
+                        
+                        <!-- Tax Toggle - iPhone Style -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between p-3 rounded" id="tax_toggle_container" style="background: #f8f9fa; border: 1px solid #dee2e6;">
+                                <div>
+                                    <span class="fw-semibold">Apply VAT/Tax</span>
+                                    <br><small class="text-muted" id="tax_status_text">Tax will be added at {{ $defaultTaxRate ?? 20 }}%</small>
+                                </div>
+                                <div class="form-check form-switch form-switch-lg mb-0">
+                                    <input type="checkbox" class="form-check-input" role="switch" id="is_taxable" name="is_taxable" value="1" 
+                                           {{ old('is_taxable', true) ? 'checked' : '' }} style="width: 3em; height: 1.5em; cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tax Details (shown when toggle is ON) -->
+                        <div class="col-12" id="tax_details_section">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Tax Rate (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" step="0.01" name="tax_rate" id="tax_rate" class="form-control" 
+                                               value="{{ old('tax_rate', $defaultTaxRate ?? 20) }}" min="0" max="100">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <small class="text-muted">Default: {{ $defaultTaxRate ?? 20 }}% VAT</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Tax Amount (£)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">£</span>
+                                        <input type="number" step="0.01" name="tax_amount" id="tax_amount" class="form-control bg-light" 
+                                               value="{{ old('tax_amount', 0) }}" min="0" readonly>
+                                    </div>
+                                    <small class="text-muted">Auto-calculated</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Total (Gross)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">£</span>
+                                        <input type="text" class="form-control bg-success-subtle fw-bold text-success" id="total_display" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Non-Taxable Summary (shown when toggle is OFF) -->
+                        <div class="col-12" id="non_taxable_section" style="display: none;">
+                            <div class="alert alert-info mb-0 d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <div>
+                                    <strong>Non-Taxable Expense</strong> - No VAT/Tax will be applied. 
+                                    Total: <strong id="non_taxable_total">£0.00</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

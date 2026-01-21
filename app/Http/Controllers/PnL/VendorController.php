@@ -212,11 +212,12 @@ class VendorController extends Controller
     public function update(Request $request, PnlVendor $vendor)
     {
         $this->authorize('update', $vendor);
+        $userId = auth()->id();
 
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
             'business_name' => 'nullable|string|max:255',
-            'type' => ['required', Rule::in(array_keys(PnlVendor::getTypes()))],
+            'type' => 'required|string|max:100', // Changed: Accept any string, validate manually
             'email' => 'nullable|email|max:255',
             'phone_country_code' => 'nullable|string|max:10',
             'phone' => 'required|string|max:50',
@@ -245,6 +246,15 @@ class VendorController extends Controller
             'preferred_payment_cycle' => 'nullable|string|max:50',
             'is_active' => 'boolean',
         ]);
+
+        // Validate service type exists (system or user)
+        $serviceTypeExists = $this->validateServiceTypeExists($validated['type'], $userId);
+        if (!$serviceTypeExists) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['type' => 'The selected service type is invalid. Please select a valid type from the dropdown.']);
+        }
 
         $validated['is_active'] = $request->boolean('is_active', true);
 

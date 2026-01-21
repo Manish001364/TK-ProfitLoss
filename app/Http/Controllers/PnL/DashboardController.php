@@ -19,6 +19,7 @@ class DashboardController extends Controller
         $eventId = $request->get('event_id');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
+        $chartPeriod = $request->get('chart_period', '6'); // Default 6 months
 
         // Get all events for filter dropdown
         $events = PnlEvent::forUser($userId)->orderBy('event_date', 'desc')->get();
@@ -53,6 +54,10 @@ class DashboardController extends Controller
         $totalTicketsSold = $revenueStats->tickets_sold ?? 0;
 
         $totalExpenses = PnlExpense::whereIn('event_id', $filteredEventIds)->sum('total_amount') ?? 0;
+        
+        // Calculate total budget
+        $totalBudget = PnlEvent::whereIn('id', $filteredEventIds)->sum('budget') ?? 0;
+        
         $netProfit = $totalRevenue - $totalExpenses;
 
         // Profit Status
@@ -185,14 +190,20 @@ class DashboardController extends Controller
             ->take(10)
             ->values();
 
-        // Chart data for Revenue vs Expenses trend (last 6 months)
-        $trendData = $this->getMonthlyTrend($userId, 6);
+        // Chart data for Revenue vs Expenses trend (configurable period)
+        $chartMonths = $this->getChartMonths($chartPeriod);
+        $trendData = $this->getMonthlyTrend($userId, $chartMonths);
+
+        // Check if walkthrough should be shown
+        $settings = \App\Models\PnL\PnlSettings::where('user_id', $userId)->first();
+        $showWalkthrough = !$settings?->walkthrough_dismissed && $events->count() == 0;
 
         return view('pnl.dashboard.index', compact(
             'events',
             'totalRevenue',
             'grossRevenue',
             'totalExpenses',
+            'totalBudget',
             'netProfit',
             'profitStatus',
             'totalTicketsSold',
@@ -207,8 +218,24 @@ class DashboardController extends Controller
             'trendData',
             'eventId',
             'dateFrom',
-            'dateTo'
+            'dateTo',
+            'chartPeriod',
+            'showWalkthrough'
         ));
+    }
+
+    /**
+     * Convert chart period selection to months
+     */
+    private function getChartMonths($period): int
+    {
+        return match($period) {
+            '3' => 3,
+            '6' => 6,
+            '12' => 12,
+            'ytd' => now()->month, // Year to date
+            default => 6,
+        };
     }
 
     private function getMonthlyTrend($userId, $months = 6): array

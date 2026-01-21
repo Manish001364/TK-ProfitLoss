@@ -15,6 +15,7 @@ class PnlSettings extends Model
     protected $fillable = [
         'user_id',
         'default_tax_rate',
+        'default_currency',
         'invoice_prefix',
         'invoice_next_number',
         'send_email_on_payment_created',
@@ -35,6 +36,33 @@ class PnlSettings extends Model
         'walkthrough_dismissed' => 'boolean',
     ];
 
+    // Supported currencies
+    public static function getCurrencies(): array
+    {
+        return [
+            'GBP' => ['name' => 'British Pound', 'symbol' => '£'],
+            'USD' => ['name' => 'US Dollar', 'symbol' => '$'],
+            'EUR' => ['name' => 'Euro', 'symbol' => '€'],
+            'INR' => ['name' => 'Indian Rupee', 'symbol' => '₹'],
+            'AUD' => ['name' => 'Australian Dollar', 'symbol' => 'A$'],
+            'CAD' => ['name' => 'Canadian Dollar', 'symbol' => 'C$'],
+            'AED' => ['name' => 'UAE Dirham', 'symbol' => 'د.إ'],
+            'SGD' => ['name' => 'Singapore Dollar', 'symbol' => 'S$'],
+            'CHF' => ['name' => 'Swiss Franc', 'symbol' => 'CHF'],
+            'JPY' => ['name' => 'Japanese Yen', 'symbol' => '¥'],
+            'CNY' => ['name' => 'Chinese Yuan', 'symbol' => '¥'],
+        ];
+    }
+
+    /**
+     * Get currency symbol for a currency code
+     */
+    public static function getCurrencySymbol(string $code): string
+    {
+        $currencies = self::getCurrencies();
+        return $currencies[$code]['symbol'] ?? $code;
+    }
+
     // Relationships
     public function user(): BelongsTo
     {
@@ -50,6 +78,7 @@ class PnlSettings extends Model
             ['user_id' => $userId],
             [
                 'default_tax_rate' => 20.00,
+                'default_currency' => 'GBP',
                 'invoice_prefix' => 'INV',
                 'invoice_next_number' => 1,
                 'send_email_on_payment_created' => true,
@@ -81,5 +110,13 @@ class PnlSettings extends Model
     public function resetInvoiceSequence(int $startNumber = 1): void
     {
         $this->update(['invoice_next_number' => $startNumber]);
+    }
+
+    /**
+     * Get the default currency symbol
+     */
+    public function getCurrencySymbolAttribute(): string
+    {
+        return self::getCurrencySymbol($this->default_currency ?? 'GBP');
     }
 }

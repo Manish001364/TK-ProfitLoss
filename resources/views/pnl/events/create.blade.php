@@ -72,11 +72,41 @@
                             <input type="time" name="event_time" class="form-control" value="{{ old('event_time') }}">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small">Budget (£)</label>
+                            <label class="form-label small">Currency</label>
+                            <select name="currency" class="form-select">
+                                @foreach($currencies as $code => $info)
+                                    <option value="{{ $code }}" {{ old('currency', $settings->default_currency ?? 'GBP') === $code ? 'selected' : '' }}>
+                                        {{ $info['symbol'] }} {{ $code }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget & Revenue -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-coins me-2 text-success"></i>Budget & Revenue</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Budget</label>
                             <div class="input-group">
-                                <span class="input-group-text">£</span>
+                                <span class="input-group-text currency-symbol">{{ $currencies[$settings->default_currency ?? 'GBP']['symbol'] ?? '£' }}</span>
                                 <input type="number" step="0.01" name="budget" class="form-control" value="{{ old('budget', 0) }}" min="0">
                             </div>
+                            <small class="text-muted">Planned expenditure for this event</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Expected Revenue</label>
+                            <div class="input-group">
+                                <span class="input-group-text currency-symbol">{{ $currencies[$settings->default_currency ?? 'GBP']['symbol'] ?? '£' }}</span>
+                                <input type="number" step="0.01" name="expected_revenue" class="form-control" value="{{ old('expected_revenue', 0) }}" min="0">
+                            </div>
+                            <small class="text-muted">Projected income from ticket sales</small>
                         </div>
                     </div>
                 </div>
@@ -91,4 +121,16 @@
             </div>
         </form>
     </div>
+@endsection
+
+@section('customjs')
+    <script>
+        // Update currency symbol when currency is changed
+        document.querySelector('[name="currency"]').addEventListener('change', function() {
+            const currencies = @json($currencies);
+            const selected = this.value;
+            const symbol = currencies[selected]?.symbol || '£';
+            document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = symbol);
+        });
+    </script>
 @endsection

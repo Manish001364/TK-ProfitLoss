@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\PnL\PnlPayment;
 use App\Models\PnL\PnlAuditLog;
 use App\Mail\PaymentReminderMail;
+use App\Mail\PaymentConfirmationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class PaymentController extends Controller

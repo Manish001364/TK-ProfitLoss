@@ -627,7 +627,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                    return context.dataset.label + ': {{ $currencySymbol }}' + context.parsed.y.toLocaleString();
                                 }
                             }
                         }
@@ -638,7 +638,7 @@
                             grid: { color: '#f0f0f0' },
                             ticks: {
                                 callback: function(value) {
-                                    return '£' + value.toLocaleString();
+                                    return '{{ $currencySymbol }}' + value.toLocaleString();
                                 }
                             }
                         },
@@ -671,7 +671,7 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': £' + context.parsed.toLocaleString();
+                                    return context.label + ': {{ $currencySymbol }}' + context.parsed.toLocaleString();
                                 }
                             }
                         }

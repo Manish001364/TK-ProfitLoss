@@ -20,10 +20,11 @@ use App\Models\PnL\PnlExpense;
 use App\Models\PnL\PnlExpenseCategory;
 use App\Models\PnL\PnlPayment;
 use App\Models\PnL\PnlRevenue;
-use App\Models\PnL\PnlAttachment;
-use App\Models\PnL\PnlAuditLog;
 use App\Policies\PnlEventPolicy;
 use App\Policies\PnlVendorPolicy;
+use App\Policies\PnlExpensePolicy;
+use App\Policies\PnlRevenuePolicy;
+use App\Policies\PnlPaymentPolicy;
 
 class PnLServiceProvider extends ServiceProvider
 {
@@ -43,54 +44,8 @@ class PnLServiceProvider extends ServiceProvider
         // Register policies
         Gate::policy(PnlEvent::class, PnlEventPolicy::class);
         Gate::policy(PnlVendor::class, PnlVendorPolicy::class);
-        
-        // For other models, use simple ownership check
-        Gate::define('view-pnl-expense', function ($user, PnlExpense $expense) {
-            return $user->id === $expense->user_id;
-        });
-        Gate::define('update-pnl-expense', function ($user, PnlExpense $expense) {
-            return $user->id === $expense->user_id;
-        });
-        Gate::define('delete-pnl-expense', function ($user, PnlExpense $expense) {
-            return $user->id === $expense->user_id;
-        });
-
-        Gate::define('view-pnl-payment', function ($user, PnlPayment $payment) {
-            return $user->id === $payment->user_id;
-        });
-        Gate::define('update-pnl-payment', function ($user, PnlPayment $payment) {
-            return $user->id === $payment->user_id;
-        });
-
-        Gate::define('view-pnl-revenue', function ($user, PnlRevenue $revenue) {
-            return $user->id === $revenue->user_id;
-        });
-        Gate::define('update-pnl-revenue', function ($user, PnlRevenue $revenue) {
-            return $user->id === $revenue->user_id;
-        });
-        Gate::define('delete-pnl-revenue', function ($user, PnlRevenue $revenue) {
-            return $user->id === $revenue->user_id;
-        });
-
-        Gate::define('view-pnl-category', function ($user, PnlExpenseCategory $category) {
-            return $user->id === $category->user_id;
-        });
-        Gate::define('update-pnl-category', function ($user, PnlExpenseCategory $category) {
-            return $user->id === $category->user_id;
-        });
-        Gate::define('delete-pnl-category', function ($user, PnlExpenseCategory $category) {
-            return $user->id === $category->user_id;
-        });
-
-        Gate::define('view-pnl-attachment', function ($user, PnlAttachment $attachment) {
-            return $user->id === $attachment->user_id;
-        });
-        Gate::define('delete-pnl-attachment', function ($user, PnlAttachment $attachment) {
-            return $user->id === $attachment->user_id;
-        });
-
-        Gate::define('view-pnl-audit', function ($user, PnlAuditLog $log) {
-            return $user->id === $log->user_id;
-        });
+        Gate::policy(PnlExpense::class, PnlExpensePolicy::class);
+        Gate::policy(PnlRevenue::class, PnlRevenuePolicy::class);
+        Gate::policy(PnlPayment::class, PnlPaymentPolicy::class);
     }
 }

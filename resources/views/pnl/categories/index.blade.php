@@ -47,29 +47,41 @@
                                     </td>
                                     <td>
                                         @if($category->default_budget_limit)
-                                            ₹{{ number_format($category->default_budget_limit, 0) }}
+                                            £{{ number_format($category->default_budget_limit, 0) }}
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
                                     <td>{{ $category->expenses_count }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $category->is_active ? 'success' : 'secondary' }}">
-                                            {{ $category->is_active ? 'Active' : 'Inactive' }}
-                                        </span>
+                                        @if($category->user_id === null)
+                                            <span class="badge bg-dark">System Default</span>
+                                        @else
+                                            <span class="badge bg-{{ $category->is_active ? 'success' : 'secondary' }}">
+                                                {{ $category->is_active ? 'Active' : 'Inactive' }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            <a href="{{ route('pnl.categories.edit', $category) }}" class="btn btn-sm btn-outline-warning">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            @if($category->expenses_count == 0)
-                                                <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                        onclick="confirmDelete('{{ route('pnl.categories.destroy', $category) }}')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            @endif
-                                        </div>
+                                        @if($category->user_id === auth()->id() || $category->user_id === null)
+                                            <div class="btn-group">
+                                                @if($category->user_id !== null)
+                                                    <a href="{{ route('pnl.categories.edit', $category) }}" class="btn btn-sm btn-outline-warning" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    @if($category->expenses_count == 0)
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="confirmDelete('{{ route('pnl.categories.destroy', $category) }}')" title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted small"><i class="fas fa-lock me-1"></i>Protected</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

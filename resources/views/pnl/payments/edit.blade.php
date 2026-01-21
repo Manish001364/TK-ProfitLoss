@@ -9,20 +9,20 @@
 
         <div class="row">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="card-title mb-0">Payment Details</h5>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-danger text-white border-0 py-3">
+                        <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Details</h6>
                     </div>
                     <form action="{{ route('pnl.payments.update', $payment) }}" method="POST">
                         @csrf
                         @method('PUT')
                         <div class="card-body">
-                            <div class="alert alert-info">
-                                <strong>Expense:</strong> {{ $payment->expense->title }}<br>
-                                <strong>Amount:</strong> ₹{{ number_format($payment->amount, 2) }}
+                            <div class="alert alert-light border">
+                                <strong>Expense:</strong> {{ $payment->expense->title ?? 'Unknown' }}<br>
+                                <strong>Amount:</strong> £{{ number_format($payment->amount, 2) }}
                             </div>
 
-                            <div class="row">
+                            <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Status <span class="text-danger">*</span></label>

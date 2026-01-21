@@ -49,6 +49,7 @@ class VendorController extends Controller
     {
         // For quick add (AJAX), use simplified validation
         $isQuickAdd = $request->has('_quick_add');
+        $userId = auth()->id();
         
         if ($isQuickAdd) {
             $validated = $request->validate([
@@ -59,8 +60,18 @@ class VendorController extends Controller
                 'specialization' => 'nullable|string|max:255',
             ]);
             
+            // Check for duplicates
+            $duplicateCheck = $this->checkDuplicateVendor($userId, $validated['full_name'], $validated['email'] ?? null);
+            if ($duplicateCheck) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $duplicateCheck,
+                    'duplicate' => true
+                ], 422);
+            }
+            
             $validated['type'] = $validated['type'] ?? 'vendor';
-            $validated['user_id'] = auth()->id();
+            $validated['user_id'] = $userId;
             $validated['is_active'] = true;
             
             $vendor = PnlVendor::create($validated);
@@ -103,8 +114,17 @@ class VendorController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // Check for duplicates
+        $duplicateCheck = $this->checkDuplicateVendor($userId, $validated['full_name'], $validated['email'] ?? null);
+        if ($duplicateCheck) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('warning', $duplicateCheck);
+        }
+
         $validated['type'] = $validated['type'] ?? 'vendor';
-        $validated['user_id'] = auth()->id();
+        $validated['user_id'] = $userId;
         $validated['is_active'] = $request->boolean('is_active', true);
 
         $vendor = PnlVendor::create($validated);
@@ -112,6 +132,34 @@ class VendorController extends Controller
         return redirect()
             ->route('pnl.vendors.show', $vendor)
             ->with('success', 'Vendor/Artist created successfully!');
+    }
+
+    /**
+     * Check for duplicate vendor by name or email
+     */
+    private function checkDuplicateVendor($userId, $name, $email = null, $excludeId = null)
+    {
+        $query = PnlVendor::forUser($userId);
+        
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        // Check by name
+        $existingByName = (clone $query)->where('full_name', 'like', $name)->first();
+        if ($existingByName) {
+            return "A vendor with the name '{$name}' already exists. Please check the existing vendor list.";
+        }
+
+        // Check by email if provided
+        if ($email) {
+            $existingByEmail = (clone $query)->where('email', $email)->first();
+            if ($existingByEmail) {
+                return "A vendor with the email '{$email}' already exists ({$existingByEmail->display_name}). Please check the existing vendor list.";
+            }
+        }
+
+        return null;
     }
 
     public function show(PnlVendor $vendor)

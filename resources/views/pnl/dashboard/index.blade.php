@@ -77,7 +77,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <p class="text-muted small mb-1">Net Revenue</p>
-                                        <h4 class="mb-0 text-success">£{{ number_format($totalRevenue, 0) }}</h4>
+                                        <h4 class="mb-0 text-success">{{ $currencySymbol }}{{ number_format($totalRevenue, 0) }}</h4>
                                     </div>
                                     <div class="bg-success bg-opacity-10 rounded p-2">
                                         <i class="fas fa-pound-sign text-success"></i>
@@ -93,7 +93,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <p class="text-muted small mb-1">Total Expenses</p>
-                                        <h4 class="mb-0 text-danger">£{{ number_format($totalExpenses, 0) }}</h4>
+                                        <h4 class="mb-0 text-danger">{{ $currencySymbol }}{{ number_format($totalExpenses, 0) }}</h4>
                                     </div>
                                     <div class="bg-danger bg-opacity-10 rounded p-2">
                                         <i class="fas fa-receipt text-danger"></i>
@@ -110,7 +110,7 @@
                                     <div>
                                         <p class="text-muted small mb-1">Net {{ ucfirst($profitStatus) }}</p>
                                         <h4 class="mb-0 {{ $profitStatus === 'profit' ? 'text-success' : ($profitStatus === 'loss' ? 'text-warning' : 'text-secondary') }}">
-                                            {{ $netProfit >= 0 ? '' : '-' }}£{{ number_format(abs($netProfit), 0) }}
+                                            {{ $netProfit >= 0 ? '' : '-' }}{{ $currencySymbol }}{{ number_format(abs($netProfit), 0) }}
                                         </h4>
                                     </div>
                                     <div class="bg-{{ $profitStatus === 'profit' ? 'success' : ($profitStatus === 'loss' ? 'warning' : 'secondary') }} bg-opacity-10 rounded p-2">

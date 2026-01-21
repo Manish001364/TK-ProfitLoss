@@ -556,10 +556,56 @@
                 }
             });
 
-            // Vendor Search
+            // Vendor Type Expense Chart
+            const vendorTypeCtx = document.getElementById('vendorTypeChart').getContext('2d');
+            const vendorTypeData = {!! json_encode($expenseByVendorType) !!};
+            new Chart(vendorTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: vendorTypeData.map(item => item.label),
+                    datasets: [{
+                        data: vendorTypeData.map(item => item.total),
+                        backgroundColor: vendorTypeData.map(item => item.color),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '50%',
+                    plugins: {
+                        legend: { 
+                            display: true,
+                            position: 'bottom',
+                            labels: { usePointStyle: true, pointStyle: 'circle', font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': £' + context.parsed.toLocaleString() + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Live Search - Vendor Table
             $('#vendorSearch').on('keyup', function() {
                 const searchText = $(this).val().toLowerCase();
                 $('#vendorTable tbody tr.vendor-row').each(function() {
+                    const rowText = $(this).text().toLowerCase();
+                    $(this).toggle(rowText.indexOf(searchText) > -1);
+                });
+            });
+
+            // Live Search - Events Table
+            $('#eventSearch').on('keyup', function() {
+                const searchText = $(this).val().toLowerCase();
+                $('#eventTable tbody tr.event-row').each(function() {
                     const rowText = $(this).text().toLowerCase();
                     $(this).toggle(rowText.indexOf(searchText) > -1);
                 });

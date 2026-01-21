@@ -218,7 +218,7 @@ class ExpenseController extends Controller
 
         $userId = auth()->id();
         $events = PnlEvent::forUser($userId)->orderBy('event_date', 'desc')->get();
-        $categories = PnlExpenseCategory::forUser($userId)->active()->ordered()->get();
+        $categories = PnlExpenseCategory::getAllForUser($userId); // Use getAllForUser to include system categories
         $vendors = PnlVendor::forUser($userId)->active()->orderBy('full_name')->get();
         
         // Get user settings

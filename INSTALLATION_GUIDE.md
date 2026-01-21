@@ -9,6 +9,7 @@ Follow these steps to add the P&L module to your Laravel project.
 
 - **CRITICAL FIX: Cash Flow Calculations** - Profit/Loss now correctly calculated from actual ticket sales revenue (not manual estimates)
 - **Expense Currency Support** - Each expense can now store its own currency code
+- **Combined Categories & Services Page** - Single page showing both Expense Categories and Vendor Service Types in two columns (cleaner sidebar navigation)
 
 ## What's in v2.6
 

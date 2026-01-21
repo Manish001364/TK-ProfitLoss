@@ -148,5 +148,52 @@
             var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
             modal.show();
         }
+
+        $(document).ready(function() {
+            // Live Search - filters as you type
+            function filterTable() {
+                const searchText = $('#liveSearch').val().toLowerCase();
+                const typeFilter = $('#typeFilter').val().toLowerCase();
+                const statusFilter = $('#statusFilter').val().toLowerCase();
+
+                $('#vendorsTable tbody tr').each(function() {
+                    const row = $(this);
+                    const rowText = row.text().toLowerCase();
+                    const rowType = row.data('type') || '';
+                    const rowStatus = row.data('status') || '';
+
+                    let showRow = true;
+
+                    // Text search
+                    if (searchText && rowText.indexOf(searchText) === -1) {
+                        showRow = false;
+                    }
+
+                    // Type filter
+                    if (typeFilter && rowType !== typeFilter) {
+                        showRow = false;
+                    }
+
+                    // Status filter
+                    if (statusFilter && rowStatus !== statusFilter) {
+                        showRow = false;
+                    }
+
+                    row.toggle(showRow);
+                });
+            }
+
+            // Bind events
+            $('#liveSearch').on('keyup', filterTable);
+            $('#typeFilter, #statusFilter').on('change', filterTable);
+
+            // Clear filters
+            $('#clearFilters').on('click', function() {
+                $('#liveSearch').val('');
+                $('#typeFilter').val('');
+                $('#statusFilter').val('');
+                filterTable();
+            });
+        });
     </script>
 @endsection

@@ -37,12 +37,23 @@ class DashboardController extends Controller
 
         $filteredEventIds = $eventQuery->pluck('id');
 
-        // Summary Statistics
-        $totalRevenue = PnlRevenue::whereIn('event_id', $filteredEventIds)->sum('net_revenue_after_refunds');
-        $grossRevenue = PnlRevenue::whereIn('event_id', $filteredEventIds)->sum('gross_revenue');
-        $totalExpenses = PnlExpense::whereIn('event_id', $filteredEventIds)->sum('total_amount');
+        // Summary Statistics - Calculate from actual columns
+        // Gross Revenue = ticket_price * tickets_sold
+        // Net Revenue = Gross - platform_fees - payment_gateway_fees - taxes - refund_amount
+        $revenueStats = PnlRevenue::whereIn('event_id', $filteredEventIds)
+            ->select(
+                DB::raw('SUM(ticket_price * tickets_sold) as gross_revenue'),
+                DB::raw('SUM((ticket_price * tickets_sold) - platform_fees - payment_gateway_fees - taxes - refund_amount) as net_revenue'),
+                DB::raw('SUM(tickets_sold) as tickets_sold')
+            )
+            ->first();
+
+        $grossRevenue = $revenueStats->gross_revenue ?? 0;
+        $totalRevenue = $revenueStats->net_revenue ?? 0;
+        $totalTicketsSold = $revenueStats->tickets_sold ?? 0;
+
+        $totalExpenses = PnlExpense::whereIn('event_id', $filteredEventIds)->sum('total_amount') ?? 0;
         $netProfit = $totalRevenue - $totalExpenses;
-        $totalTicketsSold = PnlRevenue::whereIn('event_id', $filteredEventIds)->sum('tickets_sold');
 
         // Profit Status
         $profitStatus = 'break-even';
@@ -63,13 +74,13 @@ class DashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
-        // Revenue by ticket type
+        // Revenue by ticket type - using calculated fields
         $revenueByTicketType = PnlRevenue::whereIn('event_id', $filteredEventIds)
             ->select(
                 'ticket_type',
                 DB::raw('SUM(tickets_sold) as tickets_sold'),
-                DB::raw('SUM(gross_revenue) as gross_revenue'),
-                DB::raw('SUM(net_revenue_after_refunds) as net_revenue')
+                DB::raw('SUM(ticket_price * tickets_sold) as gross_revenue'),
+                DB::raw('SUM((ticket_price * tickets_sold) - platform_fees - payment_gateway_fees - taxes - refund_amount) as net_revenue')
             )
             ->groupBy('ticket_type')
             ->get();
@@ -78,13 +89,13 @@ class DashboardController extends Controller
         $paymentSummary = [
             'paid' => PnlPayment::forUser($userId)->whereHas('expense', function($q) use ($filteredEventIds) {
                 $q->whereIn('event_id', $filteredEventIds);
-            })->where('status', 'paid')->sum('amount'),
+            })->where('status', 'paid')->sum('amount') ?? 0,
             'pending' => PnlPayment::forUser($userId)->whereHas('expense', function($q) use ($filteredEventIds) {
                 $q->whereIn('event_id', $filteredEventIds);
-            })->where('status', 'pending')->sum('amount'),
+            })->where('status', 'pending')->sum('amount') ?? 0,
             'scheduled' => PnlPayment::forUser($userId)->whereHas('expense', function($q) use ($filteredEventIds) {
                 $q->whereIn('event_id', $filteredEventIds);
-            })->where('status', 'scheduled')->sum('amount'),
+            })->where('status', 'scheduled')->sum('amount') ?? 0,
         ];
 
         // Upcoming Payments (next 30 days)
@@ -160,8 +171,13 @@ class DashboardController extends Controller
                 ->whereMonth('event_date', $date->month)
                 ->pluck('id');
 
-            $revenues[] = PnlRevenue::whereIn('event_id', $eventIds)->sum('net_revenue_after_refunds');
-            $expenses[] = PnlExpense::whereIn('event_id', $eventIds)->sum('total_amount');
+            // Calculate net revenue from actual columns
+            $netRevenue = PnlRevenue::whereIn('event_id', $eventIds)
+                ->select(DB::raw('SUM((ticket_price * tickets_sold) - platform_fees - payment_gateway_fees - taxes - refund_amount) as net'))
+                ->value('net') ?? 0;
+
+            $revenues[] = (float) $netRevenue;
+            $expenses[] = (float) (PnlExpense::whereIn('event_id', $eventIds)->sum('total_amount') ?? 0);
         }
 
         return [
@@ -177,15 +193,15 @@ class DashboardController extends Controller
         $period = $request->get('period', 30); // days
 
         // Upcoming payments grouped by period
-        $upcoming7 = PnlPayment::forUser($userId)->upcoming(7)->sum('amount');
-        $upcoming14 = PnlPayment::forUser($userId)->upcoming(14)->sum('amount');
-        $upcoming30 = PnlPayment::forUser($userId)->upcoming(30)->sum('amount');
+        $upcoming7 = PnlPayment::forUser($userId)->upcoming(7)->sum('amount') ?? 0;
+        $upcoming14 = PnlPayment::forUser($userId)->upcoming(14)->sum('amount') ?? 0;
+        $upcoming30 = PnlPayment::forUser($userId)->upcoming(30)->sum('amount') ?? 0;
 
         // Outstanding (all pending/scheduled)
-        $outstanding = PnlPayment::forUser($userId)->pending()->sum('amount');
+        $outstanding = PnlPayment::forUser($userId)->pending()->sum('amount') ?? 0;
 
         // Overdue
-        $overdue = PnlPayment::forUser($userId)->overdue()->sum('amount');
+        $overdue = PnlPayment::forUser($userId)->overdue()->sum('amount') ?? 0;
 
         return view('pnl.dashboard.cashflow', compact(
             'upcoming7',

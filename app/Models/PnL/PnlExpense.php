@@ -24,16 +24,21 @@ class PnlExpense extends Model
         'title',
         'description',
         'amount',
+        'tax_rate',
         'tax_amount',
         'total_amount',
+        'is_taxable',
         'expense_date',
         'invoice_number',
+        'receipt_path',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'tax_rate' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'is_taxable' => 'boolean',
         'expense_date' => 'date',
     ];
 

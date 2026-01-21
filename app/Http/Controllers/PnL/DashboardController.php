@@ -370,6 +370,7 @@ class DashboardController extends Controller
 
     /**
      * Calculate cash flow projections for chart
+     * Uses actual revenue from ticket sales, NOT expected_revenue estimates
      */
     private function calculateProjections($userId, $days = 30): array
     {
@@ -390,14 +391,24 @@ class DashboardController extends Controller
             ->pluck('total', 'scheduled_date')
             ->toArray();
 
-        // Get expected revenue from upcoming events
-        $eventRevenues = PnlEvent::forUser($userId)
+        // Get actual revenue from events in the date range
+        // Calculate from ticket sales (not expected_revenue estimate)
+        $eventRevenues = [];
+        $upcomingEvents = PnlEvent::forUser($userId)
             ->where('event_date', '>=', now()->toDateString())
             ->where('event_date', '<=', now()->addDays($days)->toDateString())
-            ->select('event_date', DB::raw('SUM(COALESCE(expected_revenue, 0)) as total'))
-            ->groupBy('event_date')
-            ->pluck('total', 'event_date')
-            ->toArray();
+            ->with('revenues')
+            ->get();
+        
+        foreach ($upcomingEvents as $event) {
+            $dateStr = $event->event_date->format('Y-m-d');
+            // Use total_revenue (calculated from ticket sales) instead of expected_revenue
+            $actualRevenue = $event->total_revenue;
+            if (!isset($eventRevenues[$dateStr])) {
+                $eventRevenues[$dateStr] = 0;
+            }
+            $eventRevenues[$dateStr] += $actualRevenue;
+        }
 
         // Build daily projections
         for ($i = 0; $i <= $days; $i += 7) { // Weekly intervals for cleaner chart

@@ -337,167 +337,74 @@
 @endsection
 
 @section('customjs')
-    <!-- intl-tel-input CSS & JS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/css/intlTelInput.css">
-    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/intlTelInput.min.js"></script>
-    
-    <style>
-        /* Fix intl-tel-input width and styling */
-        .iti { width: 100%; display: block; }
-        .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags.png"); }
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .iti__flag { background-image: url("https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/img/flags@2x.png"); }
-        }
-        /* CRITICAL: Ensure dropdown appears properly - fix z-index and overflow issues */
-        .iti__country-list {
-            z-index: 99999 !important;
-            max-height: 250px;
-            background: #fff;
-            border: 1px solid #dee2e6;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            position: absolute !important;
-        }
-        /* Ensure the dropdown container has proper positioning */
-        .iti--container {
-            z-index: 99999 !important;
-            position: absolute !important;
-        }
-        /* Fix parent overflow issues */
-        .card, .card-body {
-            overflow: visible !important;
-        }
-        .iti--separate-dial-code .iti__selected-flag {
-            background-color: #f8f9fa;
-            border-right: 1px solid #dee2e6;
-        }
-        .iti--separate-dial-code input {
-            padding-left: 100px !important;
-        }
-        .iti__arrow {
-            border-left-color: #333;
-            border-right-color: #333;
-        }
-        .phone-example { font-size: 11px; }
-    </style>
-    
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Phone format examples per country
-            const phoneExamples = {
-                'gb': '7911 123456',
-                'us': '(201) 555-0123',
-                'in': '98765 43210',
-                'de': '1512 3456789',
-                'fr': '6 12 34 56 78',
-                'es': '612 34 56 78',
-                'it': '312 345 6789',
-                'nl': '6 12345678',
-                'ie': '85 123 4567',
-                'au': '412 345 678',
-                'ca': '(506) 234-5678',
-                'ae': '50 123 4567',
-                'sg': '8123 4567'
-            };
-
-            // Initialize intl-tel-input for all phone fields
-            const phoneInputs = [
-                { input: document.querySelector('#phone'), hidden: document.querySelector('#phone_country_code'), validMsg: '.phone-valid-msg', invalidMsg: '.phone-invalid-msg', exampleId: 'phone-example' },
-                { input: document.querySelector('#alternate_phone'), hidden: document.querySelector('#alternate_phone_country_code'), validMsg: '.alt-phone-valid-msg', invalidMsg: '.alt-phone-invalid-msg', exampleId: 'alt-phone-example' },
-                { input: document.querySelector('#emergency_phone'), hidden: document.querySelector('#emergency_phone_country_code'), validMsg: null, invalidMsg: null, exampleId: null }
-            ];
-            
-            const itiInstances = [];
-            
-            phoneInputs.forEach(function(config) {
-                if (!config.input) return;
-                
-                const iti = intlTelInput(config.input, {
-                    initialCountry: "gb",
-                    preferredCountries: ["gb", "us", "in", "de", "fr", "es", "it", "nl", "ie", "au", "ca", "ae", "sg"],
-                    separateDialCode: true,
-                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.5.3/build/js/utils.js",
-                    nationalMode: true,
-                    autoPlaceholder: "aggressive",
-                    formatOnDisplay: true,
-                    dropdownContainer: document.body // CRITICAL: Prevent dropdown from being cut off by parent overflow
-                });
-                
-                itiInstances.push({ iti: iti, config: config });
-                
-                // Update hidden field and show example when country changes
-                config.input.addEventListener('countrychange', function() {
-                    const countryData = iti.getSelectedCountryData();
-                    config.hidden.value = '+' + countryData.dialCode;
-                    
-                    // Update example text
-                    if (config.exampleId) {
-                        const exampleEl = document.getElementById(config.exampleId);
-                        if (exampleEl) {
-                            const example = phoneExamples[countryData.iso2] || '';
-                            exampleEl.textContent = example ? `Example: +${countryData.dialCode} ${example}` : '';
-                        }
+            // Phone country code change - update placeholder/example
+            document.querySelectorAll('.phone-country-select').forEach(function(select) {
+                select.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const example = selectedOption.getAttribute('data-example') || '';
+                    const phoneInput = this.closest('.input-group').querySelector('input[type="tel"]');
+                    if (phoneInput && example) {
+                        phoneInput.placeholder = example;
                     }
-                });
-                
-                // Validate on blur with specific error message
-                config.input.addEventListener('blur', function() {
-                    const countryData = iti.getSelectedCountryData();
-                    config.hidden.value = '+' + countryData.dialCode;
-                    
-                    if (config.validMsg && config.invalidMsg) {
-                        const validMsg = document.querySelector(config.validMsg);
-                        const invalidMsg = document.querySelector(config.invalidMsg);
-                        
-                        if (config.input.value.trim()) {
-                            if (iti.isValidNumber()) {
-                                validMsg.classList.remove('d-none');
-                                invalidMsg.classList.add('d-none');
-                                config.input.classList.remove('is-invalid');
-                                config.input.classList.add('is-valid');
-                            } else {
-                                validMsg.classList.add('d-none');
-                                invalidMsg.classList.remove('d-none');
-                                // Show specific error with example
-                                const example = phoneExamples[countryData.iso2] || '';
-                                const countryName = countryData.name || 'selected country';
-                                invalidMsg.innerHTML = `<i class="fas fa-times"></i> Invalid format for ${countryName}. ${example ? 'Example: +' + countryData.dialCode + ' ' + example : ''}`;
-                                config.input.classList.add('is-invalid');
-                                config.input.classList.remove('is-valid');
-                            }
-                        } else {
-                            validMsg.classList.add('d-none');
-                            invalidMsg.classList.add('d-none');
-                            config.input.classList.remove('is-invalid', 'is-valid');
-                        }
-                    }
-                });
-                
-                // Set initial value and trigger initial example
-                const countryData = iti.getSelectedCountryData();
-                config.hidden.value = '+' + countryData.dialCode;
-                if (config.exampleId) {
-                    const exampleEl = document.getElementById(config.exampleId);
-                    if (exampleEl) {
-                        const example = phoneExamples[countryData.iso2] || '';
-                        exampleEl.textContent = example ? `Example: +${countryData.dialCode} ${example}` : '';
-                    }
-                }
-            });
-            
-            // Form submit - get national number only
-            document.querySelector('#vendorForm').addEventListener('submit', function() {
-                itiInstances.forEach(function(item) {
-                    if (item.config.input.value) {
-                        // Store just the national number (without country code)
-                        item.config.input.value = item.iti.getNumber(intlTelInputUtils.numberFormat.NATIONAL).replace(/\s/g, '');
+                    // Update example text below
+                    const exampleEl = this.closest('.col-md-6').querySelector('[id$="-example"]');
+                    if (exampleEl && example) {
+                        exampleEl.textContent = 'Example: ' + example;
                     }
                 });
             });
             
             // Home address toggle
-            document.querySelector('#showHomeAddress').addEventListener('change', function() {
-                const sections = document.querySelectorAll('.home-address-section');
-                sections.forEach(function(section) {
+            const homeAddressToggle = document.querySelector('#showHomeAddress');
+            if (homeAddressToggle) {
+                homeAddressToggle.addEventListener('change', function() {
+                    const sections = document.querySelectorAll('.home-address-section');
+                    sections.forEach(function(section) {
+                        section.style.display = homeAddressToggle.checked ? 'block' : 'none';
+                    });
+                });
+            }
+            
+            // Dynamic postcode placeholder based on country
+            const businessCountry = document.querySelector('#business_country');
+            const homeCountry = document.querySelector('#home_country');
+            const postcodeFormats = {
+                'United Kingdom': 'SW1A 1AA',
+                'United States': '10001',
+                'India': '400001',
+                'Germany': '10115',
+                'France': '75001',
+                'Spain': '28001',
+                'Italy': '00100',
+                'Netherlands': '1012 AB',
+                'Ireland': 'D01 F5P2',
+                'Australia': '2000',
+                'UAE': '',
+                'Singapore': '018956'
+            };
+            
+            function updatePostcodePlaceholder(countrySelect, postcodeInput) {
+                if (!countrySelect || !postcodeInput) return;
+                const country = countrySelect.value;
+                const format = postcodeFormats[country] || '';
+                postcodeInput.placeholder = format ? 'e.g., ' + format : 'Postcode / ZIP';
+            }
+            
+            if (businessCountry) {
+                businessCountry.addEventListener('change', function() {
+                    updatePostcodePlaceholder(this, document.querySelector('input[name="business_postcode"]'));
+                });
+            }
+            if (homeCountry) {
+                homeCountry.addEventListener('change', function() {
+                    updatePostcodePlaceholder(this, document.querySelector('input[name="home_postcode"]'));
+                });
+            }
+        });
+    </script>
+@endsection
                     section.style.display = this.checked ? '' : 'none';
                 }.bind(this));
             });

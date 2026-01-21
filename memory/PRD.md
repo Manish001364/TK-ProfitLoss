@@ -79,6 +79,9 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - **Settings button in header**
 - **Mobile-friendly layout**
 - **Expense by Vendor Type section at bottom**
+- **Smart Tips & Insights with budget utilisation analysis** (NEW v2.4)
+- **First-time user walkthrough modal** (NEW v2.4)
+- **Chart period filters (3/6/12 months, YTD)** (NEW v2.4)
 
 ### 7. Per-Organiser Settings ✅
 - **Default VAT/Tax rate configuration**
@@ -89,6 +92,7 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
   - On invoice created
   - On payment scheduled
   - On payment completed
+- **Walkthrough dismissed flag** (NEW v2.4)
 
 ### 8. Currency ✅
 - All values in GBP (£)
@@ -103,24 +107,31 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - Status badges with subtle background colors
 - **White text on colored backgrounds for readability**
 
-### 10. Sidebar Navigation ✅ (NEW)
-- **Complete sidebar menu code provided in INSTALLATION_GUIDE.md**
-- **Dropdown menu option with all P&L module links**
-- **Flat menu option for simpler layouts**
+### 10. Sidebar Navigation ✅
+- **Built-in P&L sidebar in all module pages**
+- **Light-themed sidebar matching TicketKart style**
+- **All P&L links accessible from sidebar**
 - **CSS styling included**
+
+### 11. Expense Categories - System & User Split ✅ (NEW v2.4)
+- **System categories (read-only defaults)**: Artist Fees, DJ Fees, Venue Hire, Catering, Security, Equipment Hire, Marketing, Staff, Transportation, Insurance, Licensing, Production, Other
+- **User categories (editable)**: Users can create custom categories
+- **Protected system defaults**: Cannot be edited or deleted by users
 
 ---
 
 ## Database Schema
 
-### Tables (9 total - all prefixed with `pnl_`):
+### Tables (11 total - all prefixed with `pnl_`):
 
 | Table | Purpose |
 |-------|---------|
 | `pnl_settings` | Per-user settings (VAT, invoice prefix, email prefs) |
 | `pnl_events` | Event details, budget, dates |
 | `pnl_vendors` | Vendor/artist contact info, service type |
-| `pnl_expense_categories` | Category definitions |
+| `pnl_expense_categories` | Legacy category definitions (backward compat) |
+| `pnl_expense_categories_system` | System default categories (NEW v2.4) |
+| `pnl_expense_categories_user` | User-created categories (NEW v2.4) |
 | `pnl_expenses` | Individual expenses with tax info |
 | `pnl_payments` | Payment tracking with email toggle |
 | `pnl_revenues` | Ticket sales revenue |
@@ -131,36 +142,25 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 
 ## Session Changelog
 
-### December 2025 - Initial Build
-- Created complete P&L module from scratch
-- Built 8 migration files, 8 models, 10 controllers
-- Created all Blade views
+### January 2025 - Version 2.4 (Current)
+- **Dashboard walkthrough**: First-time user onboarding modal with carousel slides
+- **Smart budget tips**: Rule-based insights for budget utilisation (UK English)
+- **Chart period filters**: 3/6/12 months or Year-to-Date filters for trend chart
+- **Expense category split**: System defaults (read-only) + User categories (editable)
+- **UI consistency fixes**: Warning headers now use `text-dark` for readability
+- **Database schema updates**: New system/user category tables added
 
-### January 2025 - Layout & Design Fix
-- Updated all views to use `layouts.organiser_layout`
-- Changed currency from ₹ to £ (GBP)
-- Smaller pie chart on event show page
-- Date range picker for dashboard filters
-- Auto-filter on dropdown selection
-- Improved vendor form with optional fields
-- Created SQL_TABLES.sql as alternative to migrations
-- Narrowed UI to match TicketKart's event creation page
-- Updated INSTALLATION_GUIDE.md
+### January 2025 - Version 2.3
+- **Built-in Sidebar Navigation** - All P&L pages now have integrated sidebar
+- **White text on colored headers** - Better visibility
+- **Protected default categories** - System categories can't be deleted
+- **Fixed audit log column** - Added missing `reason` column
 
-### January 2025 - Version 2.0 Features
-- **Added pnl_settings table for per-organiser settings**
-- **Added tax_rate, total_amount, is_taxable columns to expenses**
-- **Added send_email_to_vendor column to payments**
-- **New invoice number format: INV-YYYYMM-XXX**
-- **Created Settings page with VAT, invoice, and email preferences**
-- **Created Revenue edit page with quick-add ticket buttons**
-- **Created Expense edit page**
-- **PDF invoice generation with barryvdh/laravel-dompdf**
-- **Email invoice functionality**
-- **Created MIGRATION_GUIDE.md for existing users**
-- **Updated INSTALLATION_GUIDE.md**
+### January 2025 - Version 2.2
+- **TicketKart Integration** - Added `ticketkart_event_id` column and import command
+- **Revenue import command** - `php artisan pnl:import-revenue`
 
-### January 2025 - Version 2.1 Features (Current)
+### January 2025 - Version 2.1
 - **Dashboard: Collapsible sections with state persistence (localStorage)**
 - **Dashboard: Pagination controls for tables (5/10/25 rows)**
 - **Dashboard: Smaller, mobile-friendly charts**
@@ -169,8 +169,16 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - **Fixed: Expense edit form now has all options from create form**
 - **Fixed: Editing disabled for paid expenses**
 - **Fixed: "N/A" bug in upcoming payments (null-safe operators)**
-- **Added: Complete sidebar navigation code in INSTALLATION_GUIDE.md**
-- **Added: CSS styling for sidebar submenu**
+
+### January 2025 - Version 2.0
+- **Added pnl_settings table for per-organiser settings**
+- **Added tax_rate, total_amount, is_taxable columns to expenses**
+- **Added send_email_to_vendor column to payments**
+- **New invoice number format: INV-YYYYMM-XXX**
+- **Created Settings page with VAT, invoice, and email preferences**
+- **Created Revenue edit page with quick-add ticket buttons**
+- **PDF invoice generation with barryvdh/laravel-dompdf**
+- **Email invoice functionality**
 
 ---
 
@@ -184,34 +192,20 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 
 ---
 
-## Installation Summary
-
-1. Install required packages: `maatwebsite/excel`, `barryvdh/laravel-dompdf`
-2. Copy module files to Laravel project
-3. Register `PnLServiceProvider` in `config/app.php`
-4. Add routes in `routes/web.php`
-5. Run `SQL_TABLES.sql` in MySQL (or use migrations)
-6. Add P&L menu to sidebar (code provided in INSTALLATION_GUIDE.md)
-7. Clear cache and test at `/pnl/dashboard`
-8. Configure settings at `/pnl/settings`
-
----
-
 ## Key Routes
 
 | Route | URL | Description |
 |-------|-----|-------------|
 | `pnl.dashboard` | `/pnl/dashboard` | Main Dashboard |
 | `pnl.settings.index` | `/pnl/settings` | Settings Page |
+| `pnl.settings.dismiss-walkthrough` | `POST /pnl/settings/dismiss-walkthrough` | Dismiss Walkthrough |
 | `pnl.events.index` | `/pnl/events` | Events List |
 | `pnl.vendors.index` | `/pnl/vendors` | Vendors List |
 | `pnl.expenses.index` | `/pnl/expenses` | Expenses List |
 | `pnl.expenses.pdf` | `/pnl/expenses/{id}/pdf` | Download PDF Invoice |
 | `pnl.expenses.email` | `POST /pnl/expenses/{id}/email` | Email Invoice |
 | `pnl.revenues.index` | `/pnl/revenues` | Revenue List |
-| `pnl.revenues.edit` | `/pnl/revenues/{id}/edit` | Edit/Add Tickets |
 | `pnl.payments.index` | `/pnl/payments` | Payments List |
-| `pnl.payments.upcoming` | `/pnl/payments/upcoming` | Upcoming Payments |
 | `pnl.categories.index` | `/pnl/categories` | Expense Categories |
 | `pnl.audit.index` | `/pnl/audit` | Audit Logs |
 
@@ -224,9 +218,7 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - [ ] Budget vs Actual comparison charts
 - [ ] Multi-currency support
 - [ ] API endpoints for mobile app
-- [ ] Integration with TicketKart's existing `events` and `eventtickets` tables
-- [ ] Auto-import revenue from ticket sales
-- [ ] Link P&L events with TicketKart events via `ticketkart_event_id`
+- [ ] Dedicated settings page for default currency management
 
 ---
 
@@ -241,6 +233,7 @@ composer require barryvdh/laravel-dompdf
 ### Key Models
 - `PnlSettings` - Per-user settings
 - `PnlExpense` - Expenses with tax fields
+- `PnlExpenseCategory` - Categories with system/user split
 - `PnlPayment` - Payments with email toggle
 - `PnlVendor` - Vendor/artist contacts
 - `PnlEvent` - Event management
@@ -249,20 +242,8 @@ composer require barryvdh/laravel-dompdf
 ### Key Controllers
 - `SettingsController` - Settings management
 - `ExpenseController` - Expense CRUD + PDF/Email
+- `ExpenseCategoryController` - Category management with protection
 - `RevenueController` - Revenue CRUD
 - `PaymentController` - Payment tracking
 - `VendorController` - Vendor management
-- `DashboardController` - Dashboard stats
-
----
-
-## TicketKart Integration Notes
-
-The module is designed for easy integration with TicketKart's existing database:
-
-1. **Events Table:** Can be linked via `ticketkart_event_id` column (see INSTALLATION_GUIDE.md)
-2. **Tickets Table (`eventtickets`):** Revenue can be auto-imported from ticket sales
-3. **User System:** Uses Laravel's built-in `auth()->id()` for user isolation
-4. **Layout:** Uses `layouts.organiser_layout` to match TicketKart's UI
-
-For detailed integration instructions, see **INSTALLATION_GUIDE.md - TicketKart Integration** section.
+- `DashboardController` - Dashboard stats with tips & walkthrough

@@ -7,6 +7,27 @@
 -- ==============================================
 
 -- ---------------------------------------------
+-- TABLE 0: pnl_settings (Per-Organiser Settings)
+-- ---------------------------------------------
+CREATE TABLE IF NOT EXISTS `pnl_settings` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `default_tax_rate` DECIMAL(5, 2) DEFAULT 20.00 COMMENT 'Default VAT/Tax rate %',
+    `invoice_prefix` VARCHAR(10) DEFAULT 'INV' COMMENT 'Invoice number prefix',
+    `invoice_next_number` INT UNSIGNED DEFAULT 1 COMMENT 'Next invoice sequence number',
+    `send_email_on_payment_created` TINYINT(1) DEFAULT 1,
+    `send_email_on_payment_paid` TINYINT(1) DEFAULT 1,
+    `send_email_on_payment_scheduled` TINYINT(1) DEFAULT 1,
+    `company_name` VARCHAR(255) NULL COMMENT 'Company name for invoices',
+    `company_address` TEXT NULL COMMENT 'Company address for invoices',
+    `company_vat_number` VARCHAR(50) NULL COMMENT 'VAT registration number',
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `idx_pnl_settings_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------
 -- TABLE 1: pnl_events
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_events` (
@@ -100,24 +121,30 @@ INSERT INTO `pnl_expense_categories` (`name`, `type`, `color`, `icon`, `sort_ord
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_expenses` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NULL,
     `event_id` BIGINT UNSIGNED NOT NULL,
     `category_id` BIGINT UNSIGNED NOT NULL,
     `vendor_id` BIGINT UNSIGNED NULL,
     `title` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
     `amount` DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    `tax_rate` DECIMAL(5, 2) DEFAULT 0.00 COMMENT 'Tax/VAT rate %',
     `tax_amount` DECIMAL(15, 2) DEFAULT 0.00,
+    `total_amount` DECIMAL(15, 2) DEFAULT 0.00 COMMENT 'Amount + Tax',
+    `is_taxable` TINYINT(1) DEFAULT 1,
     `expense_date` DATE NOT NULL,
-    `invoice_number` VARCHAR(100) NULL,
+    `invoice_number` VARCHAR(100) NULL COMMENT 'Format: INV-YYYYMM-XXX',
     `receipt_path` VARCHAR(500) NULL,
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`),
+    INDEX `idx_pnl_expenses_user_id` (`user_id`),
     INDEX `idx_pnl_expenses_event_id` (`event_id`),
     INDEX `idx_pnl_expenses_category_id` (`category_id`),
     INDEX `idx_pnl_expenses_vendor_id` (`vendor_id`),
     INDEX `idx_pnl_expenses_expense_date` (`expense_date`),
+    INDEX `idx_pnl_expenses_invoice_number` (`invoice_number`),
     CONSTRAINT `fk_pnl_expenses_event` FOREIGN KEY (`event_id`) REFERENCES `pnl_events` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_pnl_expenses_category` FOREIGN KEY (`category_id`) REFERENCES `pnl_expense_categories` (`id`) ON DELETE RESTRICT,
     CONSTRAINT `fk_pnl_expenses_vendor` FOREIGN KEY (`vendor_id`) REFERENCES `pnl_vendors` (`id`) ON DELETE SET NULL
@@ -128,6 +155,7 @@ CREATE TABLE IF NOT EXISTS `pnl_expenses` (
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_payments` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NULL,
     `expense_id` BIGINT UNSIGNED NOT NULL,
     `vendor_id` BIGINT UNSIGNED NULL,
     `amount` DECIMAL(15, 2) NOT NULL,
@@ -140,10 +168,14 @@ CREATE TABLE IF NOT EXISTS `pnl_payments` (
     `reminder_enabled` TINYINT(1) DEFAULT 1,
     `reminder_days_before` INT DEFAULT 3,
     `reminder_on_due_date` TINYINT(1) DEFAULT 1,
+    `reminder_count` INT DEFAULT 0,
     `last_reminder_sent_at` TIMESTAMP NULL,
+    `send_email_to_vendor` TINYINT(1) DEFAULT 1 COMMENT 'Enable/disable email notifications to vendor',
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` TIMESTAMP NULL,
     PRIMARY KEY (`id`),
+    INDEX `idx_pnl_payments_user_id` (`user_id`),
     INDEX `idx_pnl_payments_expense_id` (`expense_id`),
     INDEX `idx_pnl_payments_vendor_id` (`vendor_id`),
     INDEX `idx_pnl_payments_status` (`status`),
@@ -228,7 +260,9 @@ CREATE TABLE IF NOT EXISTS `pnl_audit_logs` (
 -- 3. Foreign keys ensure data integrity
 -- 4. Soft deletes enabled on main tables (deleted_at column)
 -- 5. Default expense categories are inserted automatically
+-- 6. pnl_settings stores per-organiser VAT defaults and invoice settings
+-- 7. Invoice numbers use format: INV-YYYYMM-XXX (e.g., INV-202501-001)
 -- 
 -- To drop all P&L tables (CAREFUL - deletes all data!):
--- DROP TABLE IF EXISTS pnl_audit_logs, pnl_attachments, pnl_revenues, pnl_payments, pnl_expenses, pnl_expense_categories, pnl_vendors, pnl_events;
+-- DROP TABLE IF EXISTS pnl_audit_logs, pnl_attachments, pnl_revenues, pnl_payments, pnl_expenses, pnl_expense_categories, pnl_vendors, pnl_events, pnl_settings;
 -- ==============================================

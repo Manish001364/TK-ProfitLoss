@@ -358,4 +358,29 @@ class VendorController extends Controller
 
         return false;
     }
+
+    /**
+     * Map service type slug to a valid ENUM value for the 'type' column
+     * The pnl_vendors.type column is: ENUM('artist', 'dj', 'vendor', 'caterer', 'security', 'equipment', 'venue', 'marketing', 'staff', 'other')
+     */
+    private function mapServiceTypeToEnum($serviceTypeSlug): string
+    {
+        // Direct mapping for slugs that match ENUM values
+        $validEnumValues = ['artist', 'dj', 'vendor', 'caterer', 'security', 'equipment', 'venue', 'marketing', 'staff', 'other'];
+        
+        if (in_array($serviceTypeSlug, $validEnumValues)) {
+            return $serviceTypeSlug;
+        }
+        
+        // Map other service types to closest ENUM value
+        $mappings = [
+            'photography' => 'vendor',
+            'transport' => 'vendor',
+            'decor' => 'vendor',
+            'mc' => 'artist',
+            'catering' => 'caterer',
+        ];
+        
+        return $mappings[$serviceTypeSlug] ?? 'other';
+    }
 }

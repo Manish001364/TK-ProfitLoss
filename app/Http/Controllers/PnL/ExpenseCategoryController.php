@@ -81,7 +81,7 @@ class ExpenseCategoryController extends Controller
         $category = PnlExpenseCategory::create($validated);
 
         return redirect()
-            ->route('pnl.categories.index')
+            ->route('pnl.configuration.index')
             ->with('success', 'Category created successfully!');
     }
 
@@ -111,7 +111,7 @@ class ExpenseCategoryController extends Controller
         $category->update($validated);
 
         return redirect()
-            ->route('pnl.categories.index')
+            ->route('pnl.configuration.index')
             ->with('success', 'Category updated successfully!');
     }
 
@@ -127,7 +127,7 @@ class ExpenseCategoryController extends Controller
         $category->delete();
 
         return redirect()
-            ->route('pnl.categories.index')
+            ->route('pnl.configuration.index')
             ->with('success', 'Category deleted successfully!');
     }
 

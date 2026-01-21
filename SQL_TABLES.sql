@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `pnl_settings` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `default_tax_rate` DECIMAL(5, 2) DEFAULT 20.00 COMMENT 'Default VAT/Tax rate %',
+    `default_currency` VARCHAR(3) DEFAULT 'GBP' COMMENT 'Default currency code',
     `invoice_prefix` VARCHAR(10) DEFAULT 'INV' COMMENT 'Invoice number prefix',
     `invoice_next_number` INT UNSIGNED DEFAULT 1 COMMENT 'Next invoice sequence number',
     `send_email_on_payment_created` TINYINT(1) DEFAULT 1,
@@ -27,6 +28,21 @@ CREATE TABLE IF NOT EXISTS `pnl_settings` (
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `idx_pnl_settings_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------
+-- TABLE 0b: pnl_currency_rates (User-defined exchange rates)
+-- ---------------------------------------------
+CREATE TABLE IF NOT EXISTS `pnl_currency_rates` (
+    `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `from_currency` VARCHAR(3) NOT NULL DEFAULT 'GBP',
+    `to_currency` VARCHAR(3) NOT NULL,
+    `rate` DECIMAL(15, 6) NOT NULL COMMENT 'Conversion rate',
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `idx_pnl_currency_rates_user_pair` (`user_id`, `from_currency`, `to_currency`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------

@@ -76,7 +76,7 @@
                                         @endif
                                     </td>
                                     <td class="border-0">
-                                        <span class="badge bg-info-subtle text-info">{{ ucfirst($vendor->type) }}</span>
+                                        <span class="badge bg-info-subtle text-info">{{ $vendor->service_type_name }}</span>
                                     </td>
                                     <td class="border-0 small">
                                         <i class="fas fa-envelope text-muted me-1"></i>{{ $vendor->email ?? '-' }}<br>

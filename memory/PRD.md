@@ -1,6 +1,7 @@
 # P&L Module for TicketKart - Product Requirements Document
 
 ## Version History
+- **v2.9** (January 2025) - CRITICAL FIX: Vendor creation ENUM error, Event view null category fix
 - **v2.8** (January 2025) - Code cleanup, walkthrough fix, phone dropdown fix
 - **v2.7** (January 2025) - Cash flow fix, payment emails, combined config page
 - **v2.6** (January 2025) - Service types, multi-currency
@@ -28,7 +29,7 @@ Self-contained P&L (Profit & Loss) module for TicketKart event management platfo
 
 ### Database Tables
 - `pnl_events` - Events with budget and currency
-- `pnl_vendors` - Vendors with international phone support
+- `pnl_vendors` - Vendors with international phone support + service_type_id
 - `pnl_expenses` - Expenses with tax and currency
 - `pnl_revenues` - Revenue entries
 - `pnl_payments` - Payment records
@@ -47,22 +48,32 @@ Self-contained P&L (Profit & Loss) module for TicketKart event management platfo
 4. `MIGRATION_GUIDE.md` - Upgrade instructions
 5. `README.md` - Module overview
 
-## Recent Changes (v2.8)
+## Recent Changes (v2.9)
 
 ### Fixed
-- Walkthrough guide now shows on first visit
-- Phone country dropdown works with native select
-- Removed duplicate files and unused code
-- Added proper comments to all controllers
+- **CRITICAL: Vendor Creation ENUM Error** - Service type slug was being saved directly to ENUM column. Now:
+  - `service_type_id` stores the service type slug for display
+  - `type` stores mapped ENUM value for backward compatibility
+- **Event View Null Category** - Added null-safe operators for expenses without categories
 
-### Cleaned Up
-- Removed `sidebar-menu.blade.php` (duplicate)
-- Removed `categories/index.blade.php` (moved to configuration)
-- Removed `service-types/index.blade.php` (moved to configuration)
-- Controllers now have proper documentation headers
+### Updated Files
+- `VendorController.php` - Added `mapServiceTypeToEnum()` method
+- `PnlVendor.php` - Added `service_type_id` field and `service_type_name` accessor
+- `PnlServiceType.php` - Added `getBySlugOrId()` method
+- `SQL_TABLES.sql` - Added `service_type_id` column to pnl_vendors
+- `events/show.blade.php` - Null-safe category display
+- `vendors/index.blade.php`, `show.blade.php`, `edit.blade.php` - Use service_type_name
+
+### Migration Required
+```sql
+ALTER TABLE `pnl_vendors`
+    ADD COLUMN IF NOT EXISTS `service_type_id` CHAR(36) NULL AFTER `type`;
+UPDATE `pnl_vendors` SET `service_type_id` = `type` WHERE `service_type_id` IS NULL;
+```
 
 ## Future/Backlog
 - Add more sold tickets functionality
 - File uploads for invoices/contracts
 - Budget vs Actual comparison charts
 - API endpoints for mobile app
+- Walkthrough guide fix (P1 - still needs testing)

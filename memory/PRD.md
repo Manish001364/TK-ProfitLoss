@@ -191,10 +191,10 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 
 ## Deliverables
 
-1. **ticketkart-pnl-module.zip** - Complete module package
+1. **ticketkart-pnl-module.zip** - Complete module package (v2.7)
 2. **SQL_TABLES.sql** - Raw SQL for direct database creation
-3. **INSTALLATION_GUIDE.md** - Step-by-step installation instructions with sidebar code
-4. **MIGRATION_GUIDE.md** - Upgrade instructions for existing users (v2.5 latest)
+3. **INSTALLATION_GUIDE.md** - Step-by-step installation instructions (v2.7)
+4. **MIGRATION_GUIDE.md** - Upgrade instructions for existing users (v2.7 latest)
 5. **README.md** - Module overview
 
 ---

@@ -74,6 +74,37 @@ class DashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
+        // Expense breakdown by vendor type (Artist, DJ, Venue, Equipment, etc.)
+        $expenseByVendorType = DB::table('pnl_expenses')
+            ->join('pnl_vendors', 'pnl_expenses.vendor_id', '=', 'pnl_vendors.id')
+            ->whereIn('pnl_expenses.event_id', $filteredEventIds)
+            ->whereNull('pnl_expenses.deleted_at')
+            ->select(
+                'pnl_vendors.type',
+                DB::raw('SUM(pnl_expenses.total_amount) as total'),
+                DB::raw('COUNT(DISTINCT pnl_expenses.id) as count')
+            )
+            ->groupBy('pnl_vendors.type')
+            ->orderByDesc('total')
+            ->get()
+            ->map(function ($item) {
+                $colors = [
+                    'artist' => '#dc3545',
+                    'dj' => '#6f42c1',
+                    'vendor' => '#0d6efd',
+                    'caterer' => '#fd7e14',
+                    'security' => '#6c757d',
+                    'equipment' => '#20c997',
+                    'venue' => '#0dcaf0',
+                    'marketing' => '#d63384',
+                    'staff' => '#198754',
+                    'other' => '#adb5bd',
+                ];
+                $item->color = $colors[$item->type] ?? '#6c757d';
+                $item->label = ucfirst($item->type);
+                return $item;
+            });
+
         // Revenue by ticket type - using calculated fields
         $revenueByTicketType = PnlRevenue::whereIn('event_id', $filteredEventIds)
             ->select(

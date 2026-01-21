@@ -203,7 +203,7 @@
 
             <!-- Notification Settings -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-warning text-white border-0 py-3">
+                <div class="card-header bg-warning text-dark border-0 py-3">
                     <h6 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h6>
                 </div>
                 <div class="card-body">

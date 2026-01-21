@@ -267,48 +267,69 @@
     <div class="modal fade" id="addVendorModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header border-0">
+                <div class="modal-header bg-primary text-white border-0">
                     <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Quick Add Vendor/Artist</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="alert alert-info small mb-3">
+                        <i class="fas fa-info-circle me-1"></i> 
+                        <strong>Required fields:</strong> Name, Service Type, and Phone number are mandatory.
+                    </div>
                     <form id="quickVendorForm">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label small">Name <span class="text-danger">*</span></label>
-                                <input type="text" name="vendor_name" id="vendor_name" class="form-control" required placeholder="Vendor/Artist name">
+                                <label class="form-label small">Vendor/Artist Name <span class="text-danger">*</span></label>
+                                <input type="text" name="vendor_name" id="vendor_name" class="form-control" required placeholder="e.g., DJ Alpha, ABC Catering">
+                                <div class="invalid-feedback">Please enter a vendor/artist name</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small">Type</label>
-                                <select name="vendor_type" id="vendor_type" class="form-select">
-                                    <option value="artist">Artist</option>
-                                    <option value="dj">DJ</option>
-                                    <option value="vendor">Vendor</option>
-                                    <option value="caterer">Caterer</option>
-                                    <option value="security">Security</option>
-                                    <option value="equipment">Equipment</option>
-                                    <option value="venue">Venue</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="staff">Staff</option>
-                                    <option value="other">Other</option>
+                                <label class="form-label small">Service Type <span class="text-danger">*</span></label>
+                                <select name="vendor_type" id="vendor_type" class="form-select" required>
+                                    <option value="">Select Service Type</option>
+                                    @foreach($vendorTypes ?? [] as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
                                 </select>
+                                <div class="invalid-feedback">Please select a service type</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Phone Number <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select id="quick_phone_country" class="form-select" style="max-width: 120px;">
+                                        <option value="+44" data-country="gb" selected>🇬🇧 +44</option>
+                                        <option value="+1" data-country="us">🇺🇸 +1</option>
+                                        <option value="+91" data-country="in">🇮🇳 +91</option>
+                                        <option value="+49" data-country="de">🇩🇪 +49</option>
+                                        <option value="+33" data-country="fr">🇫🇷 +33</option>
+                                        <option value="+34" data-country="es">🇪🇸 +34</option>
+                                        <option value="+39" data-country="it">🇮🇹 +39</option>
+                                        <option value="+31" data-country="nl">🇳🇱 +31</option>
+                                        <option value="+353" data-country="ie">🇮🇪 +353</option>
+                                        <option value="+61" data-country="au">🇦🇺 +61</option>
+                                        <option value="+971" data-country="ae">🇦🇪 +971</option>
+                                        <option value="+65" data-country="sg">🇸🇬 +65</option>
+                                    </select>
+                                    <input type="tel" name="vendor_phone" id="vendor_phone" class="form-control" required placeholder="7911 123456">
+                                </div>
+                                <input type="hidden" name="phone_country_code" id="quick_phone_country_code" value="+44">
+                                <div class="invalid-feedback">Please enter a phone number</div>
+                                <small class="text-muted" id="quick_phone_example">Example: 7911 123456</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small">Email</label>
                                 <input type="email" name="vendor_email" id="vendor_email" class="form-control" placeholder="email@example.com">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small">Phone</label>
-                                <input type="text" name="vendor_phone" id="vendor_phone" class="form-control" placeholder="+44 7xxx xxx xxx">
+                                <div class="invalid-feedback">Please enter a valid email address</div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label small">Service Area / Specialization</label>
-                                <input type="text" name="vendor_specialization" id="vendor_specialization" class="form-control" placeholder="e.g., Bollywood DJ, Continental Food">
+                                <input type="text" name="vendor_specialization" id="vendor_specialization" class="form-control" placeholder="e.g., Bollywood DJ, Continental Food, Event Security">
                             </div>
                         </div>
+                        <div id="quickVendorError" class="alert alert-danger mt-3 d-none"></div>
                     </form>
                 </div>
-                <div class="modal-footer border-0">
+                <div class="modal-footer border-0 bg-light">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-success btn-sm" onclick="saveQuickVendor()">
                         <i class="fas fa-save me-1"></i> Save & Select

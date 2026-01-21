@@ -44,10 +44,11 @@
                                    value="{{ old('business_name') }}" placeholder="Legal business name (if different)">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small">Service Type</label>
-                            <select name="type" class="form-select @error('type') is-invalid @enderror">
+                            <label class="form-label small">Service Type <span class="text-danger">*</span></label>
+                            <select name="type" class="form-select @error('type') is-invalid @enderror" required>
+                                <option value="">Select Service Type</option>
                                 @foreach($vendorTypes as $key => $label)
-                                    <option value="{{ $key }}" {{ old('type', 'artist') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                    <option value="{{ $key }}" {{ old('type') === $key ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
                             </select>
                             @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -76,8 +77,8 @@
                             @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small">Primary Phone</label>
-                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" 
+                            <label class="form-label small">Primary Phone <span class="text-danger">*</span></label>
+                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" required 
                                    value="{{ old('phone') }}" placeholder="+44 7xxx xxx xxx">
                         </div>
                         <div class="col-md-3">

@@ -1,10 +1,10 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container-fluid py-4">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 900px;">
         <!-- Page Header -->
         <div class="mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-edit"></i> Edit Payment</h1>
+            <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Payment</h4>
         </div>
 
         <div class="row">

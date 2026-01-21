@@ -4,9 +4,11 @@
  * 
  * Represents expense categories for the P&L module.
  * 
- * Table: pnl_expense_categories
- * - user_id = NULL: System default categories (read-only)
- * - user_id = {id}: User's custom categories (editable)
+ * Data Sources (checked in order):
+ * 1. pnl_expense_categories_system - System default categories (read-only)
+ * 2. pnl_expense_categories_user - User's custom categories (editable)
+ * 3. pnl_expense_categories (legacy) - For backward compatibility
+ * 4. Hardcoded defaults - Fallback when tables don't exist
  */
 
 namespace App\Models\PnL;
@@ -52,25 +54,70 @@ class PnlExpenseCategory extends Model
     /**
      * Get ALL categories for expense dropdown (system + user custom)
      * Used when creating/editing expenses
+     * Similar approach to PnlServiceType::getAllForUser()
      */
     public static function getAllForUser($userId)
     {
-        // Get system categories (user_id = NULL) + user's custom categories (user_id = $userId)
-        $categories = self::where(function($query) use ($userId) {
-                $query->whereNull('user_id')           // System defaults
-                      ->orWhere('user_id', $userId);   // User's custom
-            })
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $allCategories = collect();
         
-        // If no categories found, return hardcoded defaults
-        if ($categories->isEmpty()) {
+        // 1. Try to get from pnl_expense_categories_system table
+        try {
+            $systemCategories = DB::table('pnl_expense_categories_system')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function ($item) {
+                    $item->is_system = true;
+                    return $item;
+                });
+            $allCategories = $allCategories->merge($systemCategories);
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+        
+        // 2. Try to get from pnl_expense_categories_user table
+        try {
+            $userCategories = DB::table('pnl_expense_categories_user')
+                ->where('user_id', $userId)
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function ($item) {
+                    $item->is_system = false;
+                    return $item;
+                });
+            $allCategories = $allCategories->merge($userCategories);
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+        
+        // 3. If still empty, try legacy pnl_expense_categories table
+        if ($allCategories->isEmpty()) {
+            try {
+                $legacyCategories = DB::table('pnl_expense_categories')
+                    ->where(function($query) use ($userId) {
+                        $query->whereNull('user_id')
+                              ->orWhere('user_id', $userId);
+                    })
+                    ->where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(function ($item) {
+                        $item->is_system = ($item->user_id === null);
+                        return $item;
+                    });
+                $allCategories = $allCategories->merge($legacyCategories);
+            } catch (\Exception $e) {
+                // Table might not exist
+            }
+        }
+        
+        // 4. If still empty, return hardcoded defaults
+        if ($allCategories->isEmpty()) {
             return self::getHardcodedDefaults();
         }
         
-        return $categories;
+        return $allCategories;
     }
 
     /**
@@ -79,10 +126,41 @@ class PnlExpenseCategory extends Model
      */
     public static function getUserCategories($userId)
     {
-        return self::where('user_id', $userId)
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+        $userCategories = collect();
+        
+        // Try new table first
+        try {
+            $userCategories = DB::table('pnl_expense_categories_user')
+                ->where('user_id', $userId)
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function ($item) {
+                    $item->is_system = false;
+                    return $item;
+                });
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+        
+        // Fallback to legacy table
+        if ($userCategories->isEmpty()) {
+            try {
+                $userCategories = DB::table('pnl_expense_categories')
+                    ->where('user_id', $userId)
+                    ->where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(function ($item) {
+                        $item->is_system = false;
+                        return $item;
+                    });
+            } catch (\Exception $e) {
+                // Table might not exist
+            }
+        }
+        
+        return $userCategories;
     }
 
     /**
@@ -91,10 +169,45 @@ class PnlExpenseCategory extends Model
      */
     public static function getSystemCategories()
     {
-        return self::whereNull('user_id')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+        $systemCategories = collect();
+        
+        // Try new table first
+        try {
+            $systemCategories = DB::table('pnl_expense_categories_system')
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function ($item) {
+                    $item->is_system = true;
+                    return $item;
+                });
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+        
+        // Fallback to legacy table (where user_id is NULL)
+        if ($systemCategories->isEmpty()) {
+            try {
+                $systemCategories = DB::table('pnl_expense_categories')
+                    ->whereNull('user_id')
+                    ->where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->get()
+                    ->map(function ($item) {
+                        $item->is_system = true;
+                        return $item;
+                    });
+            } catch (\Exception $e) {
+                // Table might not exist
+            }
+        }
+        
+        // Fallback to hardcoded
+        if ($systemCategories->isEmpty()) {
+            return self::getHardcodedDefaults();
+        }
+        
+        return $systemCategories;
     }
 
     /**
@@ -103,14 +216,15 @@ class PnlExpenseCategory extends Model
     private static function getHardcodedDefaults()
     {
         return collect([
-            (object)['id' => 'default_1', 'name' => 'Artist/Performer Fee', 'type' => 'fixed', 'color' => '#dc3545', 'icon' => 'fas fa-microphone'],
-            (object)['id' => 'default_2', 'name' => 'DJ Fee', 'type' => 'fixed', 'color' => '#6f42c1', 'icon' => 'fas fa-headphones'],
-            (object)['id' => 'default_3', 'name' => 'Venue Hire', 'type' => 'fixed', 'color' => '#0d6efd', 'icon' => 'fas fa-building'],
-            (object)['id' => 'default_4', 'name' => 'Equipment Rental', 'type' => 'variable', 'color' => '#198754', 'icon' => 'fas fa-sliders-h'],
-            (object)['id' => 'default_5', 'name' => 'Catering', 'type' => 'variable', 'color' => '#fd7e14', 'icon' => 'fas fa-utensils'],
-            (object)['id' => 'default_6', 'name' => 'Security', 'type' => 'fixed', 'color' => '#6c757d', 'icon' => 'fas fa-shield-alt'],
-            (object)['id' => 'default_7', 'name' => 'Marketing', 'type' => 'variable', 'color' => '#e91e8c', 'icon' => 'fas fa-bullhorn'],
-            (object)['id' => 'default_8', 'name' => 'Staff Wages', 'type' => 'variable', 'color' => '#17a2b8', 'icon' => 'fas fa-users'],
+            (object)['id' => 'default_artist', 'name' => 'Artist/Performer Fee', 'type' => 'fixed', 'color' => '#dc3545', 'icon' => 'fas fa-microphone', 'is_system' => true],
+            (object)['id' => 'default_dj', 'name' => 'DJ Fee', 'type' => 'fixed', 'color' => '#6f42c1', 'icon' => 'fas fa-headphones', 'is_system' => true],
+            (object)['id' => 'default_venue', 'name' => 'Venue Hire', 'type' => 'fixed', 'color' => '#0d6efd', 'icon' => 'fas fa-building', 'is_system' => true],
+            (object)['id' => 'default_equipment', 'name' => 'Equipment Rental', 'type' => 'variable', 'color' => '#198754', 'icon' => 'fas fa-sliders-h', 'is_system' => true],
+            (object)['id' => 'default_catering', 'name' => 'Catering', 'type' => 'variable', 'color' => '#fd7e14', 'icon' => 'fas fa-utensils', 'is_system' => true],
+            (object)['id' => 'default_security', 'name' => 'Security', 'type' => 'fixed', 'color' => '#6c757d', 'icon' => 'fas fa-shield-alt', 'is_system' => true],
+            (object)['id' => 'default_marketing', 'name' => 'Marketing', 'type' => 'variable', 'color' => '#e91e8c', 'icon' => 'fas fa-bullhorn', 'is_system' => true],
+            (object)['id' => 'default_staff', 'name' => 'Staff Wages', 'type' => 'variable', 'color' => '#17a2b8', 'icon' => 'fas fa-users', 'is_system' => true],
+            (object)['id' => 'default_other', 'name' => 'Other', 'type' => 'variable', 'color' => '#adb5bd', 'icon' => 'fas fa-tag', 'is_system' => true],
         ]);
     }
 

@@ -1,7 +1,7 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container py-4" style="max-width: 1200px;">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 1200px;">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="mb-0" style="color: #dc3545;">P&L Dashboard</h4>
@@ -700,9 +700,6 @@
                     $(this).toggle(rowText.indexOf(searchText) > -1);
                 });
             });
-
-            // Simple client-side pagination (for dashboard preview)
-            // Full pagination is on dedicated list pages
         });
 
         // Pagination helpers

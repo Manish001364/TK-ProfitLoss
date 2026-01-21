@@ -11,7 +11,7 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - **Framework:** Laravel 10+
 - **Database:** MySQL
 - **UI Framework:** Bootstrap 5
-- **Currency:** GBP (£)
+- **Currency:** Multi-currency support (GBP default)
 - **Layout System:** Custom organiser layout (`layouts.organiser_layout`)
 - **Sidebar:** Custom (`customer/sidemenu.blade.php`)
 
@@ -22,6 +22,8 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 ### 1. Vendor/Artist Management ✅
 - Comprehensive form with service type (DJ, Caterer, Artist, etc.)
 - Only vendor name is mandatory - all other fields optional
+- **International Phone Numbers** - intl-tel-input with country flags and validation (NEW v2.5)
+- **Address Enhancement** - Country dropdown and postcode fields with country-specific validation (NEW v2.5)
 - Contact details: email, phone, secondary phone, addresses
 - Emergency contact information
 - Bank details (collapsible section)
@@ -79,11 +81,29 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - **Settings button in header**
 - **Mobile-friendly layout**
 - **Expense by Vendor Type section at bottom**
-- **Smart Tips & Insights with budget utilisation analysis** (NEW v2.4)
-- **First-time user walkthrough modal** (NEW v2.4)
-- **Chart period filters (3/6/12 months, YTD)** (NEW v2.4)
+- **Smart Tips & Insights with budget utilisation analysis** (v2.4)
+- **First-time user walkthrough modal** (v2.4)
+- **Chart period filters (3/6/12 months, YTD)** (v2.4)
 
-### 7. Per-Organiser Settings ✅
+### 7. Cash Flow Projections ✅ (NEW v2.5)
+- Dedicated cash flow page accessible from sidebar
+- Summary cards: Overdue, Due in 7/14/30 days
+- Interactive chart showing projected inflows vs outflows
+- Upcoming payments list with urgency indicators
+- Expected revenue from upcoming events
+- Net position calculation
+- Period filter (30/60/90 days)
+
+### 8. Multi-Currency Support ✅ (NEW v2.5)
+- Default currency selection in settings (GBP, USD, EUR, INR, AUD, CAD, AED, SGD, CHF, JPY, CNY)
+- Per-event currency selection
+- **User-defined exchange rates** for currency conversion
+- Exchange rate management in settings page
+- Currency symbols displayed throughout
+
+### 9. Per-Organiser Settings ✅
+- **Default currency configuration** (NEW v2.5)
+- **Exchange rates management** (NEW v2.5)
 - **Default VAT/Tax rate configuration**
 - **Invoice prefix customization**
 - **Invoice sequence reset**
@@ -92,46 +112,35 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
   - On invoice created
   - On payment scheduled
   - On payment completed
-- **Walkthrough dismissed flag** (NEW v2.4)
+- **Walkthrough dismissed flag**
 
-### 8. Currency ✅
-- All values in GBP (£)
-- Consistent throughout all views
-- Fixed: Budget (₹) → Budget (£)
-
-### 9. UI/UX Improvements ✅
-- Narrower layout (max-width: 900-1200px) matching TicketKart style
-- Clean cards with subtle shadows
-- Smaller fonts and better spacing
-- Collapsible sections for bank/tax details
-- Status badges with subtle background colors
-- **White text on colored backgrounds for readability**
-
-### 10. Sidebar Navigation ✅
-- **Built-in P&L sidebar in all module pages**
-- **Light-themed sidebar matching TicketKart style**
-- **All P&L links accessible from sidebar**
-- **CSS styling included**
-
-### 11. Expense Categories - System & User Split ✅ (NEW v2.4)
+### 10. Expense Categories - System & User Split ✅ (v2.4)
 - **System categories (read-only defaults)**: Artist Fees, DJ Fees, Venue Hire, Catering, Security, Equipment Hire, Marketing, Staff, Transportation, Insurance, Licensing, Production, Other
 - **User categories (editable)**: Users can create custom categories
 - **Protected system defaults**: Cannot be edited or deleted by users
+
+### 11. Sidebar Navigation ✅
+- **Built-in P&L sidebar in all module pages**
+- **Light-themed sidebar matching TicketKart style**
+- **Cash Flow link added** (NEW v2.5)
+- **All P&L links accessible from sidebar**
+- **CSS styling included**
 
 ---
 
 ## Database Schema
 
-### Tables (11 total - all prefixed with `pnl_`):
+### Tables (12 total - all prefixed with `pnl_`):
 
 | Table | Purpose |
 |-------|---------|
-| `pnl_settings` | Per-user settings (VAT, invoice prefix, email prefs) |
-| `pnl_events` | Event details, budget, dates |
-| `pnl_vendors` | Vendor/artist contact info, service type |
+| `pnl_settings` | Per-user settings (VAT, invoice prefix, email prefs, currency) |
+| `pnl_currency_rates` | User-defined exchange rates (NEW v2.5) |
+| `pnl_events` | Event details, budget, dates, currency |
+| `pnl_vendors` | Vendor/artist contact info, phone country codes, addresses |
 | `pnl_expense_categories` | Legacy category definitions (backward compat) |
-| `pnl_expense_categories_system` | System default categories (NEW v2.4) |
-| `pnl_expense_categories_user` | User-created categories (NEW v2.4) |
+| `pnl_expense_categories_system` | System default categories |
+| `pnl_expense_categories_user` | User-created categories |
 | `pnl_expenses` | Individual expenses with tax info |
 | `pnl_payments` | Payment tracking with email toggle |
 | `pnl_revenues` | Ticket sales revenue |
@@ -142,7 +151,15 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 
 ## Session Changelog
 
-### January 2025 - Version 2.4 (Current)
+### January 2025 - Version 2.5 (Current)
+- **International Phone Numbers**: intl-tel-input library with country flags and validation
+- **Address Enhancement**: Country dropdown and postcode fields with country-specific validation
+- **Multi-Currency Support**: Default currency setting, per-event currency, exchange rate management
+- **Cash Flow Projections**: New dedicated page for visualising upcoming payments and expected revenue
+- **Expected Revenue Field**: Added to events for cash flow calculations
+- **Sidebar Update**: Added Cash Flow link
+
+### January 2025 - Version 2.4
 - **Dashboard walkthrough**: First-time user onboarding modal with carousel slides
 - **Smart budget tips**: Rule-based insights for budget utilisation (UK English)
 - **Chart period filters**: 3/6/12 months or Year-to-Date filters for trend chart
@@ -160,26 +177,6 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 - **TicketKart Integration** - Added `ticketkart_event_id` column and import command
 - **Revenue import command** - `php artisan pnl:import-revenue`
 
-### January 2025 - Version 2.1
-- **Dashboard: Collapsible sections with state persistence (localStorage)**
-- **Dashboard: Pagination controls for tables (5/10/25 rows)**
-- **Dashboard: Smaller, mobile-friendly charts**
-- **Dashboard: Expense by Vendor Type moved to bottom**
-- **Fixed: Currency symbol ₹ → £ in event edit page**
-- **Fixed: Expense edit form now has all options from create form**
-- **Fixed: Editing disabled for paid expenses**
-- **Fixed: "N/A" bug in upcoming payments (null-safe operators)**
-
-### January 2025 - Version 2.0
-- **Added pnl_settings table for per-organiser settings**
-- **Added tax_rate, total_amount, is_taxable columns to expenses**
-- **Added send_email_to_vendor column to payments**
-- **New invoice number format: INV-YYYYMM-XXX**
-- **Created Settings page with VAT, invoice, and email preferences**
-- **Created Revenue edit page with quick-add ticket buttons**
-- **PDF invoice generation with barryvdh/laravel-dompdf**
-- **Email invoice functionality**
-
 ---
 
 ## Deliverables
@@ -187,7 +184,7 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 1. **ticketkart-pnl-module.zip** - Complete module package
 2. **SQL_TABLES.sql** - Raw SQL for direct database creation
 3. **INSTALLATION_GUIDE.md** - Step-by-step installation instructions with sidebar code
-4. **MIGRATION_GUIDE.md** - Upgrade instructions for existing users
+4. **MIGRATION_GUIDE.md** - Upgrade instructions for existing users (v2.5 latest)
 5. **README.md** - Module overview
 
 ---
@@ -197,6 +194,7 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 | Route | URL | Description |
 |-------|-----|-------------|
 | `pnl.dashboard` | `/pnl/dashboard` | Main Dashboard |
+| `pnl.dashboard.cashflow` | `/pnl/cashflow` | Cash Flow Projections (NEW) |
 | `pnl.settings.index` | `/pnl/settings` | Settings Page |
 | `pnl.settings.dismiss-walkthrough` | `POST /pnl/settings/dismiss-walkthrough` | Dismiss Walkthrough |
 | `pnl.events.index` | `/pnl/events` | Events List |
@@ -214,11 +212,8 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 ## Future Enhancements (Backlog)
 
 - [ ] File upload for invoices/contracts
-- [ ] Cash flow projections view
 - [ ] Budget vs Actual comparison charts
-- [ ] Multi-currency support
 - [ ] API endpoints for mobile app
-- [ ] Dedicated settings page for default currency management
 
 ---
 
@@ -230,20 +225,27 @@ composer require maatwebsite/excel
 composer require barryvdh/laravel-dompdf
 ```
 
+### Frontend Libraries (CDN)
+- **intl-tel-input v18.5.3** - International phone number input with flags
+- **Chart.js** - Dashboard charts
+- **Bootstrap 5** - UI framework
+
 ### Key Models
-- `PnlSettings` - Per-user settings
+- `PnlSettings` - Per-user settings with currency
+- `PnlCurrencyRate` - Exchange rates (NEW)
 - `PnlExpense` - Expenses with tax fields
 - `PnlExpenseCategory` - Categories with system/user split
 - `PnlPayment` - Payments with email toggle
-- `PnlVendor` - Vendor/artist contacts
-- `PnlEvent` - Event management
+- `PnlVendor` - Vendor/artist contacts with phone country codes
+- `PnlEvent` - Event management with currency
 - `PnlRevenue` - Ticket sales
 
 ### Key Controllers
-- `SettingsController` - Settings management
+- `SettingsController` - Settings management with currency rates
+- `DashboardController` - Dashboard stats, tips, walkthrough, cash flow
 - `ExpenseController` - Expense CRUD + PDF/Email
 - `ExpenseCategoryController` - Category management with protection
 - `RevenueController` - Revenue CRUD
 - `PaymentController` - Payment tracking
-- `VendorController` - Vendor management
-- `DashboardController` - Dashboard stats with tips & walkthrough
+- `VendorController` - Vendor management with phone/address
+- `EventController` - Event management with currency

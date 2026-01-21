@@ -152,7 +152,19 @@
                     <!-- Revenue vs Expenses Chart -->
                     <div class="col-lg-8">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
+                            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                                <span class="small text-muted">Monthly Trend</span>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <span class="small text-muted">Period:</span>
+                                    <select class="form-select form-select-sm" style="width: 130px;" id="chartPeriodSelect" onchange="updateChartPeriod()">
+                                        <option value="3" {{ $chartPeriod == '3' ? 'selected' : '' }}>Last 3 months</option>
+                                        <option value="6" {{ $chartPeriod == '6' ? 'selected' : '' }}>Last 6 months</option>
+                                        <option value="12" {{ $chartPeriod == '12' ? 'selected' : '' }}>Last 12 months</option>
+                                        <option value="ytd" {{ $chartPeriod == 'ytd' ? 'selected' : '' }}>Year to Date</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0">
                                 <canvas id="trendChart" height="220"></canvas>
                             </div>
                         </div>

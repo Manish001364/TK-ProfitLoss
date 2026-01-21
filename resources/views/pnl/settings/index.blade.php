@@ -1,14 +1,13 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container py-4" style="max-width: 900px;">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 900px;">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h4 class="mb-1">P&L Settings</h4>
                 <p class="text-muted small mb-0">Configure your default VAT, invoice settings, and notifications</p>
             </div>
-            <a href="{{ route('pnl.dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
         </div>
 
         @if(session('success'))

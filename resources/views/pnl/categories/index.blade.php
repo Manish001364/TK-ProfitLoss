@@ -1,16 +1,16 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container-fluid py-4">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 1100px;">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-tags"></i> Expense Categories</h1>
-            <a href="{{ route('pnl.categories.create') }}" class="btn btn-primary">
+            <h4 class="mb-0"><i class="fas fa-tags me-2"></i>Expense Categories</h4>
+            <a href="{{ route('pnl.categories.create') }}" class="btn btn-danger btn-sm">
                 <i class="fas fa-plus"></i> Add Category
             </a>
         </div>
 
-        <div class="card">
+        <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0" id="categories-table">

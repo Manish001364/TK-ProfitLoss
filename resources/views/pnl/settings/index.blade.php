@@ -23,8 +23,8 @@
 
             <!-- Tax Settings -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-percent me-2 text-primary"></i>Tax / VAT Settings</h6>
+                <div class="card-header bg-danger text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-percent me-2"></i>Tax / VAT Settings</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -50,8 +50,8 @@
 
             <!-- Invoice Settings -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-file-invoice me-2 text-success"></i>Invoice Settings</h6>
+                <div class="card-header bg-success text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-file-invoice me-2"></i>Invoice Settings</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -79,8 +79,8 @@
 
             <!-- Company Details for Invoices -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-building me-2 text-info"></i>Company Details (for Invoices)</h6>
+                <div class="card-header bg-info text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-building me-2"></i>Company Details (for Invoices)</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -99,8 +99,8 @@
 
             <!-- Email Notification Settings -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 py-3">
-                    <h6 class="mb-0"><i class="fas fa-envelope me-2 text-warning"></i>Email Notifications to Vendors</h6>
+                <div class="card-header bg-secondary text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-envelope me-2"></i>Email Notifications to Vendors</h6>
                 </div>
                 <div class="card-body">
                     <p class="text-muted small mb-3">When should we automatically email vendors about their invoices?</p>

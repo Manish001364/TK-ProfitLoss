@@ -70,7 +70,7 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body py-3">
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="small">Budget Utilization</span>
+                        <span class="small">Budget Utilisation</span>
                         <span class="small">
                             <strong>£{{ number_format($summary['total_expenses'], 0) }}</strong> / £{{ number_format($event->budget, 0) }}
                             ({{ number_format($summary['budget_utilization'], 1) }}%)
@@ -89,6 +89,15 @@
                 </div>
             </div>
         @endif
+
+        <!-- Event-Specific Tips & Insights -->
+        @php
+            $totalBudget = $event->budget ?? 0;
+            $totalExpenses = $summary['total_expenses'] ?? 0;
+            $totalRevenue = $summary['total_revenue'] ?? 0;
+            $netProfit = $summary['net_profit'] ?? 0;
+        @endphp
+        @include('pnl.partials.tips')
 
         <div class="row g-3 mb-4">
             <!-- Expenses Section -->

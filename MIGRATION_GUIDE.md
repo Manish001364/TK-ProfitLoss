@@ -47,7 +47,22 @@ CREATE TABLE IF NOT EXISTS `pnl_settings` (
     UNIQUE INDEX `idx_pnl_settings_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. Add new columns to pnl_expenses
+-- 2. Add user_id column to pnl_events
+ALTER TABLE `pnl_events` 
+    ADD COLUMN `user_id` BIGINT UNSIGNED NULL AFTER `id`,
+    ADD INDEX `idx_pnl_events_user_id` (`user_id`);
+
+-- 3. Add user_id column to pnl_vendors
+ALTER TABLE `pnl_vendors`
+    ADD COLUMN `user_id` BIGINT UNSIGNED NULL AFTER `id`,
+    ADD INDEX `idx_pnl_vendors_user_id` (`user_id`);
+
+-- 4. Add user_id column to pnl_expense_categories
+ALTER TABLE `pnl_expense_categories`
+    ADD COLUMN `user_id` BIGINT UNSIGNED NULL AFTER `id`,
+    ADD INDEX `idx_pnl_expense_categories_user_id` (`user_id`);
+
+-- 5. Add new columns to pnl_expenses
 ALTER TABLE `pnl_expenses` 
     ADD COLUMN `user_id` BIGINT UNSIGNED NULL AFTER `id`,
     ADD COLUMN `tax_rate` DECIMAL(5, 2) DEFAULT 0.00 COMMENT 'Tax/VAT rate %' AFTER `amount`,
@@ -56,7 +71,7 @@ ALTER TABLE `pnl_expenses`
     ADD INDEX `idx_pnl_expenses_user_id` (`user_id`),
     ADD INDEX `idx_pnl_expenses_invoice_number` (`invoice_number`);
 
--- 3. Add new columns to pnl_payments
+-- 6. Add new columns to pnl_payments
 ALTER TABLE `pnl_payments`
     ADD COLUMN `user_id` BIGINT UNSIGNED NULL AFTER `id`,
     ADD COLUMN `reminder_count` INT DEFAULT 0 AFTER `last_reminder_sent_at`,
@@ -64,15 +79,38 @@ ALTER TABLE `pnl_payments`
     ADD COLUMN `deleted_at` TIMESTAMP NULL AFTER `updated_at`,
     ADD INDEX `idx_pnl_payments_user_id` (`user_id`);
 
--- 4. Update existing expense records to calculate total_amount
+-- 7. Add user_id column to pnl_revenues
+ALTER TABLE `pnl_revenues`
+    ADD COLUMN `user_id` BIGINT UNSIGNED NULL AFTER `id`,
+    ADD INDEX `idx_pnl_revenues_user_id` (`user_id`);
+
+-- 8. Update existing records to set user_id (IMPORTANT!)
+-- Replace YOUR_USER_ID with your actual organiser user ID
+-- You can find this by running: SELECT id FROM users WHERE email = 'your@email.com';
+
+SET @YOUR_USER_ID = 1;  -- CHANGE THIS to your actual user ID
+
+UPDATE `pnl_events` SET `user_id` = @YOUR_USER_ID WHERE `user_id` IS NULL;
+UPDATE `pnl_vendors` SET `user_id` = @YOUR_USER_ID WHERE `user_id` IS NULL;
+UPDATE `pnl_expense_categories` SET `user_id` = @YOUR_USER_ID WHERE `user_id` IS NULL;
+UPDATE `pnl_expenses` SET `user_id` = @YOUR_USER_ID WHERE `user_id` IS NULL;
+UPDATE `pnl_payments` SET `user_id` = @YOUR_USER_ID WHERE `user_id` IS NULL;
+UPDATE `pnl_revenues` SET `user_id` = @YOUR_USER_ID WHERE `user_id` IS NULL;
+
+-- 9. Update existing expense records to calculate total_amount
 UPDATE `pnl_expenses` SET `total_amount` = `amount` + COALESCE(`tax_amount`, 0) WHERE `total_amount` = 0 OR `total_amount` IS NULL;
 
--- 5. Set tax_rate to 20% for existing taxable expenses
+-- 10. Set tax_rate to 20% for existing taxable expenses
 UPDATE `pnl_expenses` SET `tax_rate` = 20.00 WHERE `tax_amount` > 0 AND (`tax_rate` = 0 OR `tax_rate` IS NULL);
 
 -- ==============================================
 -- END OF MIGRATION SCRIPT
 -- ==============================================
+```
+
+**⚠️ IMPORTANT:** Before running step 8, change `@YOUR_USER_ID` to your actual user ID. You can find it by running:
+```sql
+SELECT id, email FROM users WHERE email = 'your@email.com';
 ```
 
 ---

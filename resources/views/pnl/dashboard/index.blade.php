@@ -6,6 +6,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="mb-0">P&L Dashboard</h4>
             <div class="d-flex gap-2">
+                <a href="{{ route('pnl.settings.index') }}" class="btn btn-outline-secondary btn-sm" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </a>
                 <a href="{{ route('pnl.events.create') }}" class="btn btn-danger btn-sm">
                     <i class="fas fa-plus"></i> New Event
                 </a>

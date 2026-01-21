@@ -18,6 +18,7 @@ class PnlEvent extends Model
 
     protected $fillable = [
         'user_id',
+        'ticketkart_event_id',
         'name',
         'description',
         'venue',
@@ -32,6 +33,7 @@ class PnlEvent extends Model
         'event_date' => 'date',
         'event_time' => 'datetime:H:i',
         'budget' => 'decimal:2',
+        'ticketkart_event_id' => 'integer',
     ];
 
     // Relationships

@@ -1,6 +1,6 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
+@section('pnl_content')
     <div class="container py-4" style="max-width: 900px;">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">

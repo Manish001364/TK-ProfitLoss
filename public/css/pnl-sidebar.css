@@ -1,0 +1,223 @@
+/**
+ * P&L Module - Sidebar Styles
+ * 
+ * Location: public/css/pnl-sidebar.css
+ * 
+ * Include in your layout file:
+ * <link rel="stylesheet" href="{{ asset('css/pnl-sidebar.css') }}">
+ */
+
+/* =====================================================
+   P&L SIDEBAR MENU - Dropdown Style
+   ===================================================== */
+
+/* Main P&L Menu Item */
+.pnl-menu-item {
+    list-style: none;
+    margin: 5px 0;
+}
+
+.pnl-menu-item > a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    color: #333;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.pnl-menu-item > a:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.pnl-menu-item.active > a {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* P&L Menu Icon */
+.pnl-menu-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    color: #666;
+    font-size: 16px;
+}
+
+.pnl-menu-item.active .pnl-menu-icon,
+.pnl-menu-item:hover .pnl-menu-icon {
+    color: #dc3545;
+}
+
+/* P&L Menu Text */
+.pnl-menu-text {
+    flex: 1;
+    font-size: 14px;
+}
+
+/* Chevron Arrow */
+.pnl-chevron {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+    color: #999;
+}
+
+.pnl-menu-item.active .pnl-chevron,
+[aria-expanded="true"] .pnl-chevron {
+    transform: rotate(180deg);
+    color: #dc3545;
+}
+
+
+/* =====================================================
+   P&L SUBMENU - Dropdown Items
+   ===================================================== */
+
+.pnl-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    padding-left: 20px;
+    overflow: hidden;
+}
+
+.pnl-submenu li {
+    margin: 2px 0;
+}
+
+.pnl-submenu li a {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #666;
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border-left: 2px solid transparent;
+}
+
+.pnl-submenu li a:hover {
+    background-color: rgba(220, 53, 69, 0.08);
+    color: #dc3545;
+    border-left-color: #dc3545;
+}
+
+.pnl-submenu li.active a {
+    background-color: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
+    border-left-color: #dc3545;
+    font-weight: 500;
+}
+
+/* Submenu Icons */
+.pnl-submenu li a i {
+    width: 18px;
+    margin-right: 10px;
+    font-size: 12px;
+    color: #999;
+}
+
+.pnl-submenu li.active a i,
+.pnl-submenu li a:hover i {
+    color: #dc3545;
+}
+
+
+/* =====================================================
+   P&L BADGE (for counts or status)
+   ===================================================== */
+
+.pnl-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 10px;
+    margin-left: auto;
+}
+
+.pnl-badge-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.pnl-badge-warning {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.pnl-badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+
+/* =====================================================
+   COLLAPSED SIDEBAR SUPPORT (Optional)
+   ===================================================== */
+
+.sidebar-collapsed .pnl-menu-text,
+.sidebar-collapsed .pnl-chevron,
+.sidebar-collapsed .pnl-submenu {
+    display: none;
+}
+
+.sidebar-collapsed .pnl-menu-item > a {
+    justify-content: center;
+    padding: 12px;
+}
+
+.sidebar-collapsed .pnl-menu-icon {
+    margin-right: 0;
+}
+
+
+/* =====================================================
+   MOBILE RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 768px) {
+    .pnl-menu-item > a {
+        padding: 10px 12px;
+    }
+    
+    .pnl-submenu {
+        padding-left: 15px;
+    }
+    
+    .pnl-submenu li a {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+}
+
+
+/* =====================================================
+   DARK MODE SUPPORT (Optional)
+   ===================================================== */
+
+.dark-mode .pnl-menu-item > a {
+    color: #e0e0e0;
+}
+
+.dark-mode .pnl-menu-item > a:hover {
+    background-color: rgba(220, 53, 69, 0.2);
+}
+
+.dark-mode .pnl-submenu li a {
+    color: #aaa;
+}
+
+.dark-mode .pnl-submenu li a:hover,
+.dark-mode .pnl-submenu li.active a {
+    color: #ff6b7a;
+    background-color: rgba(220, 53, 69, 0.15);
+}

@@ -73,10 +73,11 @@
                                                 @endif
                                             </td>
                                             <td class="border-0">
-                                                <form action="{{ route('pnl.payments.mark-paid', $payment) }}" method="POST" style="display:inline;">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-sm btn-success" title="Mark Paid"><i class="fas fa-check"></i> Pay</button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-success" 
+                                                        onclick="openPaymentModal('{{ $payment->id }}', '{{ $payment->expense?->title ?? 'Payment' }}', '{{ number_format($payment->amount, 2) }}', '{{ $payment->vendor?->email ?? '' }}', '{{ $payment->vendor?->display_name ?? 'Vendor' }}')"
+                                                        title="Mark Paid">
+                                                    <i class="fas fa-check"></i> Pay
+                                                </button>
                                                 <a href="{{ route('pnl.payments.edit', $payment) }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
                                             </td>
                                         </tr>
@@ -98,4 +99,102 @@
             </div>
         @endif
     </div>
+
+    <!-- Mark as Paid Modal -->
+    <div class="modal fade" id="markPaidModal" tabindex="-1" aria-labelledby="markPaidModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="markPaidModalLabel"><i class="fas fa-check-circle me-2"></i>Mark Payment as Paid</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="markPaidForm" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-light border mb-3">
+                            <strong id="modalExpenseTitle">Payment</strong><br>
+                            <span class="text-success fw-bold" id="modalAmount">£0.00</span>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small">Payment Date</label>
+                                <input type="date" name="actual_paid_date" class="form-control" value="{{ date('Y-m-d') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Payment Method</label>
+                                <select name="payment_method" class="form-control">
+                                    <option value="">Not Specified</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="cheque">Cheque</option>
+                                    <option value="card">Card</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small">Transaction Reference (optional)</label>
+                            <input type="text" name="transaction_reference" class="form-control" placeholder="e.g. REF-12345">
+                        </div>
+
+                        <hr>
+                        <h6><i class="fas fa-envelope text-primary me-2"></i>Send Confirmation Emails</h6>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="modal_send_vendor_email" name="send_vendor_email" value="1" checked>
+                                    <label class="form-check-label" for="modal_send_vendor_email">
+                                        <i class="fas fa-user-tie text-primary me-1"></i> Vendor
+                                        <br><small class="text-muted" id="modalVendorEmail">No email</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="modal_send_organiser_email" name="send_organiser_email" value="1" checked>
+                                    <label class="form-check-label" for="modal_send_organiser_email">
+                                        <i class="fas fa-user text-success me-1"></i> Yourself
+                                        <br><small class="text-muted">{{ auth()->user()->email ?? 'Your email' }}</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-check me-1"></i> Mark as Paid & Send Emails</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('customjs')
+<script>
+    function openPaymentModal(paymentId, expenseTitle, amount, vendorEmail, vendorName) {
+        document.getElementById('markPaidForm').action = '/pnl/payments/' + paymentId + '/mark-paid';
+        document.getElementById('modalExpenseTitle').textContent = expenseTitle;
+        document.getElementById('modalAmount').textContent = '£' + amount;
+        
+        const vendorEmailEl = document.getElementById('modalVendorEmail');
+        const vendorCheckbox = document.getElementById('modal_send_vendor_email');
+        
+        if (vendorEmail) {
+            vendorEmailEl.textContent = vendorEmail;
+            vendorCheckbox.disabled = false;
+            vendorCheckbox.checked = true;
+        } else {
+            vendorEmailEl.textContent = 'No email on file';
+            vendorCheckbox.disabled = true;
+            vendorCheckbox.checked = false;
+        }
+        
+        var modal = new bootstrap.Modal(document.getElementById('markPaidModal'));
+        modal.show();
+    }
+</script>
 @endsection

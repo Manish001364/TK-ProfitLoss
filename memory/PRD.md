@@ -151,7 +151,17 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 
 ## Session Changelog
 
-### January 2025 - Version 2.5 (Current)
+### January 2025 - Version 2.7 (Current)
+- **CRITICAL BUG FIX: Cash Flow Calculations** - Profit/Loss now correctly calculated from actual ticket sales revenue (`total_revenue` - `total_expenses`), NOT from manual `expected_revenue` estimates
+- **Expense Currency Support** - Each expense now stores its own currency code, defaults to user's default currency
+- **Database Schema Update** - Added `currency` column to `pnl_expenses` table
+
+### January 2025 - Version 2.6
+- **Service Types Management**: 13 system defaults + custom vendor service types
+- **Default Service Types**: Artist, DJ, Venue, Catering, Security, Equipment Hire, Marketing, Staff, Transport, Photography, Decor, MC/Host, Other
+- **Sidebar Update**: Configuration section with dividers for Categories, Service Types, Settings
+
+### January 2025 - Version 2.5
 - **International Phone Numbers**: intl-tel-input library with country flags and validation
 - **Address Enhancement**: Country dropdown and postcode fields with country-specific validation
 - **Multi-Currency Support**: Default currency setting, per-event currency, exchange rate management

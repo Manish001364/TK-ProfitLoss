@@ -126,9 +126,13 @@
                                         <tr>
                                             <td class="border-0"><a href="{{ route('pnl.expenses.show', $expense) }}">{{ $expense->title }}</a></td>
                                             <td class="border-0">
-                                                <span class="badge" style="background-color: {{ $expense->category->color }}20; color: {{ $expense->category->color }}">
-                                                    {{ $expense->category->name }}
-                                                </span>
+                                                @if($expense->category)
+                                                    <span class="badge" style="background-color: {{ $expense->category->color ?? '#6c757d' }}20; color: {{ $expense->category->color ?? '#6c757d' }}">
+                                                        {{ $expense->category->name ?? 'Uncategorized' }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary-subtle text-secondary">Uncategorized</span>
+                                                @endif
                                             </td>
                                             <td class="border-0 small">{{ $expense->vendor?->display_name ?? '-' }}</td>
                                             <td class="border-0 text-end">£{{ number_format($expense->total_amount, 0) }}</td>

@@ -137,6 +137,7 @@ CREATE TABLE IF NOT EXISTS `pnl_vendors` (
     `id` CHAR(36) NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `type` ENUM('artist', 'dj', 'vendor', 'caterer', 'security', 'equipment', 'venue', 'marketing', 'staff', 'other') DEFAULT 'vendor',
+    `service_type_id` CHAR(36) NULL COMMENT 'Links to pnl_service_types_system or pnl_service_types_user',
     `full_name` VARCHAR(255) NOT NULL,
     `business_name` VARCHAR(255) NULL,
     `email` VARCHAR(255) NULL,

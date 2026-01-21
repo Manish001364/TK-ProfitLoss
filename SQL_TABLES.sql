@@ -46,6 +46,64 @@ CREATE TABLE IF NOT EXISTS `pnl_currency_rates` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------
+-- TABLE 0c: pnl_service_types_system (System Default Service Types)
+-- ---------------------------------------------
+-- These are system-wide default service types for vendors/artists
+-- Users CANNOT edit, delete, or modify these types
+CREATE TABLE IF NOT EXISTS `pnl_service_types_system` (
+    `id` CHAR(36) NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `slug` VARCHAR(50) NOT NULL,
+    `description` TEXT NULL,
+    `icon` VARCHAR(50) DEFAULT 'fas fa-user',
+    `color` VARCHAR(20) DEFAULT '#6366f1',
+    `sort_order` INT DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `idx_pnl_service_types_system_slug` (`slug`),
+    INDEX `idx_pnl_service_types_system_sort` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert default system service types
+INSERT INTO `pnl_service_types_system` (`id`, `name`, `slug`, `description`, `icon`, `color`, `sort_order`) VALUES
+(UUID(), 'Artist', 'artist', 'Musicians, bands, performers', 'fas fa-music', '#dc3545', 1),
+(UUID(), 'DJ', 'dj', 'Disc jockeys and sound controllers', 'fas fa-headphones', '#6f42c1', 2),
+(UUID(), 'Venue', 'venue', 'Event venues and locations', 'fas fa-building', '#0dcaf0', 3),
+(UUID(), 'Catering', 'catering', 'Food and beverage services', 'fas fa-utensils', '#fd7e14', 4),
+(UUID(), 'Security', 'security', 'Security personnel and services', 'fas fa-shield-alt', '#6c757d', 5),
+(UUID(), 'Equipment Hire', 'equipment', 'Sound, lighting, and stage equipment', 'fas fa-cogs', '#20c997', 6),
+(UUID(), 'Marketing', 'marketing', 'Advertising, PR, and promotions', 'fas fa-bullhorn', '#d63384', 7),
+(UUID(), 'Staff', 'staff', 'Event staff and volunteers', 'fas fa-users', '#198754', 8),
+(UUID(), 'Transport', 'transport', 'Transportation and logistics', 'fas fa-truck', '#0d6efd', 9),
+(UUID(), 'Photography', 'photography', 'Photographers and videographers', 'fas fa-camera', '#ffc107', 10),
+(UUID(), 'Decor', 'decor', 'Decorations and staging', 'fas fa-paint-brush', '#17a2b8', 11),
+(UUID(), 'MC/Host', 'mc', 'Master of ceremonies and event hosts', 'fas fa-microphone', '#6610f2', 12),
+(UUID(), 'Other', 'other', 'Other service providers', 'fas fa-ellipsis-h', '#adb5bd', 99);
+
+-- ---------------------------------------------
+-- TABLE 0d: pnl_service_types_user (User-Created Custom Service Types)
+-- ---------------------------------------------
+-- These are custom service types created by individual users
+CREATE TABLE IF NOT EXISTS `pnl_service_types_user` (
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `slug` VARCHAR(50) NOT NULL,
+    `description` TEXT NULL,
+    `icon` VARCHAR(50) DEFAULT 'fas fa-user',
+    `color` VARCHAR(20) DEFAULT '#6366f1',
+    `sort_order` INT DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `idx_pnl_service_types_user_slug` (`user_id`, `slug`),
+    INDEX `idx_pnl_service_types_user_sort` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ---------------------------------------------
 -- TABLE 1: pnl_events
 -- ---------------------------------------------
 CREATE TABLE IF NOT EXISTS `pnl_events` (

@@ -6,6 +6,35 @@ If you have already installed a previous version of the P&L module, follow these
 
 ---
 
+## Version 2.3 Changes (January 2025) - LATEST
+
+### New Features
+- **Built-in Sidebar Navigation** - All P&L pages now have integrated sidebar
+- **White text on colored headers** - Better visibility
+- **Protected default categories** - System categories can't be deleted
+- **Fixed audit log column** - Added missing `reason` column
+
+### Database Migration for v2.3
+
+Run this SQL to add the missing `reason` column to `pnl_audit_logs`:
+
+```sql
+-- ==============================================
+-- MIGRATION SCRIPT v2.3
+-- ==============================================
+
+-- Add missing 'reason' column to audit_logs table
+ALTER TABLE `pnl_audit_logs` 
+    ADD COLUMN `reason` VARCHAR(500) NULL COMMENT 'Reason for the change' 
+    AFTER `new_values`;
+
+-- ==============================================
+-- END OF v2.3 MIGRATION
+-- ==============================================
+```
+
+---
+
 ## Version 2.0 Changes (January 2025)
 
 ### New Features

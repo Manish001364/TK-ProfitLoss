@@ -73,7 +73,7 @@
                             <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-save me-1"></i> Create Category
                             </button>
-                            <a href="{{ route('pnl.categories.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('pnl.configuration.index') }}" class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                         </div>

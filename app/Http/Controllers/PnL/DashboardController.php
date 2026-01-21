@@ -44,14 +44,14 @@ class DashboardController extends Controller
         $revenueStats = PnlRevenue::whereIn('event_id', $filteredEventIds)
             ->select(
                 DB::raw('SUM(ticket_price * tickets_sold) as gross_revenue'),
-                DB::raw('SUM((ticket_price * tickets_sold) - platform_fees - payment_gateway_fees - taxes - refund_amount) as net_revenue'),
+                DB::raw('SUM((ticket_price * tickets_sold) - COALESCE(platform_fees, 0) - COALESCE(payment_gateway_fees, 0) - COALESCE(taxes, 0) - COALESCE(refund_amount, 0)) as net_revenue'),
                 DB::raw('SUM(tickets_sold) as tickets_sold')
             )
             ->first();
 
-        $grossRevenue = $revenueStats->gross_revenue ?? 0;
-        $totalRevenue = $revenueStats->net_revenue ?? 0;
-        $totalTicketsSold = $revenueStats->tickets_sold ?? 0;
+        $grossRevenue = (float) ($revenueStats->gross_revenue ?? 0);
+        $totalRevenue = (float) ($revenueStats->net_revenue ?? 0);
+        $totalTicketsSold = (int) ($revenueStats->tickets_sold ?? 0);
 
         $totalExpenses = PnlExpense::whereIn('event_id', $filteredEventIds)->sum('total_amount') ?? 0;
         

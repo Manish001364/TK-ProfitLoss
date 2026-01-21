@@ -54,9 +54,9 @@ class VendorController extends Controller
         if ($isQuickAdd) {
             $validated = $request->validate([
                 'full_name' => 'required|string|max:255',
-                'type' => 'nullable|string|max:50',
+                'type' => 'required|string|max:50',
+                'phone' => 'required|string|max:50',
                 'email' => 'nullable|email|max:255',
-                'phone' => 'nullable|string|max:50',
                 'specialization' => 'nullable|string|max:255',
             ]);
             
@@ -70,7 +70,6 @@ class VendorController extends Controller
                 ], 422);
             }
             
-            $validated['type'] = $validated['type'] ?? 'vendor';
             $validated['user_id'] = $userId;
             $validated['is_active'] = true;
             
@@ -87,13 +86,13 @@ class VendorController extends Controller
             ]);
         }
         
-        // Full form validation
+        // Full form validation - name, phone, type are mandatory
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
             'business_name' => 'nullable|string|max:255',
-            'type' => ['nullable', Rule::in(array_keys(PnlVendor::getTypes()))],
+            'type' => 'required|string|in:' . implode(',', array_keys(PnlVendor::getTypes())),
+            'phone' => 'required|string|max:50',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
             'alternate_phone' => 'nullable|string|max:50',
             'business_address' => 'nullable|string',
             'home_address' => 'nullable|string',

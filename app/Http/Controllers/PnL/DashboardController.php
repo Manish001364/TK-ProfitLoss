@@ -132,6 +132,28 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Vendor Summary with payment totals
+        $vendorSummary = PnlVendor::forUser($userId)
+            ->active()
+            ->withCount('payments')
+            ->get()
+            ->map(function ($vendor) {
+                $totalPaid = $vendor->payments()->where('status', 'paid')->sum('amount');
+                $totalPending = $vendor->payments()->whereIn('status', ['pending', 'scheduled'])->sum('amount');
+                return [
+                    'id' => $vendor->id,
+                    'name' => $vendor->display_name,
+                    'type' => $vendor->type,
+                    'email' => $vendor->email,
+                    'total_paid' => $totalPaid,
+                    'total_pending' => $totalPending,
+                    'payments_count' => $vendor->payments_count,
+                ];
+            })
+            ->sortByDesc('total_paid')
+            ->take(10)
+            ->values();
+
         // Chart data for Revenue vs Expenses trend (last 6 months)
         $trendData = $this->getMonthlyTrend($userId, 6);
 

@@ -18,14 +18,17 @@
         <!-- Filters -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body py-3">
-                <form method="GET" action="{{ route('pnl.vendors.index') }}" id="filterForm" class="row g-3 align-items-end">
+                <div class="row g-3 align-items-end">
                     <div class="col-md-4">
-                        <label class="form-label small text-muted mb-1">Search</label>
-                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Name, email, phone..." value="{{ request('search') }}">
+                        <label class="form-label small text-muted mb-1">Live Search</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="liveSearch" class="form-control" placeholder="Type to search name, email, phone...">
+                        </div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small text-muted mb-1">Type</label>
-                        <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <select id="typeFilter" class="form-select form-select-sm">
                             <option value="">All Types</option>
                             @foreach($vendorTypes as $key => $label)
                                 <option value="{{ $key }}" {{ request('type') === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -34,17 +37,16 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small text-muted mb-1">Status</label>
-                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <select id="statusFilter" class="form-select form-select-sm">
                             <option value="">All</option>
                             <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                             <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i> Filter</button>
-                        <a href="{{ route('pnl.vendors.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i></a>
+                        <button type="button" id="clearFilters" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i> Clear</button>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
 
@@ -52,7 +54,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="vendorsTable">
                         <thead class="table-light">
                             <tr>
                                 <th class="border-0">Name</th>

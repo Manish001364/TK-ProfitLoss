@@ -221,7 +221,12 @@
                                 </span>
                             </td>
                         </tr>
-                        @if($expense->payment && $expense->payment->scheduled_date)
+                        @if($expense->payment && $expense->payment->status === 'paid' && $expense->payment->actual_paid_date)
+                        <tr>
+                            <td style="padding: 3px 0; color: #155724; font-weight: bold;">Paid Date:</td>
+                            <td style="padding: 3px 0; text-align: right; color: #155724; font-weight: bold;">{{ $expense->payment->actual_paid_date->format('d M Y') }}</td>
+                        </tr>
+                        @elseif($expense->payment && $expense->payment->scheduled_date)
                         <tr>
                             <td style="padding: 3px 0; color: #666;">Due Date:</td>
                             <td style="padding: 3px 0; text-align: right;">{{ $expense->payment->scheduled_date->format('d M Y') }}</td>

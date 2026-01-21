@@ -81,22 +81,56 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small">Primary Phone <span class="text-danger">*</span></label>
-                            <input type="tel" name="phone" id="phone" class="form-control @error('phone') is-invalid @enderror" required 
-                                   value="{{ old('phone') }}">
-                            <input type="hidden" name="phone_country_code" id="phone_country_code" value="{{ old('phone_country_code', '+44') }}">
-                            @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <small class="text-muted phone-valid-msg d-none text-success"><i class="fas fa-check"></i> Valid number</small>
-                            <small class="text-muted phone-invalid-msg d-none text-danger"></small>
-                            <small class="text-muted phone-example d-block" id="phone-example">Example: +44 7911 123456</small>
+                            <div class="input-group">
+                                <select name="phone_country_code" id="phone_country_code" class="form-select phone-country-select" style="max-width: 140px;">
+                                    <option value="+44" data-example="7911 123456" {{ old('phone_country_code', '+44') == '+44' ? 'selected' : '' }}>🇬🇧 +44</option>
+                                    <option value="+1" data-example="(201) 555-0123" {{ old('phone_country_code') == '+1' ? 'selected' : '' }}>🇺🇸 +1</option>
+                                    <option value="+91" data-example="98765 43210" {{ old('phone_country_code') == '+91' ? 'selected' : '' }}>🇮🇳 +91</option>
+                                    <option value="+49" data-example="1512 3456789" {{ old('phone_country_code') == '+49' ? 'selected' : '' }}>🇩🇪 +49</option>
+                                    <option value="+33" data-example="6 12 34 56 78" {{ old('phone_country_code') == '+33' ? 'selected' : '' }}>🇫🇷 +33</option>
+                                    <option value="+34" data-example="612 34 56 78" {{ old('phone_country_code') == '+34' ? 'selected' : '' }}>🇪🇸 +34</option>
+                                    <option value="+39" data-example="312 345 6789" {{ old('phone_country_code') == '+39' ? 'selected' : '' }}>🇮🇹 +39</option>
+                                    <option value="+31" data-example="6 12345678" {{ old('phone_country_code') == '+31' ? 'selected' : '' }}>🇳🇱 +31</option>
+                                    <option value="+353" data-example="85 123 4567" {{ old('phone_country_code') == '+353' ? 'selected' : '' }}>🇮🇪 +353</option>
+                                    <option value="+61" data-example="412 345 678" {{ old('phone_country_code') == '+61' ? 'selected' : '' }}>🇦🇺 +61</option>
+                                    <option value="+971" data-example="50 123 4567" {{ old('phone_country_code') == '+971' ? 'selected' : '' }}>🇦🇪 +971</option>
+                                    <option value="+65" data-example="8123 4567" {{ old('phone_country_code') == '+65' ? 'selected' : '' }}>🇸🇬 +65</option>
+                                    <option value="+81" data-example="90 1234 5678" {{ old('phone_country_code') == '+81' ? 'selected' : '' }}>🇯🇵 +81</option>
+                                    <option value="+86" data-example="131 2345 6789" {{ old('phone_country_code') == '+86' ? 'selected' : '' }}>🇨🇳 +86</option>
+                                    <option value="+55" data-example="11 91234 5678" {{ old('phone_country_code') == '+55' ? 'selected' : '' }}>🇧🇷 +55</option>
+                                    <option value="+27" data-example="71 123 4567" {{ old('phone_country_code') == '+27' ? 'selected' : '' }}>🇿🇦 +27</option>
+                                    <option value="+234" data-example="803 123 4567" {{ old('phone_country_code') == '+234' ? 'selected' : '' }}>🇳🇬 +234</option>
+                                    <option value="+254" data-example="712 345678" {{ old('phone_country_code') == '+254' ? 'selected' : '' }}>🇰🇪 +254</option>
+                                    <option value="+92" data-example="300 1234567" {{ old('phone_country_code') == '+92' ? 'selected' : '' }}>🇵🇰 +92</option>
+                                    <option value="+880" data-example="1712 345678" {{ old('phone_country_code') == '+880' ? 'selected' : '' }}>🇧🇩 +880</option>
+                                </select>
+                                <input type="tel" name="phone" id="phone" class="form-control @error('phone') is-invalid @enderror" required 
+                                       value="{{ old('phone') }}" placeholder="7911 123456">
+                            </div>
+                            @error('phone')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            <small class="text-muted d-block mt-1" id="phone-example">Example: 7911 123456</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small">Secondary Phone</label>
-                            <input type="tel" name="alternate_phone" id="alternate_phone" class="form-control" 
-                                   value="{{ old('alternate_phone') }}">
-                            <input type="hidden" name="alternate_phone_country_code" id="alternate_phone_country_code" value="{{ old('alternate_phone_country_code', '+44') }}">
-                            <small class="text-muted alt-phone-valid-msg d-none text-success"><i class="fas fa-check"></i> Valid number</small>
-                            <small class="text-muted alt-phone-invalid-msg d-none text-danger"></small>
-                            <small class="text-muted phone-example d-block" id="alt-phone-example">Example: +44 7911 123456</small>
+                            <div class="input-group">
+                                <select name="alternate_phone_country_code" id="alternate_phone_country_code" class="form-select phone-country-select" style="max-width: 140px;">
+                                    <option value="+44" data-example="7911 123456" {{ old('alternate_phone_country_code', '+44') == '+44' ? 'selected' : '' }}>🇬🇧 +44</option>
+                                    <option value="+1" data-example="(201) 555-0123" {{ old('alternate_phone_country_code') == '+1' ? 'selected' : '' }}>🇺🇸 +1</option>
+                                    <option value="+91" data-example="98765 43210" {{ old('alternate_phone_country_code') == '+91' ? 'selected' : '' }}>🇮🇳 +91</option>
+                                    <option value="+49" data-example="1512 3456789" {{ old('alternate_phone_country_code') == '+49' ? 'selected' : '' }}>🇩🇪 +49</option>
+                                    <option value="+33" data-example="6 12 34 56 78" {{ old('alternate_phone_country_code') == '+33' ? 'selected' : '' }}>🇫🇷 +33</option>
+                                    <option value="+34" data-example="612 34 56 78" {{ old('alternate_phone_country_code') == '+34' ? 'selected' : '' }}>🇪🇸 +34</option>
+                                    <option value="+39" data-example="312 345 6789" {{ old('alternate_phone_country_code') == '+39' ? 'selected' : '' }}>🇮🇹 +39</option>
+                                    <option value="+31" data-example="6 12345678" {{ old('alternate_phone_country_code') == '+31' ? 'selected' : '' }}>🇳🇱 +31</option>
+                                    <option value="+353" data-example="85 123 4567" {{ old('alternate_phone_country_code') == '+353' ? 'selected' : '' }}>🇮🇪 +353</option>
+                                    <option value="+61" data-example="412 345 678" {{ old('alternate_phone_country_code') == '+61' ? 'selected' : '' }}>🇦🇺 +61</option>
+                                    <option value="+971" data-example="50 123 4567" {{ old('alternate_phone_country_code') == '+971' ? 'selected' : '' }}>🇦🇪 +971</option>
+                                    <option value="+65" data-example="8123 4567" {{ old('alternate_phone_country_code') == '+65' ? 'selected' : '' }}>🇸🇬 +65</option>
+                                </select>
+                                <input type="tel" name="alternate_phone" id="alternate_phone" class="form-control" 
+                                       value="{{ old('alternate_phone') }}" placeholder="Optional">
+                            </div>
+                            <small class="text-muted d-block mt-1" id="alt-phone-example">Example: 7911 123456</small>
                         </div>
                     </div>
                 </div>

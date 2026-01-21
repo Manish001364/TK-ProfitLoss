@@ -186,7 +186,8 @@ class VendorController extends Controller
         $this->authorize('update', $vendor);
         
         $vendorTypes = PnlVendor::getTypes();
-        return view('pnl.vendors.edit', compact('vendor', 'vendorTypes'));
+        $countries = PnlVendor::getCountries();
+        return view('pnl.vendors.edit', compact('vendor', 'vendorTypes', 'countries'));
     }
 
     public function update(Request $request, PnlVendor $vendor)
@@ -197,13 +198,20 @@ class VendorController extends Controller
             'full_name' => 'required|string|max:255',
             'business_name' => 'nullable|string|max:255',
             'type' => ['required', Rule::in(array_keys(PnlVendor::getTypes()))],
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'alternate_phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'phone_country_code' => 'nullable|string|max:10',
+            'phone' => 'required|string|max:50',
+            'alternate_phone_country_code' => 'nullable|string|max:10',
+            'alternate_phone' => 'nullable|string|max:50',
             'business_address' => 'nullable|string',
+            'business_country' => 'nullable|string|max:100',
+            'business_postcode' => 'nullable|string|max:20',
             'home_address' => 'nullable|string',
+            'home_country' => 'nullable|string|max:100',
+            'home_postcode' => 'nullable|string|max:20',
             'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:20',
+            'emergency_contact_phone_country_code' => 'nullable|string|max:10',
+            'emergency_contact_phone' => 'nullable|string|max:50',
             'emergency_contact_relation' => 'nullable|string|max:100',
             'bank_name' => 'nullable|string|max:255',
             'bank_account_name' => 'nullable|string|max:255',
@@ -213,6 +221,7 @@ class VendorController extends Controller
             'tax_vat_reference' => 'nullable|string|max:50',
             'pan_number' => 'nullable|string|max:20',
             'gst_number' => 'nullable|string|max:20',
+            'specialization' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'preferred_payment_cycle' => 'nullable|string|max:50',
             'is_active' => 'boolean',

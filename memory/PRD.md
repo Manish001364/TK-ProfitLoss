@@ -54,9 +54,14 @@ Self-contained P&L (Profit & Loss) module for TicketKart event management platfo
 - **CRITICAL: Vendor Creation ENUM Error** - Service type slug was being saved directly to ENUM column. Now:
   - `service_type_id` stores the service type slug for display
   - `type` stores mapped ENUM value for backward compatibility
+- **CRITICAL: Event Creation Error** - Removed call to non-existent `createDefaultsForUser()` method
+- **CRITICAL: Expense Category Validation** - System categories now properly validated and shown in dropdown
 - **Event View Null Category** - Added null-safe operators for expenses without categories
 
 ### Updated Files
+- `EventController.php` - Removed `createDefaultsForUser()` call
+- `ExpenseController.php` - Fixed category validation, use `getAllForUser()` everywhere
+- `PnlExpenseCategory.php` - Rewritten to fetch from system/user tables like PnlServiceType
 - `VendorController.php` - Added `mapServiceTypeToEnum()` method
 - `PnlVendor.php` - Added `service_type_id` field and `service_type_name` accessor
 - `PnlServiceType.php` - Added `getBySlugOrId()` method

@@ -6,7 +6,90 @@ If you have already installed a previous version of the P&L module, follow these
 
 ---
 
-## Version 2.5 Changes (January 2025) - LATEST
+## Version 2.6 Changes (January 2025) - LATEST
+
+### New Features
+- **Service Types Management** - System default + custom vendor service types (like expense categories)
+- **13 Default Service Types**: Artist, DJ, Venue, Catering, Security, Equipment Hire, Marketing, Staff, Transport, Photography, Decor, MC/Host, Other
+- **Custom Service Types**: Users can create their own vendor categories
+- **Improved Sidebar Navigation**: Configuration section with dividers
+
+### Database Migration for v2.6
+
+Run this SQL to create service types tables:
+
+```sql
+-- ==============================================
+-- MIGRATION SCRIPT v2.6 - Service Types
+-- ==============================================
+
+-- 1. Create System Service Types Table
+CREATE TABLE IF NOT EXISTS `pnl_service_types_system` (
+    `id` CHAR(36) NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `slug` VARCHAR(50) NOT NULL,
+    `description` TEXT NULL,
+    `icon` VARCHAR(50) DEFAULT 'fas fa-user',
+    `color` VARCHAR(20) DEFAULT '#6366f1',
+    `sort_order` INT DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `idx_pnl_service_types_system_slug` (`slug`),
+    INDEX `idx_pnl_service_types_system_sort` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2. Insert default system service types
+INSERT INTO `pnl_service_types_system` (`id`, `name`, `slug`, `description`, `icon`, `color`, `sort_order`) VALUES
+(UUID(), 'Artist', 'artist', 'Musicians, bands, performers', 'fas fa-music', '#dc3545', 1),
+(UUID(), 'DJ', 'dj', 'Disc jockeys and sound controllers', 'fas fa-headphones', '#6f42c1', 2),
+(UUID(), 'Venue', 'venue', 'Event venues and locations', 'fas fa-building', '#0dcaf0', 3),
+(UUID(), 'Catering', 'catering', 'Food and beverage services', 'fas fa-utensils', '#fd7e14', 4),
+(UUID(), 'Security', 'security', 'Security personnel and services', 'fas fa-shield-alt', '#6c757d', 5),
+(UUID(), 'Equipment Hire', 'equipment', 'Sound, lighting, and stage equipment', 'fas fa-cogs', '#20c997', 6),
+(UUID(), 'Marketing', 'marketing', 'Advertising, PR, and promotions', 'fas fa-bullhorn', '#d63384', 7),
+(UUID(), 'Staff', 'staff', 'Event staff and volunteers', 'fas fa-users', '#198754', 8),
+(UUID(), 'Transport', 'transport', 'Transportation and logistics', 'fas fa-truck', '#0d6efd', 9),
+(UUID(), 'Photography', 'photography', 'Photographers and videographers', 'fas fa-camera', '#ffc107', 10),
+(UUID(), 'Decor', 'decor', 'Decorations and staging', 'fas fa-paint-brush', '#17a2b8', 11),
+(UUID(), 'MC/Host', 'mc', 'Master of ceremonies and event hosts', 'fas fa-microphone', '#6610f2', 12),
+(UUID(), 'Other', 'other', 'Other service providers', 'fas fa-ellipsis-h', '#adb5bd', 99);
+
+-- 3. Create User Service Types Table
+CREATE TABLE IF NOT EXISTS `pnl_service_types_user` (
+    `id` CHAR(36) NOT NULL,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `name` VARCHAR(100) NOT NULL,
+    `slug` VARCHAR(50) NOT NULL,
+    `description` TEXT NULL,
+    `icon` VARCHAR(50) DEFAULT 'fas fa-user',
+    `color` VARCHAR(20) DEFAULT '#6366f1',
+    `sort_order` INT DEFAULT 0,
+    `is_active` TINYINT(1) DEFAULT 1,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `idx_pnl_service_types_user_slug` (`user_id`, `slug`),
+    INDEX `idx_pnl_service_types_user_sort` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==============================================
+-- END OF v2.6 MIGRATION
+-- ==============================================
+```
+
+### Important Notes for v2.6
+
+1. **Service Types**: The sidebar now shows "Service Types" under Configuration. Users can view system defaults and create custom types.
+
+2. **Backward Compatibility**: Existing vendors using old type values (artist, dj, vendor, etc.) will continue to work. The new system types use the same slugs.
+
+3. **New Route**: `/pnl/service-types` for managing service types.
+
+---
+
+## Version 2.5 Changes (January 2025)
 
 ### New Features
 - **International Phone Numbers** - Phone fields now use intl-tel-input with country flags and validation

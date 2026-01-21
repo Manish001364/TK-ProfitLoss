@@ -1,9 +1,8 @@
-{{-- P&L Module Internal Navigation --}}
+{{-- P&L Module Internal Navigation - TicketKart Theme --}}
 <div class="pnl-sidebar">
     <div class="pnl-sidebar-header">
-        <h6 class="mb-0">
-            <i class="fas fa-chart-line me-2"></i>P&L Module
-        </h6>
+        <i class="fas fa-chart-line me-2"></i>
+        <span>P&L Module</span>
     </div>
     <nav class="pnl-nav">
         <a href="{{ route('pnl.dashboard') }}" class="pnl-nav-link {{ request()->routeIs('pnl.dashboard') ? 'active' : '' }}">
@@ -42,11 +41,14 @@
 </div>
 
 <style>
+/* Light Theme Sidebar - TicketKart Style */
 .pnl-sidebar {
-    background: #1a1a2e;
+    background: #ffffff;
     border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     overflow: hidden;
     margin-bottom: 20px;
+    border: 1px solid #e9ecef;
 }
 
 .pnl-sidebar-header {
@@ -54,6 +56,9 @@
     color: white;
     padding: 15px 20px;
     font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
 }
 
 .pnl-nav {
@@ -64,55 +69,95 @@
     display: flex;
     align-items: center;
     padding: 12px 20px;
-    color: #a0a0a0;
+    color: #495057;
     text-decoration: none;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
 }
 
 .pnl-nav-link:hover {
-    background: rgba(220, 53, 69, 0.1);
-    color: #fff;
+    background: rgba(220, 53, 69, 0.08);
+    color: #dc3545;
     border-left-color: #dc3545;
+    text-decoration: none;
 }
 
 .pnl-nav-link.active {
-    background: rgba(220, 53, 69, 0.2);
-    color: #fff;
+    background: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
     border-left-color: #dc3545;
+    font-weight: 500;
 }
 
 .pnl-nav-link i {
     width: 20px;
     margin-right: 12px;
     font-size: 14px;
+    color: #6c757d;
+}
+
+.pnl-nav-link:hover i,
+.pnl-nav-link.active i {
+    color: #dc3545;
 }
 
 .pnl-nav-link span {
     font-size: 14px;
 }
 
-/* For horizontal layout on mobile */
+/* Mobile - Horizontal scrollable menu */
 @media (max-width: 991px) {
     .pnl-sidebar {
         margin-bottom: 15px;
+        border-radius: 8px;
+    }
+    .pnl-sidebar-header {
+        padding: 12px 15px;
+        font-size: 13px;
     }
     .pnl-nav {
         display: flex;
-        flex-wrap: wrap;
-        padding: 5px;
+        overflow-x: auto;
+        padding: 8px;
+        gap: 5px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .pnl-nav::-webkit-scrollbar {
+        display: none;
     }
     .pnl-nav-link {
         padding: 8px 12px;
         border-left: none;
-        border-radius: 5px;
-        margin: 3px;
+        border-radius: 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        border: 1px solid #e9ecef;
+    }
+    .pnl-nav-link.active {
+        border-color: #dc3545;
+        background: rgba(220, 53, 69, 0.1);
     }
     .pnl-nav-link i {
         margin-right: 6px;
+        font-size: 12px;
     }
     .pnl-nav-link span {
         font-size: 12px;
+    }
+}
+
+/* Very small screens - icon only */
+@media (max-width: 576px) {
+    .pnl-nav-link span {
+        display: none;
+    }
+    .pnl-nav-link i {
+        margin-right: 0;
+        font-size: 16px;
+    }
+    .pnl-nav-link {
+        padding: 10px 14px;
     }
 }
 </style>

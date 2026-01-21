@@ -155,6 +155,7 @@ Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a
 ### January 2025 - Version 2.7 (Current)
 - **CRITICAL BUG FIX: Cash Flow Calculations** - Profit/Loss now correctly calculated from actual ticket sales revenue (`total_revenue` - `total_expenses`), NOT from manual `expected_revenue` estimates
 - **Expense Currency Support** - Each expense now stores its own currency code, defaults to user's default currency
+- **Combined Categories & Services Page** - Single page showing both Expense Categories and Service Types in two columns (cleaner UI, less sidebar clutter)
 - **Database Schema Update** - Added `currency` column to `pnl_expenses` table
 
 ### January 2025 - Version 2.6

@@ -57,11 +57,22 @@ class VendorController extends Controller
         if ($isQuickAdd) {
             $validated = $request->validate([
                 'full_name' => 'required|string|max:255',
-                'type' => 'required|string|max:50',
+                'type' => 'required|string|max:100',
                 'phone' => 'required|string|max:50',
+                'phone_country_code' => 'nullable|string|max:10',
                 'email' => 'nullable|email|max:255',
                 'specialization' => 'nullable|string|max:255',
             ]);
+            
+            // Validate service type exists
+            $serviceTypeExists = $this->validateServiceTypeExists($validated['type'], $userId);
+            if (!$serviceTypeExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected service type is invalid. Please select from the dropdown.',
+                    'errors' => ['type' => ['The selected service type is invalid.']]
+                ], 422);
+            }
             
             // Check for duplicates
             $duplicateCheck = $this->checkDuplicateVendor($userId, $validated['full_name'], $validated['email'] ?? null);

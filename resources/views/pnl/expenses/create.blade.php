@@ -414,11 +414,49 @@
 
         // Quick add vendor
         function saveQuickVendor() {
-            const name = $('#vendor_name').val();
+            const name = $('#vendor_name').val().trim();
+            const type = $('#vendor_type').val();
+            const phone = $('#vendor_phone').val().trim();
+            const phoneCountryCode = $('#quick_phone_country').val();
+            const email = $('#vendor_email').val().trim();
+            const errorDiv = $('#quickVendorError');
+            
+            // Reset validation states
+            $('#quickVendorForm .is-invalid').removeClass('is-invalid');
+            errorDiv.addClass('d-none').text('');
+            
+            // Validate required fields
+            let hasErrors = false;
+            
             if (!name) {
-                alert('Please enter vendor name');
+                $('#vendor_name').addClass('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (!type) {
+                $('#vendor_type').addClass('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (!phone) {
+                $('#vendor_phone').addClass('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (email && !isValidEmail(email)) {
+                $('#vendor_email').addClass('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                errorDiv.removeClass('d-none').html('<i class="fas fa-exclamation-triangle me-1"></i> Please fill in all required fields correctly.');
                 return;
             }
+
+            // Show loading state
+            const saveBtn = $(event.target);
+            const originalText = saveBtn.html();
+            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
 
             $.ajax({
                 url: '{{ route("pnl.vendors.store") }}',
@@ -426,14 +464,17 @@
                 data: {
                     _token: '{{ csrf_token() }}',
                     full_name: name,
-                    type: $('#vendor_type').val(),
-                    email: $('#vendor_email').val(),
-                    phone: $('#vendor_phone').val(),
+                    type: type,
+                    email: email,
+                    phone: phone,
+                    phone_country_code: phoneCountryCode,
                     specialization: $('#vendor_specialization').val(),
                     is_active: 1,
                     _quick_add: 1
                 },
                 success: function(response) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    
                     if (response.success && response.vendor) {
                         // Add to dropdown and select
                         const option = new Option(
@@ -449,15 +490,52 @@
                         $('#quickVendorForm')[0].reset();
                         
                         // Show success message
-                        alert('Vendor "' + response.vendor.display_name + '" added successfully!');
+                        alert('✓ Vendor "' + response.vendor.display_name + '" added successfully!');
                     } else {
-                        alert('Error: ' + (response.message || 'Could not save vendor'));
+                        errorDiv.removeClass('d-none').html('<i class="fas fa-times-circle me-1"></i> ' + (response.message || 'Could not save vendor'));
                     }
                 },
                 error: function(xhr) {
-                    alert('Error saving vendor. Please try again.');
+                    saveBtn.prop('disabled', false).html(originalText);
+                    
+                    let errorMessage = 'Error saving vendor. Please try again.';
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON.errors) {
+                            const errors = Object.values(xhr.responseJSON.errors).flat();
+                            errorMessage = errors.join('<br>');
+                        }
+                    }
+                    errorDiv.removeClass('d-none').html('<i class="fas fa-times-circle me-1"></i> ' + errorMessage);
                 }
             });
         }
+        
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+        
+        // Update phone country code hidden field and example
+        $('#quick_phone_country').on('change', function() {
+            $('#quick_phone_country_code').val($(this).val());
+            const examples = {
+                '+44': '7911 123456',
+                '+1': '(201) 555-0123',
+                '+91': '98765 43210',
+                '+49': '1512 3456789',
+                '+33': '6 12 34 56 78',
+                '+34': '612 34 56 78',
+                '+39': '312 345 6789',
+                '+31': '6 12345678',
+                '+353': '85 123 4567',
+                '+61': '412 345 678',
+                '+971': '50 123 4567',
+                '+65': '8123 4567'
+            };
+            const example = examples[$(this).val()] || '';
+            $('#quick_phone_example').text(example ? 'Example: ' + example : '');
+            $('#vendor_phone').attr('placeholder', example);
+        });
     </script>
 @endsection

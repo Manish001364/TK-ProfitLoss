@@ -7,9 +7,13 @@
             <div>
                 <h4 class="mb-1">{{ $expense->title }}</h4>
                 <p class="text-muted small mb-0">
-                    <span class="badge" style="background-color: {{ $expense->category->color }}20; color: {{ $expense->category->color }}">
-                        {{ $expense->category->name }}
-                    </span>
+                    @if($expense->category)
+                        <span class="badge" style="background-color: {{ $expense->category->color ?? '#6c757d' }}20; color: {{ $expense->category->color ?? '#6c757d' }}">
+                            {{ $expense->category->name }}
+                        </span>
+                    @else
+                        <span class="badge bg-secondary">Uncategorized</span>
+                    @endif
                     <span class="ms-2">{{ $expense->expense_date->format('d M Y') }}</span>
                 </p>
             </div>

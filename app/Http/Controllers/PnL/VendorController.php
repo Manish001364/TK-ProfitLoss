@@ -286,4 +286,47 @@ class VendorController extends Controller
             $filename . '.' . $format
         );
     }
+
+    /**
+     * Validate that a service type exists in either system or user tables
+     */
+    private function validateServiceTypeExists($typeSlug, $userId): bool
+    {
+        // Check in hardcoded defaults first
+        $defaults = PnlServiceType::getDefaultTypes();
+        if (isset($defaults[$typeSlug])) {
+            return true;
+        }
+
+        // Check in legacy PnlVendor::getTypes()
+        $legacyTypes = PnlVendor::getTypes();
+        if (isset($legacyTypes[$typeSlug])) {
+            return true;
+        }
+
+        // Check in system service types table
+        try {
+            $exists = \DB::table('pnl_service_types_system')
+                ->where('slug', $typeSlug)
+                ->where('is_active', true)
+                ->exists();
+            if ($exists) return true;
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        // Check in user service types table
+        try {
+            $exists = \DB::table('pnl_service_types_user')
+                ->where('user_id', $userId)
+                ->where('slug', $typeSlug)
+                ->where('is_active', true)
+                ->exists();
+            if ($exists) return true;
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        return false;
+    }
 }

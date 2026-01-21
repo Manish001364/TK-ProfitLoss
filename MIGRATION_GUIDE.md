@@ -6,7 +6,46 @@ If you have already installed a previous version of the P&L module, follow these
 
 ---
 
-## Version 2.7 Changes (January 2025) - LATEST
+## Version 2.8 Changes (January 2025) - LATEST
+
+### Bug Fixes
+- **CRITICAL: Vendor Creation ENUM Fix** - Fixed SQL error when creating vendors with service types not in the original ENUM list
+- **CRITICAL: Event View Null Category Fix** - Fixed null reference error when viewing events with expenses that have missing categories
+- **Service Type Storage Improvement** - Service type is now stored in a dedicated `service_type_id` column for better flexibility
+
+### Database Migration for v2.8
+
+Run this SQL to add the service_type_id column to vendors:
+
+```sql
+-- ==============================================
+-- MIGRATION SCRIPT v2.8 - Vendor Service Type Fix
+-- ==============================================
+
+-- 1. Add service_type_id column to pnl_vendors (if not exists)
+ALTER TABLE `pnl_vendors`
+    ADD COLUMN IF NOT EXISTS `service_type_id` CHAR(36) NULL COMMENT 'Links to pnl_service_types_system or pnl_service_types_user' AFTER `type`;
+
+-- 2. Migrate existing vendor types to service_type_id (optional)
+-- This copies the existing type value to service_type_id for backward compatibility
+UPDATE `pnl_vendors` SET `service_type_id` = `type` WHERE `service_type_id` IS NULL;
+
+-- ==============================================
+-- END OF v2.8 MIGRATION
+-- ==============================================
+```
+
+### Important Notes for v2.8
+
+1. **Service Type Storage**: Vendors now store their service type in two fields:
+   - `type` (ENUM): Stores a mapped value for backward compatibility (artist, dj, vendor, etc.)
+   - `service_type_id` (CHAR): Stores the actual service type slug for display purposes
+   
+2. **Null-Safe Category Display**: Event expense listings now gracefully handle missing categories.
+
+---
+
+## Version 2.7 Changes (January 2025)
 
 ### Bug Fixes
 - **CRITICAL: Cash Flow Profit/Loss Calculation Fixed** - Cash flow now correctly calculates profit/loss from actual ticket sales revenue minus expenses (not from `expected_revenue` estimates)

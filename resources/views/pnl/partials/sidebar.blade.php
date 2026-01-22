@@ -79,7 +79,7 @@
     <nav class="pnl-nav">
         {{-- Main Section --}}
         <a href="{{ route('pnl.dashboard') }}" 
-           class="pnl-nav-link {{ request()->routeIs('pnl.dashboard*') ? 'active' : '' }}">
+           class="pnl-nav-link {{ request()->routeIs('pnl.dashboard') && !request()->routeIs('pnl.dashboard.cashflow') ? 'active' : '' }}">
             <i class="fas fa-tachometer-alt"></i>
             <span>Dashboard</span>
         </a>

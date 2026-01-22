@@ -123,12 +123,13 @@
                                 </thead>
                                 <tbody>
                                     @forelse($event->expenses as $expense)
+                                        @php $catData = $expense->category_data @endphp
                                         <tr>
                                             <td class="border-0"><a href="{{ route('pnl.expenses.show', $expense) }}">{{ $expense->title }}</a></td>
                                             <td class="border-0">
-                                                @if($expense->category)
-                                                    <span class="badge" style="background-color: {{ $expense->category->color ?? '#6c757d' }}20; color: {{ $expense->category->color ?? '#6c757d' }}">
-                                                        {{ $expense->category->name ?? 'Uncategorized' }}
+                                                @if($catData)
+                                                    <span class="badge" style="background-color: {{ $catData->color ?? '#6c757d' }}20; color: {{ $catData->color ?? '#6c757d' }}">
+                                                        {{ $catData->name ?? 'Uncategorized' }}
                                                     </span>
                                                 @else
                                                     <span class="badge bg-secondary-subtle text-secondary">Uncategorized</span>

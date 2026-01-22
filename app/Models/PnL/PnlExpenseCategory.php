@@ -59,6 +59,8 @@ class PnlExpenseCategory extends Model
     public static function getAllForUser($userId)
     {
         $allCategories = collect();
+        $hasSystemTable = false;
+        $hasUserTable = false;
         
         // 1. Try to get from pnl_expense_categories_system table
         try {
@@ -70,7 +72,10 @@ class PnlExpenseCategory extends Model
                     $item->is_system = true;
                     return $item;
                 });
-            $allCategories = $allCategories->merge($systemCategories);
+            if ($systemCategories->isNotEmpty()) {
+                $hasSystemTable = true;
+                $allCategories = $allCategories->merge($systemCategories);
+            }
         } catch (\Exception $e) {
             // Table might not exist
         }
@@ -86,30 +91,39 @@ class PnlExpenseCategory extends Model
                     $item->is_system = false;
                     return $item;
                 });
-            $allCategories = $allCategories->merge($userCategories);
+            if ($userCategories->isNotEmpty()) {
+                $hasUserTable = true;
+                $allCategories = $allCategories->merge($userCategories);
+            }
         } catch (\Exception $e) {
             // Table might not exist
         }
         
-        // 3. If still empty, try legacy pnl_expense_categories table
-        if ($allCategories->isEmpty()) {
-            try {
-                $legacyCategories = DB::table('pnl_expense_categories')
-                    ->where(function($query) use ($userId) {
-                        $query->whereNull('user_id')
-                              ->orWhere('user_id', $userId);
-                    })
-                    ->where('is_active', true)
-                    ->orderBy('sort_order')
-                    ->get()
-                    ->map(function ($item) {
-                        $item->is_system = ($item->user_id === null);
-                        return $item;
-                    });
-                $allCategories = $allCategories->merge($legacyCategories);
-            } catch (\Exception $e) {
-                // Table might not exist
+        // 3. ALWAYS try legacy pnl_expense_categories table for additional categories
+        // This ensures custom categories created via the legacy system are included
+        try {
+            $legacyCategories = DB::table('pnl_expense_categories')
+                ->where(function($query) use ($userId) {
+                    $query->whereNull('user_id')
+                          ->orWhere('user_id', $userId);
+                })
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(function ($item) {
+                    $item->is_system = ($item->user_id === null);
+                    return $item;
+                });
+            
+            // Merge but avoid duplicates by ID
+            $existingIds = $allCategories->pluck('id')->toArray();
+            foreach ($legacyCategories as $cat) {
+                if (!in_array($cat->id, $existingIds)) {
+                    $allCategories->push($cat);
+                }
             }
+        } catch (\Exception $e) {
+            // Table might not exist
         }
         
         // 4. If still empty, return hardcoded defaults

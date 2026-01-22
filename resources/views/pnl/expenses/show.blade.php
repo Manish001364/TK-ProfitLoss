@@ -7,9 +7,10 @@
             <div>
                 <h4 class="mb-1">{{ $expense->title }}</h4>
                 <p class="text-muted small mb-0">
-                    @if($expense->category)
-                        <span class="badge" style="background-color: {{ $expense->category->color ?? '#6c757d' }}20; color: {{ $expense->category->color ?? '#6c757d' }}">
-                            {{ $expense->category->name }}
+                    @php $catData = $expense->category_data @endphp
+                    @if($catData)
+                        <span class="badge" style="background-color: {{ $catData->color ?? '#6c757d' }}20; color: {{ $catData->color ?? '#6c757d' }}">
+                            {{ $catData->name }}
                         </span>
                     @else
                         <span class="badge bg-secondary">Uncategorized</span>

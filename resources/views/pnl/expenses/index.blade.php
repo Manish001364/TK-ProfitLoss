@@ -71,16 +71,17 @@
                         </thead>
                         <tbody>
                             @forelse($expenses as $expense)
+                                @php $catData = $expense->category_data @endphp
                                 <tr>
                                     <td class="border-0"><strong><a href="{{ route('pnl.expenses.show', $expense) }}" class="text-dark">{{ $expense->title }}</a></strong></td>
                                     <td class="border-0 small"><a href="{{ route('pnl.events.show', $expense->event) }}">{{ $expense->event->name }}</a></td>
                                     <td class="border-0">
-                                        @if($expense->category)
-                                            <span class="badge" style="background-color: {{ $expense->category->color ?? '#6c757d' }}20; color: {{ $expense->category->color ?? '#6c757d' }}">
-                                                {{ $expense->category->name }}
+                                        @if($catData)
+                                            <span class="badge" style="background-color: {{ $catData->color ?? '#6c757d' }}20; color: {{ $catData->color ?? '#6c757d' }}">
+                                                {{ $catData->name }}
                                             </span>
                                         @else
-                                            <span class="badge bg-secondary">-</span>
+                                            <span class="badge bg-secondary">Uncategorized</span>
                                         @endif
                                     </td>
                                     <td class="border-0 small">{{ $expense->vendor?->display_name ?? '-' }}</td>

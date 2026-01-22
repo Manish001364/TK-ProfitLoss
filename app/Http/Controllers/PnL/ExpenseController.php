@@ -406,7 +406,7 @@ class ExpenseController extends Controller
             // Table might not exist
         }
 
-        // Check in legacy pnl_expense_categories table
+        // Check in legacy pnl_expense_categories table (ALWAYS check - user custom categories stored here)
         try {
             $exists = \DB::table('pnl_expense_categories')
                 ->where('id', $categoryId)
@@ -414,10 +414,15 @@ class ExpenseController extends Controller
                     $query->where('user_id', $userId)
                           ->orWhereNull('user_id'); // System defaults
                 })
+                ->where(function($query) {
+                    // Handle cases where is_active might not exist or be null
+                    $query->where('is_active', true)
+                          ->orWhereNull('is_active');
+                })
                 ->exists();
             if ($exists) return true;
         } catch (\Exception $e) {
-            // Table might not exist
+            // Table might not exist or column missing
         }
 
         return false;

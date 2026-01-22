@@ -53,11 +53,12 @@ class DashboardController extends Controller
         $totalRevenue = (float) ($revenueStats->net_revenue ?? 0);
         $totalTicketsSold = (int) ($revenueStats->tickets_sold ?? 0);
 
-        $totalExpenses = PnlExpense::whereIn('event_id', $filteredEventIds)->sum('total_amount') ?? 0;
+        $totalExpenses = (float) (PnlExpense::whereIn('event_id', $filteredEventIds)->sum('total_amount') ?? 0);
         
         // Calculate total budget
-        $totalBudget = PnlEvent::whereIn('id', $filteredEventIds)->sum('budget') ?? 0;
+        $totalBudget = (float) (PnlEvent::whereIn('id', $filteredEventIds)->sum('budget') ?? 0);
         
+        // Net Profit = Total Revenue - Total Expenses
         $netProfit = $totalRevenue - $totalExpenses;
 
         // Profit Status

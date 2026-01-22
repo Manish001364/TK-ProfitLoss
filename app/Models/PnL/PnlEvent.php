@@ -18,6 +18,7 @@ class PnlEvent extends Model
 
     protected $fillable = [
         'user_id',
+        'ticketkart_event_id',
         'name',
         'description',
         'venue',
@@ -25,6 +26,8 @@ class PnlEvent extends Model
         'event_date',
         'event_time',
         'budget',
+        'currency',
+        'expected_revenue',
         'status',
     ];
 
@@ -32,6 +35,8 @@ class PnlEvent extends Model
         'event_date' => 'date',
         'event_time' => 'datetime:H:i',
         'budget' => 'decimal:2',
+        'expected_revenue' => 'decimal:2',
+        'ticketkart_event_id' => 'integer',
     ];
 
     // Relationships
@@ -58,17 +63,31 @@ class PnlEvent extends Model
     // Calculated Attributes
     public function getTotalExpensesAttribute(): float
     {
-        return $this->expenses()->sum('total_amount');
+        return (float) $this->expenses()->sum('total_amount');
     }
 
     public function getTotalRevenueAttribute(): float
     {
-        return $this->revenues()->sum('net_revenue_after_refunds');
+        // Calculate: (ticket_price * tickets_sold) - fees - refunds
+        $revenues = $this->revenues()->get();
+        $total = 0;
+        foreach ($revenues as $revenue) {
+            $gross = $revenue->ticket_price * $revenue->tickets_sold;
+            $net = $gross - $revenue->platform_fees - $revenue->payment_gateway_fees - $revenue->taxes - $revenue->refund_amount;
+            $total += $net;
+        }
+        return (float) $total;
     }
 
     public function getGrossRevenueAttribute(): float
     {
-        return $this->revenues()->sum('gross_revenue');
+        // Calculate: ticket_price * tickets_sold
+        $revenues = $this->revenues()->get();
+        $total = 0;
+        foreach ($revenues as $revenue) {
+            $total += $revenue->ticket_price * $revenue->tickets_sold;
+        }
+        return (float) $total;
     }
 
     public function getNetProfitAttribute(): float
@@ -93,6 +112,14 @@ class PnlEvent extends Model
     {
         if ($this->budget <= 0) return 0;
         return ($this->total_expenses / $this->budget) * 100;
+    }
+
+    /**
+     * Get currency symbol for this event
+     */
+    public function getCurrencySymbolAttribute(): string
+    {
+        return PnlSettings::getCurrencySymbol($this->currency ?? 'GBP');
     }
 
     // Scopes

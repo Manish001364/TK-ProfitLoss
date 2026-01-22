@@ -1,218 +1,541 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container-fluid py-4">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 900px;">
         <!-- Page Header -->
-        <div class="mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-plus-circle"></i> Add Expense</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Add Expense</h4>
+                <p class="text-muted small mb-0">Record a new expense for an event</p>
+            </div>
+            <a href="{{ route('pnl.expenses.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
 
         <form action="{{ route('pnl.expenses.store') }}" method="POST">
             @csrf
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">Expense Details</h5>
+            
+            <!-- Expense Details -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-danger text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-receipt me-2"></i>Expense Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Event <span class="text-danger">*</span></label>
+                            <select name="event_id" class="form-select @error('event_id') is-invalid @enderror" required>
+                                <option value="">Select Event</option>
+                                @foreach($events as $event)
+                                    <option value="{{ $event->id }}" {{ old('event_id', $selectedEventId) == $event->id ? 'selected' : '' }}>
+                                        {{ $event->name }} ({{ $event->event_date->format('d M Y') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('event_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Event <span class="text-danger">*</span></label>
-                                        <select name="event_id" class="form-control @error('event_id') is-invalid @enderror" required>
-                                            <option value="">Select Event</option>
-                                            @foreach($events as $event)
-                                                <option value="{{ $event->id }}" {{ old('event_id', $selectedEventId) == $event->id ? 'selected' : '' }}>
-                                                    {{ $event->name }} ({{ $event->event_date->format('d M Y') }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('event_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Category <span class="text-danger">*</span></label>
-                                        <select name="category_id" class="form-control @error('category_id') is-invalid @enderror" required>
-                                            <option value="">Select Category</option>
-                                            @foreach($categories as $category)
-                                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                                    {{ $category->name }} ({{ ucfirst($category->type) }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Category <span class="text-danger">*</span></label>
+                            <select name="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
+                                <option value="">Select Category</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }} ({{ ucfirst($category->type) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" 
+                                   value="{{ old('title') }}" required placeholder="e.g., Artist Fee - DJ XYZ">
+                            @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Description</label>
+                            <textarea name="description" class="form-control" rows="2" placeholder="Additional details...">{{ old('description') }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Vendor/Artist</label>
+                            <div class="input-group">
+                                <select name="vendor_id" class="form-select" id="vendor_select">
+                                    <option value="">Select vendor or add new</option>
+                                    @foreach($vendors as $vendor)
+                                        <option value="{{ $vendor->id }}" {{ old('vendor_id') == $vendor->id ? 'selected' : '' }}>
+                                            {{ $vendor->display_name }} ({{ $vendor->service_type_name }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addVendorModal" title="Add New Vendor">
+                                    <i class="fas fa-plus"></i>
+                                </button>
                             </div>
-
-                            <div class="form-group mb-3">
-                                <label>Title <span class="text-danger">*</span></label>
-                                <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" 
-                                       value="{{ old('title') }}" required placeholder="e.g., Artist Fee - DJ XYZ">
-                                @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Invoice Number</label>
+                            <div class="input-group">
+                                <input type="text" name="invoice_number" id="invoice_number" class="form-control" 
+                                       value="{{ old('invoice_number', $nextInvoiceNumber) }}" placeholder="INV-00001">
+                                <button type="button" class="btn btn-outline-secondary" onclick="generateInvoiceNumber()" title="Generate New">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
                             </div>
-
-                            <div class="form-group mb-3">
-                                <label>Description</label>
-                                <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="2">{{ old('description') }}</textarea>
-                                @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Vendor/Artist</label>
-                                        <select name="vendor_id" class="form-control @error('vendor_id') is-invalid @enderror">
-                                            <option value="">Select Vendor (Optional)</option>
-                                            @foreach($vendors as $vendor)
-                                                <option value="{{ $vendor->id }}" {{ old('vendor_id') == $vendor->id ? 'selected' : '' }}>
-                                                    {{ $vendor->display_name }} ({{ ucfirst($vendor->type) }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('vendor_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Invoice Number</label>
-                                        <input type="text" name="invoice_number" class="form-control @error('invoice_number') is-invalid @enderror" 
-                                               value="{{ old('invoice_number') }}">
-                                        @error('invoice_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Amount (₹) <span class="text-danger">*</span></label>
-                                        <input type="number" step="0.01" name="amount" class="form-control @error('amount') is-invalid @enderror" 
-                                               value="{{ old('amount', 0) }}" required min="0" id="amount">
-                                        @error('amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Tax Amount (₹)</label>
-                                        <input type="number" step="0.01" name="tax_amount" class="form-control @error('tax_amount') is-invalid @enderror" 
-                                               value="{{ old('tax_amount', 0) }}" min="0" id="tax_amount">
-                                        @error('tax_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label>Total Amount</label>
-                                        <input type="text" class="form-control" id="total_display" readonly>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label>Expense Date <span class="text-danger">*</span></label>
-                                <input type="date" name="expense_date" class="form-control @error('expense_date') is-invalid @enderror" 
-                                       value="{{ old('expense_date', date('Y-m-d')) }}" required>
-                                @error('expense_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
+                            <small class="text-muted">Auto-generated. You can edit if needed.</small>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-md-4">
-                    <!-- Payment Settings -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="card-title mb-0"><i class="fas fa-credit-card"></i> Payment Settings</h5>
+            <!-- Amount & Tax -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-coins me-2"></i>Amount & Tax</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small">Currency <span class="text-danger">*</span></label>
+                            <select name="currency" id="expense_currency" class="form-select">
+                                @foreach($currencies as $code => $info)
+                                    <option value="{{ $code }}" data-symbol="{{ $info['symbol'] }}" {{ old('currency', $defaultCurrency) === $code ? 'selected' : '' }}>
+                                        {{ $info['symbol'] }} {{ $code }} - {{ $info['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Select the currency you're paying in</small>
                         </div>
-                        <div class="card-body">
-                            <input type="hidden" name="create_payment" value="1">
-                            
-                            <div class="form-group mb-3">
-                                <label>Payment Status</label>
-                                <select name="payment_status" class="form-control" id="payment_status">
-                                    <option value="pending" {{ old('payment_status', 'pending') === 'pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="scheduled" {{ old('payment_status') === 'scheduled' ? 'selected' : '' }}>Scheduled</option>
-                                    <option value="paid" {{ old('payment_status') === 'paid' ? 'selected' : '' }}>Paid</option>
-                                </select>
+                        <div class="col-md-4">
+                            <label class="form-label small">Net Amount <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text currency-symbol">{{ $currencies[$defaultCurrency]['symbol'] ?? '£' }}</span>
+                                <input type="number" step="0.01" name="amount" id="amount" class="form-control @error('amount') is-invalid @enderror" 
+                                       value="{{ old('amount', 0) }}" required min="0">
                             </div>
+                            @error('amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Expense Date <span class="text-danger">*</span></label>
+                            <input type="date" name="expense_date" class="form-control" value="{{ old('expense_date', date('Y-m-d')) }}" required>
+                        </div>
 
-                            <div class="form-group mb-3" id="scheduled_date_group">
-                                <label>Scheduled Payment Date</label>
-                                <input type="date" name="scheduled_date" class="form-control" value="{{ old('scheduled_date') }}">
+                        @if($defaultCurrency !== 'GBP')
+                        <!-- Converted Amount Info -->
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0 py-2">
+                                <i class="fas fa-exchange-alt me-2"></i>
+                                <span id="conversion_info">This expense will be recorded in {{ $defaultCurrency }}. Dashboard totals are shown in your default currency ({{ $defaultCurrency }}).</span>
                             </div>
-
-                            <div class="form-group mb-3">
-                                <label>Payment Method</label>
-                                <select name="payment_method" class="form-control">
-                                    <option value="">Not Specified</option>
-                                    <option value="bank_transfer" {{ old('payment_method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                                    <option value="cash" {{ old('payment_method') === 'cash' ? 'selected' : '' }}>Cash</option>
-                                    <option value="cheque" {{ old('payment_method') === 'cheque' ? 'selected' : '' }}>Cheque</option>
-                                    <option value="upi" {{ old('payment_method') === 'upi' ? 'selected' : '' }}>UPI</option>
-                                    <option value="other" {{ old('payment_method') === 'other' ? 'selected' : '' }}>Other</option>
-                                </select>
-                            </div>
-
-                            <hr>
-
-                            <div class="form-group mb-3">
-                                <div class="form-check form-switch">
-                                    <input type="checkbox" class="form-check-input" id="reminder_enabled" name="reminder_enabled" value="1" {{ old('reminder_enabled', true) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="reminder_enabled">Enable Payment Reminders</label>
+                        </div>
+                        @endif
+                        
+                        <!-- Tax Toggle - iPhone Style -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between p-3 rounded" id="tax_toggle_container" style="background: #f8f9fa; border: 1px solid #dee2e6;">
+                                <div>
+                                    <span class="fw-semibold">Apply VAT/Tax</span>
+                                    <br><small class="text-muted" id="tax_status_text">Tax will be added at {{ $defaultTaxRate ?? 20 }}%</small>
+                                </div>
+                                <div class="form-check form-switch form-switch-lg mb-0">
+                                    <input type="checkbox" class="form-check-input" role="switch" id="is_taxable" name="is_taxable" value="1" 
+                                           {{ old('is_taxable', true) ? 'checked' : '' }} style="width: 3em; height: 1.5em; cursor: pointer;">
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="form-group mb-0" id="reminder_days_group">
-                                <label>Remind Before (Days)</label>
-                                <input type="number" name="reminder_days_before" class="form-control" value="{{ old('reminder_days_before', 3) }}" min="1" max="30">
+                        <!-- Tax Details (shown when toggle is ON) -->
+                        <div class="col-12" id="tax_details_section">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Tax Rate (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" step="0.01" name="tax_rate" id="tax_rate" class="form-control" 
+                                               value="{{ old('tax_rate', $defaultTaxRate ?? 20) }}" min="0" max="100">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    <small class="text-muted">Default: {{ $defaultTaxRate ?? 20 }}% VAT</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Tax Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text currency-symbol">{{ $currencies[$defaultCurrency]['symbol'] ?? '£' }}</span>
+                                        <input type="number" step="0.01" name="tax_amount" id="tax_amount" class="form-control bg-light" 
+                                               value="{{ old('tax_amount', 0) }}" min="0" readonly>
+                                    </div>
+                                    <small class="text-muted">Auto-calculated</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Total (Gross)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text currency-symbol">{{ $currencies[$defaultCurrency]['symbol'] ?? '£' }}</span>
+                                        <input type="text" class="form-control bg-success-subtle fw-bold text-success" id="total_display" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Non-Taxable Summary (shown when toggle is OFF) -->
+                        <div class="col-12" id="non_taxable_section" style="display: none;">
+                            <div class="alert alert-info mb-0 d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <div>
+                                    <strong>Non-Taxable Expense</strong> - No VAT/Tax will be applied. 
+                                    Total: <strong id="non_taxable_total">£0.00</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-footer">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-save"></i> Create Expense
+            <!-- Payment Settings -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Settings</h6>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" name="create_payment" value="1">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small">Payment Status</label>
+                            <select name="payment_status" class="form-select" id="payment_status">
+                                <option value="pending" {{ old('payment_status', 'pending') === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="scheduled" {{ old('payment_status') === 'scheduled' ? 'selected' : '' }}>Scheduled</option>
+                                <option value="paid" {{ old('payment_status') === 'paid' ? 'selected' : '' }}>Paid</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" id="scheduled_date_group">
+                            <label class="form-label small">Scheduled Date</label>
+                            <input type="date" name="scheduled_date" class="form-control" value="{{ old('scheduled_date') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Payment Method</label>
+                            <select name="payment_method" class="form-select">
+                                <option value="">Not Specified</option>
+                                <option value="bank_transfer" {{ old('payment_method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer (BACS)</option>
+                                <option value="cash" {{ old('payment_method') === 'cash' ? 'selected' : '' }}>Cash</option>
+                                <option value="cheque" {{ old('payment_method') === 'cheque' ? 'selected' : '' }}>Cheque</option>
+                                <option value="card" {{ old('payment_method') === 'card' ? 'selected' : '' }}>Card</option>
+                                <option value="other" {{ old('payment_method') === 'other' ? 'selected' : '' }}>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" class="form-check-input" id="send_email_to_vendor" name="send_email_to_vendor" value="1" 
+                                       {{ old('send_email_to_vendor', true) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="send_email_to_vendor">
+                                    <i class="fas fa-envelope text-muted me-1"></i>Send email notifications to vendor
+                                </label>
+                            </div>
+                            <small class="text-muted ms-4">Vendor will be notified when payment status changes</small>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" class="form-check-input" id="reminder_enabled" name="reminder_enabled" value="1" 
+                                       {{ old('reminder_enabled', true) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="reminder_enabled">Enable payment reminders</label>
+                            </div>
+                            <div class="mt-2" id="reminder_days_group">
+                                <label class="form-label small">Remind before (days)</label>
+                                <input type="number" name="reminder_days_before" class="form-control form-control-sm" 
+                                       value="{{ old('reminder_days_before', 3) }}" min="1" max="30" style="width: 80px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger"><i class="fas fa-save me-1"></i> Create Expense</button>
+                <a href="{{ route('pnl.expenses.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Add Vendor Modal -->
+    <div class="modal fade" id="addVendorModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white border-0">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Quick Add Vendor/Artist</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small mb-3">
+                        <i class="fas fa-info-circle me-1"></i> 
+                        <strong>Required fields:</strong> Name, Service Type, and Phone number are mandatory.
+                    </div>
+                    <form id="quickVendorForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small">Vendor/Artist Name <span class="text-danger">*</span></label>
+                                <input type="text" name="vendor_name" id="vendor_name" class="form-control" required placeholder="e.g., DJ Alpha, ABC Catering">
+                                <div class="invalid-feedback">Please enter a vendor/artist name</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Service Type <span class="text-danger">*</span></label>
+                                <select name="vendor_type" id="vendor_type" class="form-select" required>
+                                    <option value="">Select Service Type</option>
+                                    @foreach($vendorTypes ?? [] as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback">Please select a service type</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Phone Number <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select id="quick_phone_country" class="form-select" style="max-width: 120px;">
+                                        <option value="+44" data-country="gb" selected>🇬🇧 +44</option>
+                                        <option value="+1" data-country="us">🇺🇸 +1</option>
+                                        <option value="+91" data-country="in">🇮🇳 +91</option>
+                                        <option value="+49" data-country="de">🇩🇪 +49</option>
+                                        <option value="+33" data-country="fr">🇫🇷 +33</option>
+                                        <option value="+34" data-country="es">🇪🇸 +34</option>
+                                        <option value="+39" data-country="it">🇮🇹 +39</option>
+                                        <option value="+31" data-country="nl">🇳🇱 +31</option>
+                                        <option value="+353" data-country="ie">🇮🇪 +353</option>
+                                        <option value="+61" data-country="au">🇦🇺 +61</option>
+                                        <option value="+971" data-country="ae">🇦🇪 +971</option>
+                                        <option value="+65" data-country="sg">🇸🇬 +65</option>
+                                    </select>
+                                    <input type="tel" name="vendor_phone" id="vendor_phone" class="form-control" required placeholder="7911 123456">
+                                </div>
+                                <input type="hidden" name="phone_country_code" id="quick_phone_country_code" value="+44">
+                                <div class="invalid-feedback">Please enter a phone number</div>
+                                <small class="text-muted" id="quick_phone_example">Example: 7911 123456</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Email</label>
+                                <input type="email" name="vendor_email" id="vendor_email" class="form-control" placeholder="email@example.com">
+                                <div class="invalid-feedback">Please enter a valid email address</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small">Service Area / Specialization</label>
+                                <input type="text" name="vendor_specialization" id="vendor_specialization" class="form-control" placeholder="e.g., Bollywood DJ, Continental Food, Event Security">
+                            </div>
+                        </div>
+                        <div id="quickVendorError" class="alert alert-danger mt-3 d-none"></div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="saveQuickVendor()">
+                        <i class="fas fa-save me-1"></i> Save & Select
                     </button>
-                    <a href="{{ route('pnl.expenses.index') }}" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-times"></i> Cancel
+                    <a href="{{ route('pnl.vendors.create') }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i> Full Form
                     </a>
                 </div>
             </div>
-        </form>
+        </div>
     </div>
 @endsection
 
 @section('customjs')
     <script>
         $(document).ready(function() {
-            // Calculate total
-            function updateTotal() {
+            // Currency change handler
+            $('#expense_currency').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                const symbol = selectedOption.data('symbol') || '£';
+                
+                // Update all currency symbols
+                $('.currency-symbol').text(symbol);
+            });
+
+            // Tax toggle and calculation
+            function updateTaxDisplay() {
+                const isTaxable = $('#is_taxable').is(':checked');
                 const amount = parseFloat($('#amount').val()) || 0;
-                const tax = parseFloat($('#tax_amount').val()) || 0;
-                $('#total_display').val('₹' + (amount + tax).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                const taxRate = parseFloat($('#tax_rate').val()) || 0;
+                const symbol = $('#expense_currency option:selected').data('symbol') || '£';
+                
+                if (isTaxable) {
+                    // Show tax section, hide non-taxable message
+                    $('#tax_details_section').show();
+                    $('#non_taxable_section').hide();
+                    $('#tax_toggle_container').css('background', '#d1e7dd').css('border-color', '#badbcc');
+                    $('#tax_status_text').text('Tax will be added at ' + taxRate + '%');
+                    
+                    // Calculate tax
+                    const taxAmount = (amount * taxRate / 100);
+                    $('#tax_amount').val(taxAmount.toFixed(2));
+                    $('#total_display').val((amount + taxAmount).toFixed(2));
+                } else {
+                    // Hide tax section, show non-taxable message
+                    $('#tax_details_section').hide();
+                    $('#non_taxable_section').show();
+                    $('#tax_toggle_container').css('background', '#f8f9fa').css('border-color', '#dee2e6');
+                    $('#tax_status_text').text('No tax will be applied');
+                    
+                    // No tax
+                    $('#tax_amount').val('0.00');
+                    $('#non_taxable_total').text(symbol + amount.toFixed(2));
+                }
             }
 
-            $('#amount, #tax_amount').on('input', updateTotal);
-            updateTotal();
+            $('#amount, #tax_rate').on('input', updateTaxDisplay);
+            $('#is_taxable').on('change', updateTaxDisplay);
+            $('#expense_currency').on('change', updateTaxDisplay);
+            
+            // Initial state
+            updateTaxDisplay();
 
-            // Toggle scheduled date
+            // Payment status toggle
             $('#payment_status').on('change', function() {
-                if ($(this).val() === 'scheduled') {
-                    $('#scheduled_date_group').show();
-                } else {
-                    $('#scheduled_date_group').hide();
-                }
+                $('#scheduled_date_group').toggle($(this).val() === 'scheduled');
             }).trigger('change');
 
-            // Toggle reminder settings
+            // Reminder toggle
             $('#reminder_enabled').on('change', function() {
                 $('#reminder_days_group').toggle(this.checked);
             }).trigger('change');
+        });
+
+        // Generate invoice number
+        function generateInvoiceNumber() {
+            const now = new Date();
+            const yearMonth = now.getFullYear().toString() + (now.getMonth() + 1).toString().padStart(2, '0');
+            const random = Math.floor(Math.random() * 900 + 100);
+            $('#invoice_number').val('INV-' + yearMonth + '-' + random);
+        }
+
+        // Quick add vendor
+        function saveQuickVendor() {
+            const name = $('#vendor_name').val().trim();
+            const type = $('#vendor_type').val();
+            const phone = $('#vendor_phone').val().trim();
+            const phoneCountryCode = $('#quick_phone_country').val();
+            const email = $('#vendor_email').val().trim();
+            const errorDiv = $('#quickVendorError');
+            
+            // Reset validation states
+            $('#quickVendorForm .is-invalid').removeClass('is-invalid');
+            errorDiv.addClass('d-none').text('');
+            
+            // Validate required fields
+            let hasErrors = false;
+            
+            if (!name) {
+                $('#vendor_name').addClass('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (!type) {
+                $('#vendor_type').addClass('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (!phone) {
+                $('#vendor_phone').addClass('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (email && !isValidEmail(email)) {
+                $('#vendor_email').addClass('is-invalid');
+                hasErrors = true;
+            }
+            
+            if (hasErrors) {
+                errorDiv.removeClass('d-none').html('<i class="fas fa-exclamation-triangle me-1"></i> Please fill in all required fields correctly.');
+                return;
+            }
+
+            // Show loading state
+            const saveBtn = $(event.target);
+            const originalText = saveBtn.html();
+            saveBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+
+            $.ajax({
+                url: '{{ route("pnl.vendors.store") }}',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    full_name: name,
+                    type: type,
+                    email: email,
+                    phone: phone,
+                    phone_country_code: phoneCountryCode,
+                    specialization: $('#vendor_specialization').val(),
+                    is_active: 1,
+                    _quick_add: 1
+                },
+                success: function(response) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    
+                    if (response.success && response.vendor) {
+                        // Add to dropdown and select
+                        const option = new Option(
+                            response.vendor.display_name + ' (' + response.vendor.type.charAt(0).toUpperCase() + response.vendor.type.slice(1) + ')',
+                            response.vendor.id,
+                            true,
+                            true
+                        );
+                        $('#vendor_select').append(option).trigger('change');
+                        
+                        // Close modal and reset form
+                        $('#addVendorModal').modal('hide');
+                        $('#quickVendorForm')[0].reset();
+                        
+                        // Show success message
+                        alert('✓ Vendor "' + response.vendor.display_name + '" added successfully!');
+                    } else {
+                        errorDiv.removeClass('d-none').html('<i class="fas fa-times-circle me-1"></i> ' + (response.message || 'Could not save vendor'));
+                    }
+                },
+                error: function(xhr) {
+                    saveBtn.prop('disabled', false).html(originalText);
+                    
+                    let errorMessage = 'Error saving vendor. Please try again.';
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON.errors) {
+                            const errors = Object.values(xhr.responseJSON.errors).flat();
+                            errorMessage = errors.join('<br>');
+                        }
+                    }
+                    errorDiv.removeClass('d-none').html('<i class="fas fa-times-circle me-1"></i> ' + errorMessage);
+                }
+            });
+        }
+        
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+        
+        // Update phone country code hidden field and example
+        $('#quick_phone_country').on('change', function() {
+            $('#quick_phone_country_code').val($(this).val());
+            const examples = {
+                '+44': '7911 123456',
+                '+1': '(201) 555-0123',
+                '+91': '98765 43210',
+                '+49': '1512 3456789',
+                '+33': '6 12 34 56 78',
+                '+34': '612 34 56 78',
+                '+39': '312 345 6789',
+                '+31': '6 12345678',
+                '+353': '85 123 4567',
+                '+61': '412 345 678',
+                '+971': '50 123 4567',
+                '+65': '8123 4567'
+            };
+            const example = examples[$(this).val()] || '';
+            $('#quick_phone_example').text(example ? 'Example: ' + example : '');
+            $('#vendor_phone').attr('placeholder', example);
         });
     </script>
 @endsection

@@ -22,6 +22,9 @@ use App\Http\Controllers\PnL\RevenueController;
 use App\Http\Controllers\PnL\AttachmentController;
 use App\Http\Controllers\PnL\ExportController;
 use App\Http\Controllers\PnL\AuditLogController;
+use App\Http\Controllers\PnL\SettingsController;
+use App\Http\Controllers\PnL\ServiceTypeController;
+use App\Http\Controllers\PnL\ConfigurationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
@@ -39,11 +42,16 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
     Route::get('vendors/export', [VendorController::class, 'export'])->name('vendors.export');
     Route::resource('vendors', VendorController::class);
 
-    // Expense Categories
+    // Configuration - Combined Categories & Service Types page
+    Route::get('configuration', [ConfigurationController::class, 'index'])->name('configuration.index');
+
+    // Expense Categories (keep individual routes for create/edit/delete)
     Route::post('categories/reorder', [ExpenseCategoryController::class, 'reorder'])->name('categories.reorder');
     Route::resource('categories', ExpenseCategoryController::class)->except(['show']);
 
     // Expenses
+    Route::get('expenses/{expense}/pdf', [ExpenseController::class, 'generatePdf'])->name('expenses.pdf');
+    Route::post('expenses/{expense}/email', [ExpenseController::class, 'sendInvoiceEmail'])->name('expenses.email');
     Route::resource('expenses', ExpenseController::class);
 
     // Payments
@@ -55,6 +63,9 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
 
     // Revenue
     Route::resource('revenues', RevenueController::class);
+
+    // Service Types (keep individual routes for create/edit/delete)
+    Route::resource('service-types', ServiceTypeController::class)->except(['show']);
 
     // Attachments
     Route::post('attachments', [AttachmentController::class, 'store'])->name('attachments.store');
@@ -70,4 +81,10 @@ Route::middleware(['auth'])->prefix('pnl')->name('pnl.')->group(function () {
     // Audit Logs
     Route::get('audit', [AuditLogController::class, 'index'])->name('audit.index');
     Route::get('audit/{auditLog}', [AuditLogController::class, 'show'])->name('audit.show');
+
+    // Settings
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('settings/reset-invoice', [SettingsController::class, 'resetInvoiceSequence'])->name('settings.reset-invoice');
+    Route::post('settings/dismiss-walkthrough', [SettingsController::class, 'dismissWalkthrough'])->name('settings.dismiss-walkthrough');
 });

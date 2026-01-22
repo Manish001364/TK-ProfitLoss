@@ -1,186 +1,84 @@
 # P&L Module for TicketKart - Product Requirements Document
 
-## Project Overview
-A self-contained Profit & Loss (P&L) module designed for integration into the TicketKart Laravel-based event ticketing platform.
+## Version History
+- **v2.9** (January 2025) - CRITICAL FIX: Vendor creation ENUM error, Event view null category fix
+- **v2.8** (January 2025) - Code cleanup, walkthrough fix, phone dropdown fix
+- **v2.7** (January 2025) - Cash flow fix, payment emails, combined config page
+- **v2.6** (January 2025) - Service types, multi-currency
+- **v2.5** (January 2025) - International phone, cash flow projections
 
-## Original Problem Statement
-Build a P&L module for ticketkart.com in PHP (Laravel) for easy integration as a new feature into the existing platform.
+## Overview
+Self-contained P&L (Profit & Loss) module for TicketKart event management platform.
 
-## Target Platform
-- **Application:** ticketkart.com
-- **Framework:** Laravel 10+
-- **Database:** MySQL
-- **UI Framework:** Bootstrap 5
-- **Layout System:** Custom organiser layout (`layouts.organiser_layout`)
-- **Sidebar:** Custom (`customer/sidemenu.blade.php`)
+## Core Features
 
----
+### Implemented ✅
 
-## Core Features Implemented
+1. **Dashboard** - Overview with charts, totals, recent activity
+2. **Events** - CRUD with budget tracking, currency support
+3. **Vendors** - Artist/supplier management with international phone
+4. **Expenses** - Categorized expenses with tax/VAT
+5. **Revenue** - Ticket sales and income tracking
+6. **Payments** - Payment scheduling and tracking
+7. **PDF Invoices** - Generate and email invoices
+8. **Multi-Currency** - GBP, USD, EUR, INR support
+9. **Cash Flow** - Projections and upcoming payments
+10. **First-Time Walkthrough** - Interactive guide for new users
+11. **Categories & Services** - Combined configuration page
+12. **Payment Emails** - Confirmation to vendor and organiser
 
-### 1. Vendor/Artist Management ✅
-- Full contact management (Name, Email, Phone, Addresses)
-- Bank details storage (for reference only)
-- Tax information (PAN, GST, VAT)
-- Emergency contact details
-- Payment history tracking
-- Export to Excel
-
-### 2. Payment Tracking ✅
-- Manual payment tracking with statuses: Pending, Scheduled, Paid
-- Scheduled payment dates
-- Payment methods: Bank Transfer, Cash, Cheque, UPI
-- Transaction reference tracking
-- Mark as Paid functionality
-- Overdue payment alerts
-
-### 3. Automated Email Reminders ✅
-- Payment reminder console command
-- Configurable reminder days before due date
-- Reminder on due date option
-- Email template for reminders
-
-### 4. Expense Management ✅
-- Expense categories with types (Fixed/Variable)
-- Budget limits per category
-- Full expense tracking with vendor assignment
-- Tax amount tracking
-- Invoice number recording
-
-### 5. Revenue Tracking ✅
-- Ticket sales tracking by type
-- Gross/Net revenue calculations
-- Platform fees, gateway fees, tax deductions
-- Refund tracking
-- Per-event breakdown
-
-### 6. P&L Dashboard ✅
-- Total Revenue, Total Expenses, Net Profit/Loss
-- Visual charts (Chart.js)
-- Event filter and date range filter
-- Recent events performance table
-- Upcoming and overdue payments widgets
-
-### 7. Exporting ✅
-- Vendor contacts to Excel
-- P&L Summary to Excel/PDF
-- Event P&L to Excel
-
-### 8. Audit Log ✅
-- Track all changes (create, update, delete)
-- Old/new value comparison
-- User tracking
-- Filterable by action and date
-
----
-
-## Database Schema (8 Tables)
-
-| Table | Purpose |
-|-------|---------|
-| `pnl_events` | Event details, budget, dates |
-| `pnl_vendors` | Vendor/artist contact info |
-| `pnl_expense_categories` | Category definitions |
-| `pnl_expenses` | Individual expenses |
-| `pnl_payments` | Payment tracking |
-| `pnl_revenues` | Ticket sales revenue |
-| `pnl_attachments` | File attachments (polymorphic) |
-| `pnl_audit_logs` | Change history |
-
-All tables prefixed with `pnl_` - does NOT touch existing tables.
-
----
-
-## Technical Architecture
-
-### Directory Structure
-```
-app/
-├── Console/Commands/SendPaymentReminders.php
-├── Exports/
-│   ├── EventPnlExport.php
-│   ├── PnlSummaryExport.php
-│   └── VendorsExport.php
-├── Http/Controllers/PnL/
-│   ├── DashboardController.php
-│   ├── EventController.php
-│   ├── VendorController.php
-│   ├── ExpenseController.php
-│   ├── PaymentController.php
-│   ├── RevenueController.php
-│   └── ...
-├── Mail/PaymentReminderMail.php
-├── Models/PnL/
-│   ├── PnlEvent.php
-│   ├── PnlVendor.php
-│   ├── PnlExpense.php
-│   └── ...
-├── Providers/PnLServiceProvider.php
-└── Traits/HasAuditLog.php
-
-database/migrations/
-└── 2024_01_01_000001-8_create_pnl_*.php
-
-resources/views/pnl/
-├── dashboard/
-├── events/
-├── vendors/
-├── expenses/
-├── payments/
-├── revenues/
-├── categories/
-└── audit/
-
-routes/pnl.php
-```
-
-### Layout Integration
-- Views extend `layouts.organiser_layout`
-- Content goes in `@section('content')`
-- JavaScript goes in `@section('customjs')`
-- Uses Bootstrap 5 classes
-- Compatible with existing jQuery and Select2
-
----
-
-## Session Changelog
-
-### December 2025 - Initial Build
-- Created complete P&L module from scratch
-- Built 8 migration files, 8 models, 10 controllers
-- Created all Blade views with AdminLTE layout (initial)
-
-### December 2025 - Layout Fix
-- **Issue:** Module views used AdminLTE layout which user doesn't have
-- **Solution:** Updated all 21 Blade views to use `layouts.organiser_layout`
-- Updated INSTALLATION_GUIDE.md with correct sidebar menu instructions
-- Re-packaged module into `ticketkart-pnl-module.zip`
-
----
+### Database Tables
+- `pnl_events` - Events with budget and currency
+- `pnl_vendors` - Vendors with international phone support + service_type_id
+- `pnl_expenses` - Expenses with tax and currency
+- `pnl_revenues` - Revenue entries
+- `pnl_payments` - Payment records
+- `pnl_expense_categories` - User custom categories
+- `pnl_expense_categories_system` - System default categories
+- `pnl_service_types_user` - User custom service types
+- `pnl_service_types_system` - System default service types
+- `pnl_settings` - User settings
+- `pnl_attachments` - File attachments
+- `pnl_audit_logs` - Audit trail
 
 ## Deliverables
+1. `ticketkart-pnl-module.zip` - Complete module package
+2. `SQL_TABLES.sql` - Database schema
+3. `INSTALLATION_GUIDE.md` - Setup instructions
+4. `MIGRATION_GUIDE.md` - Upgrade instructions
+5. `README.md` - Module overview
 
-1. **ticketkart-pnl-module.zip** - Complete module package
-2. **INSTALLATION_GUIDE.md** - Step-by-step installation instructions
-3. **README.md** - Module overview
+## Recent Changes (v2.9)
 
----
+### Fixed
+- **CRITICAL: Vendor Creation ENUM Error** - Service type slug was being saved directly to ENUM column. Now:
+  - `service_type_id` stores the service type slug for display
+  - `type` stores mapped ENUM value for backward compatibility
+- **CRITICAL: Event Creation Error** - Removed call to non-existent `createDefaultsForUser()` method
+- **CRITICAL: Expense Category Validation** - System categories now properly validated and shown in dropdown
+- **Event View Null Category** - Added null-safe operators for expenses without categories
 
-## Next Steps (For User)
+### Updated Files
+- `EventController.php` - Removed `createDefaultsForUser()` call
+- `ExpenseController.php` - Fixed category validation, use `getAllForUser()` everywhere
+- `PnlExpenseCategory.php` - Rewritten to fetch from system/user tables like PnlServiceType
+- `VendorController.php` - Added `mapServiceTypeToEnum()` method
+- `PnlVendor.php` - Added `service_type_id` field and `service_type_name` accessor
+- `PnlServiceType.php` - Added `getBySlugOrId()` method
+- `SQL_TABLES.sql` - Added `service_type_id` column to pnl_vendors
+- `events/show.blade.php` - Null-safe category display
+- `vendors/index.blade.php`, `show.blade.php`, `edit.blade.php` - Use service_type_name
 
-1. Download `ticketkart-pnl-module.zip`
-2. Follow INSTALLATION_GUIDE.md step-by-step
-3. Add menu link to `sidemenu.blade.php`
-4. Run migrations
-5. Test at `/pnl/dashboard`
+### Migration Required
+```sql
+ALTER TABLE `pnl_vendors`
+    ADD COLUMN IF NOT EXISTS `service_type_id` CHAR(36) NULL AFTER `type`;
+UPDATE `pnl_vendors` SET `service_type_id` = `type` WHERE `service_type_id` IS NULL;
+```
 
----
-
-## Future Enhancements (Backlog)
-
-- [ ] File upload for invoices/contracts (infrastructure ready)
-- [ ] Cash flow projections view
-- [ ] Budget vs Actual comparison charts
-- [ ] Multi-currency support
-- [ ] API endpoints for mobile app
-- [ ] Integration with TicketKart's existing ticket sales data
+## Future/Backlog
+- Add more sold tickets functionality
+- File uploads for invoices/contracts
+- Budget vs Actual comparison charts
+- API endpoints for mobile app
+- Walkthrough guide fix (P1 - still needs testing)

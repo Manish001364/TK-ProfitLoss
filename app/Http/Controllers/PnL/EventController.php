@@ -42,7 +42,9 @@ class EventController extends Controller
 
     public function create()
     {
-        return view('pnl.events.create');
+        $settings = \App\Models\PnL\PnlSettings::getOrCreate(auth()->id());
+        $currencies = \App\Models\PnL\PnlSettings::getCurrencies();
+        return view('pnl.events.create', compact('settings', 'currencies'));
     }
 
     public function store(Request $request)
@@ -55,18 +57,23 @@ class EventController extends Controller
             'event_date' => 'required|date',
             'event_time' => 'nullable|date_format:H:i',
             'budget' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|max:3',
+            'expected_revenue' => 'nullable|numeric|min:0',
             'status' => ['required', Rule::in(['draft', 'planning', 'active', 'completed', 'cancelled'])],
         ]);
 
         $validated['user_id'] = auth()->id();
+        
+        // Set default currency from settings if not provided
+        if (empty($validated['currency'])) {
+            $settings = \App\Models\PnL\PnlSettings::getOrCreate(auth()->id());
+            $validated['currency'] = $settings->default_currency ?? 'GBP';
+        }
 
         $event = PnlEvent::create($validated);
 
-        // Create default expense categories for user if not exists
-        $existingCategories = PnlExpenseCategory::forUser(auth()->id())->count();
-        if ($existingCategories === 0) {
-            PnlExpenseCategory::createDefaultsForUser(auth()->id());
-        }
+        // Note: Default expense categories are now handled by the system categories table
+        // No need to create per-user defaults anymore
 
         return redirect()
             ->route('pnl.events.show', $event)
@@ -95,14 +102,15 @@ class EventController extends Controller
             'budget_utilization' => $event->budget_utilization,
         ];
 
-        // Expense breakdown
+        // Expense breakdown - handle null categories using category_data accessor
         $expenseByCategory = $event->expenses
             ->groupBy('category_id')
             ->map(function ($expenses) {
-                $category = $expenses->first()->category;
+                $expense = $expenses->first();
+                $catData = $expense->category_data;
                 return [
-                    'name' => $category->name,
-                    'color' => $category->color,
+                    'name' => $catData->name ?? 'Uncategorized',
+                    'color' => $catData->color ?? '#6c757d',
                     'total' => $expenses->sum('total_amount'),
                 ];
             })
@@ -115,7 +123,10 @@ class EventController extends Controller
     {
         $this->authorize('update', $event);
         
-        return view('pnl.events.edit', compact('event'));
+        $settings = \App\Models\PnL\PnlSettings::getOrCreate(auth()->id());
+        $currencies = \App\Models\PnL\PnlSettings::getCurrencies();
+        
+        return view('pnl.events.edit', compact('event', 'settings', 'currencies'));
     }
 
     public function update(Request $request, PnlEvent $event)
@@ -130,6 +141,8 @@ class EventController extends Controller
             'event_date' => 'required|date',
             'event_time' => 'nullable|date_format:H:i',
             'budget' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string|max:3',
+            'expected_revenue' => 'nullable|numeric|min:0',
             'status' => ['required', Rule::in(['draft', 'planning', 'active', 'completed', 'cancelled'])],
         ]);
 

@@ -1,219 +1,313 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container-fluid py-4">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 900px;">
         <!-- Page Header -->
-        <div class="mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-edit"></i> Edit Vendor/Artist: {{ $vendor->display_name }}</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Edit Vendor/Artist</h4>
+                <p class="text-muted small mb-0">{{ $vendor->display_name }}</p>
+            </div>
+            <a href="{{ route('pnl.vendors.show', $vendor) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
         </div>
 
-        <form action="{{ route('pnl.vendors.update', $vendor) }}" method="POST">
+        <form action="{{ route('pnl.vendors.update', $vendor) }}" method="POST" id="vendorForm">
             @csrf
             @method('PUT')
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card mb-4">
-                        <div class="card-header bg-warning text-dark">
-                            <h5 class="card-title mb-0"><i class="fas fa-user"></i> Basic Information</h5>
+
+            <!-- Basic Information -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-danger text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-user me-2"></i>Basic Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Vendor/Artist Name <span class="text-danger">*</span></label>
+                            <input type="text" name="full_name" class="form-control @error('full_name') is-invalid @enderror" 
+                                   value="{{ old('full_name', $vendor->full_name) }}" required>
+                            @error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Full Name <span class="text-danger">*</span></label>
-                                        <input type="text" name="full_name" class="form-control @error('full_name') is-invalid @enderror" 
-                                               value="{{ old('full_name', $vendor->full_name) }}" required>
-                                        @error('full_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Business Name</label>
-                                        <input type="text" name="business_name" class="form-control @error('business_name') is-invalid @enderror" 
-                                               value="{{ old('business_name', $vendor->business_name) }}">
-                                        @error('business_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label>Type <span class="text-danger">*</span></label>
-                                <select name="type" class="form-control @error('type') is-invalid @enderror" required>
-                                    @foreach($vendorTypes as $key => $label)
-                                        <option value="{{ $key }}" {{ old('type', $vendor->type) === $key ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                                @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label>Email <span class="text-danger">*</span></label>
-                                <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" 
-                                       value="{{ old('email', $vendor->email) }}" required>
-                                @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Phone</label>
-                                        <input type="text" name="phone" class="form-control" value="{{ old('phone', $vendor->phone) }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Alternate Phone</label>
-                                        <input type="text" name="alternate_phone" class="form-control" value="{{ old('alternate_phone', $vendor->alternate_phone) }}">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label>Business Address</label>
-                                <textarea name="business_address" class="form-control" rows="2">{{ old('business_address', $vendor->business_address) }}</textarea>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label>Home Address</label>
-                                <textarea name="home_address" class="form-control" rows="2">{{ old('home_address', $vendor->home_address) }}</textarea>
-                            </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Business/Company Name</label>
+                            <input type="text" name="business_name" class="form-control" 
+                                   value="{{ old('business_name', $vendor->business_name) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Service Type <span class="text-danger">*</span></label>
+                            <select name="type" class="form-select @error('type') is-invalid @enderror" required>
+                                @foreach($vendorTypes as $key => $label)
+                                    <option value="{{ $key }}" {{ old('type', $vendor->service_type_id ?? $vendor->type) === $key ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Service Area / Specialization</label>
+                            <input type="text" name="specialization" class="form-control" 
+                                   value="{{ old('specialization', $vendor->specialization) }}">
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="card mb-4">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="card-title mb-0"><i class="fas fa-phone-alt"></i> Emergency Contact</h5>
+            <!-- Contact Details -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-address-book me-2"></i>Contact Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Email Address</label>
+                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" 
+                                   value="{{ old('email', $vendor->email) }}">
+                            @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Contact Name</label>
-                                        <input type="text" name="emergency_contact_name" class="form-control" value="{{ old('emergency_contact_name', $vendor->emergency_contact_name) }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Contact Phone</label>
-                                        <input type="text" name="emergency_contact_phone" class="form-control" value="{{ old('emergency_contact_phone', $vendor->emergency_contact_phone) }}">
-                                    </div>
-                                </div>
+                        <div class="col-md-6"></div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Primary Phone <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select name="phone_country_code" class="form-select phone-country-select" style="max-width: 140px;">
+                                    <option value="+44" {{ old('phone_country_code', $vendor->phone_country_code ?? '+44') == '+44' ? 'selected' : '' }}>🇬🇧 +44</option>
+                                    <option value="+1" {{ old('phone_country_code', $vendor->phone_country_code) == '+1' ? 'selected' : '' }}>🇺🇸 +1</option>
+                                    <option value="+91" {{ old('phone_country_code', $vendor->phone_country_code) == '+91' ? 'selected' : '' }}>🇮🇳 +91</option>
+                                    <option value="+49" {{ old('phone_country_code', $vendor->phone_country_code) == '+49' ? 'selected' : '' }}>🇩🇪 +49</option>
+                                    <option value="+33" {{ old('phone_country_code', $vendor->phone_country_code) == '+33' ? 'selected' : '' }}>🇫🇷 +33</option>
+                                    <option value="+353" {{ old('phone_country_code', $vendor->phone_country_code) == '+353' ? 'selected' : '' }}>🇮🇪 +353</option>
+                                    <option value="+61" {{ old('phone_country_code', $vendor->phone_country_code) == '+61' ? 'selected' : '' }}>🇦🇺 +61</option>
+                                    <option value="+971" {{ old('phone_country_code', $vendor->phone_country_code) == '+971' ? 'selected' : '' }}>🇦🇪 +971</option>
+                                    <option value="+65" {{ old('phone_country_code', $vendor->phone_country_code) == '+65' ? 'selected' : '' }}>🇸🇬 +65</option>
+                                </select>
+                                <input type="tel" name="phone" class="form-control @error('phone') is-invalid @enderror" required 
+                                       value="{{ old('phone', $vendor->phone) }}" placeholder="7911 123456">
                             </div>
-                            <div class="form-group mb-0">
-                                <label>Relation</label>
-                                <input type="text" name="emergency_contact_relation" class="form-control" value="{{ old('emergency_contact_relation', $vendor->emergency_contact_relation) }}">
+                            @error('phone')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Secondary Phone</label>
+                            <div class="input-group">
+                                <select name="alternate_phone_country_code" class="form-select phone-country-select" style="max-width: 140px;">
+                                    <option value="+44" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code ?? '+44') == '+44' ? 'selected' : '' }}>🇬🇧 +44</option>
+                                    <option value="+1" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code) == '+1' ? 'selected' : '' }}>🇺🇸 +1</option>
+                                    <option value="+91" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code) == '+91' ? 'selected' : '' }}>🇮🇳 +91</option>
+                                    <option value="+49" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code) == '+49' ? 'selected' : '' }}>🇩🇪 +49</option>
+                                    <option value="+33" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code) == '+33' ? 'selected' : '' }}>🇫🇷 +33</option>
+                                    <option value="+353" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code) == '+353' ? 'selected' : '' }}>🇮🇪 +353</option>
+                                    <option value="+61" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code) == '+61' ? 'selected' : '' }}>🇦🇺 +61</option>
+                                    <option value="+971" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code) == '+971' ? 'selected' : '' }}>🇦🇪 +971</option>
+                                    <option value="+65" {{ old('alternate_phone_country_code', $vendor->alternate_phone_country_code) == '+65' ? 'selected' : '' }}>🇸🇬 +65</option>
+                                </select>
+                                <input type="tel" name="alternate_phone" class="form-control" 
+                                       value="{{ old('alternate_phone', $vendor->alternate_phone) }}" placeholder="Optional">
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-md-6">
-                    <div class="card mb-4">
-                        <div class="card-header bg-secondary text-white">
-                            <h5 class="card-title mb-0"><i class="fas fa-university"></i> Bank Details</h5>
+            <!-- Address Details -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Address Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small">Business Address</label>
+                            <textarea name="business_address" class="form-control" rows="2">{{ old('business_address', $vendor->business_address) }}</textarea>
                         </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Bank Name</label>
-                                        <input type="text" name="bank_name" class="form-control" value="{{ old('bank_name', $vendor->bank_name) }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Branch</label>
-                                        <input type="text" name="bank_branch" class="form-control" value="{{ old('bank_branch', $vendor->bank_branch) }}">
-                                    </div>
-                                </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Country</label>
+                            <select name="business_country" id="business_country" class="form-select">
+                                @foreach($countries as $code => $name)
+                                    <option value="{{ $name }}" {{ old('business_country', $vendor->business_country ?? 'United Kingdom') === $name ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Postcode / ZIP</label>
+                            <input type="text" name="business_postcode" id="business_postcode" class="form-control" 
+                                   value="{{ old('business_postcode', $vendor->business_postcode) }}">
+                            <small class="text-muted postcode-hint">UK format: SW1A 1AA</small>
+                        </div>
+                        
+                        <div class="col-12 mt-3">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="showHomeAddress" {{ old('home_address', $vendor->home_address) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="showHomeAddress">Show home address</label>
                             </div>
-                            <div class="form-group mb-3">
-                                <label>Account Holder Name</label>
+                        </div>
+                        
+                        <div class="col-12 home-address-section" style="{{ old('home_address', $vendor->home_address) ? '' : 'display: none;' }}">
+                            <hr class="my-3">
+                            <label class="form-label small">Home Address</label>
+                            <textarea name="home_address" class="form-control" rows="2">{{ old('home_address', $vendor->home_address) }}</textarea>
+                        </div>
+                        <div class="col-md-6 home-address-section" style="{{ old('home_address', $vendor->home_address) ? '' : 'display: none;' }}">
+                            <label class="form-label small">Home Country</label>
+                            <select name="home_country" class="form-select">
+                                <option value="">Same as business</option>
+                                @foreach($countries as $code => $name)
+                                    <option value="{{ $name }}" {{ old('home_country', $vendor->home_country) === $name ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 home-address-section" style="{{ old('home_address', $vendor->home_address) ? '' : 'display: none;' }}">
+                            <label class="form-label small">Home Postcode</label>
+                            <input type="text" name="home_postcode" class="form-control" value="{{ old('home_postcode', $vendor->home_postcode) }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Contact -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-phone-alt me-2"></i>Emergency Contact</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small">Contact Name</label>
+                            <input type="text" name="emergency_contact_name" class="form-control" value="{{ old('emergency_contact_name', $vendor->emergency_contact_name) }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Contact Phone</label>
+                            <input type="tel" name="emergency_contact_phone" id="emergency_phone" class="form-control" 
+                                   value="{{ old('emergency_contact_phone', $vendor->emergency_contact_phone) }}" 
+                                   data-initial-country="{{ $vendor->emergency_contact_phone_country_code ?? '+44' }}">
+                            <input type="hidden" name="emergency_contact_phone_country_code" id="emergency_phone_country_code" value="{{ old('emergency_contact_phone_country_code', $vendor->emergency_contact_phone_country_code ?? '+44') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Relation/Role</label>
+                            <input type="text" name="emergency_contact_relation" class="form-control" value="{{ old('emergency_contact_relation', $vendor->emergency_contact_relation) }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank & Payment Details (Collapsible) -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white border-0 py-3" data-bs-toggle="collapse" data-bs-target="#bankDetails" style="cursor: pointer;">
+                    <h6 class="mb-0">
+                        <i class="fas fa-university me-2"></i>Bank & Payment Details
+                        <i class="fas fa-chevron-down float-end"></i>
+                    </h6>
+                </div>
+                <div class="collapse {{ $vendor->bank_name ? 'show' : '' }}" id="bankDetails">
+                    <div class="card-body border-top">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small">Bank Name</label>
+                                <input type="text" name="bank_name" class="form-control" value="{{ old('bank_name', $vendor->bank_name) }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Branch</label>
+                                <input type="text" name="bank_branch" class="form-control" value="{{ old('bank_branch', $vendor->bank_branch) }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Account Holder Name</label>
                                 <input type="text" name="bank_account_name" class="form-control" value="{{ old('bank_account_name', $vendor->bank_account_name) }}">
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Account Number</label>
-                                        <input type="text" name="bank_account_number" class="form-control" value="{{ old('bank_account_number', $vendor->bank_account_number) }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>IFSC Code</label>
-                                        <input type="text" name="bank_ifsc_code" class="form-control" value="{{ old('bank_ifsc_code', $vendor->bank_ifsc_code) }}">
-                                    </div>
-                                </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Account Number</label>
+                                <input type="text" name="bank_account_number" class="form-control" value="{{ old('bank_account_number', $vendor->bank_account_number) }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Sort Code</label>
+                                <input type="text" name="bank_ifsc_code" class="form-control" value="{{ old('bank_ifsc_code', $vendor->bank_ifsc_code) }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Preferred Payment Method</label>
+                                <select name="preferred_payment_cycle" class="form-select">
+                                    <option value="">Select...</option>
+                                    <option value="bank_transfer" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer (BACS)</option>
+                                    <option value="per-event" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'per-event' ? 'selected' : '' }}>Per Event</option>
+                                    <option value="advance" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'advance' ? 'selected' : '' }}>Advance Payment</option>
+                                    <option value="weekly" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'weekly' ? 'selected' : '' }}>Weekly</option>
+                                    <option value="monthly" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'monthly' ? 'selected' : '' }}>Monthly</option>
+                                </select>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="card mb-4">
-                        <div class="card-header bg-dark text-white">
-                            <h5 class="card-title mb-0"><i class="fas fa-file-invoice"></i> Tax Information</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>PAN Number</label>
-                                        <input type="text" name="pan_number" class="form-control" value="{{ old('pan_number', $vendor->pan_number) }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>GST Number</label>
-                                        <input type="text" name="gst_number" class="form-control" value="{{ old('gst_number', $vendor->gst_number) }}">
-                                    </div>
-                                </div>
+            <!-- Tax Information (Collapsible) -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white border-0 py-3" data-bs-toggle="collapse" data-bs-target="#taxDetails" style="cursor: pointer;">
+                    <h6 class="mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>Tax Information
+                        <i class="fas fa-chevron-down float-end"></i>
+                    </h6>
+                </div>
+                <div class="collapse {{ $vendor->pan_number || $vendor->gst_number ? 'show' : '' }}" id="taxDetails">
+                    <div class="card-body border-top">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small">UTR / Tax Reference</label>
+                                <input type="text" name="pan_number" class="form-control" value="{{ old('pan_number', $vendor->pan_number) }}">
                             </div>
-                            <div class="form-group mb-0">
-                                <label>Tax/VAT Reference</label>
+                            <div class="col-md-4">
+                                <label class="form-label small">VAT Number</label>
+                                <input type="text" name="gst_number" class="form-control" value="{{ old('gst_number', $vendor->gst_number) }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small">Company Number</label>
                                 <input type="text" name="tax_vat_reference" class="form-control" value="{{ old('tax_vat_reference', $vendor->tax_vat_reference) }}">
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="card mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="card-title mb-0"><i class="fas fa-sticky-note"></i> Additional</h5>
+            <!-- Notes & Status -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-dark text-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Additional Notes</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <textarea name="notes" class="form-control" rows="3">{{ old('notes', $vendor->notes) }}</textarea>
                         </div>
-                        <div class="card-body">
-                            <div class="form-group mb-3">
-                                <label>Preferred Payment Cycle</label>
-                                <select name="preferred_payment_cycle" class="form-control">
-                                    <option value="">Not Specified</option>
-                                    <option value="per-event" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'per-event' ? 'selected' : '' }}>Per Event</option>
-                                    <option value="weekly" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'weekly' ? 'selected' : '' }}>Weekly</option>
-                                    <option value="monthly" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'monthly' ? 'selected' : '' }}>Monthly</option>
-                                    <option value="advance" {{ old('preferred_payment_cycle', $vendor->preferred_payment_cycle) === 'advance' ? 'selected' : '' }}>Advance</option>
-                                </select>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Notes</label>
-                                <textarea name="notes" class="form-control" rows="3">{{ old('notes', $vendor->notes) }}</textarea>
-                            </div>
-                            <div class="form-group mb-0">
-                                <div class="form-check form-switch">
-                                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" {{ old('is_active', $vendor->is_active) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_active">Active</label>
-                                </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" {{ old('is_active', $vendor->is_active) ? 'checked' : '' }}>
+                                <label class="form-check-label small" for="is_active">Active (available for booking)</label>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-footer">
-                    <button type="submit" class="btn btn-warning btn-lg">
-                        <i class="fas fa-save"></i> Update Vendor/Artist
-                    </button>
-                    <a href="{{ route('pnl.vendors.show', $vendor) }}" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                </div>
+            <!-- Submit -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-save me-1"></i> Update Vendor
+                </button>
+                <a href="{{ route('pnl.vendors.show', $vendor) }}" class="btn btn-outline-secondary">Cancel</a>
             </div>
         </form>
     </div>
+@endsection
+
+@section('customjs')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Home address toggle
+            const homeAddressToggle = document.querySelector('#showHomeAddress');
+            if (homeAddressToggle) {
+                homeAddressToggle.addEventListener('change', function() {
+                    const sections = document.querySelectorAll('.home-address-section');
+                    sections.forEach(function(section) {
+                        section.style.display = homeAddressToggle.checked ? 'block' : 'none';
+                    });
+                });
+            }
+        });
+    </script>
 @endsection

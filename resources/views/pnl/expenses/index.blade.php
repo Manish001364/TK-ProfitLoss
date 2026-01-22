@@ -1,137 +1,119 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container-fluid py-4">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 1100px;">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-receipt"></i> Expenses</h1>
-            <a href="{{ route('pnl.expenses.create') }}" class="btn btn-primary">
+            <h4 class="mb-0">Expenses</h4>
+            <a href="{{ route('pnl.expenses.create') }}" class="btn btn-danger btn-sm">
                 <i class="fas fa-plus"></i> Add Expense
             </a>
         </div>
 
         <!-- Filters -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form method="GET" action="{{ route('pnl.expenses.index') }}" class="row align-items-end">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body py-3">
+                <form method="GET" action="{{ route('pnl.expenses.index') }}" id="filterForm" class="row g-3 align-items-end">
                     <div class="col-md-3">
-                        <div class="form-group mb-2 mb-md-0">
-                            <label>Event</label>
-                            <select name="event_id" class="form-control" id="expense-event-filter">
-                                <option value="">All Events</option>
-                                @foreach($events as $event)
-                                    <option value="{{ $event->id }}" {{ request('event_id') == $event->id ? 'selected' : '' }}>
-                                        {{ $event->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <label class="form-label small text-muted mb-1">Event</label>
+                        <select name="event_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">All Events</option>
+                            @foreach($events as $event)
+                                <option value="{{ $event->id }}" {{ request('event_id') == $event->id ? 'selected' : '' }}>{{ $event->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-2">
-                        <div class="form-group mb-2 mb-md-0">
-                            <label>Category</label>
-                            <select name="category_id" class="form-control">
-                                <option value="">All Categories</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <label class="form-label small text-muted mb-1">Category</label>
+                        <select name="category_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-2">
-                        <div class="form-group mb-2 mb-md-0">
-                            <label>Payment Status</label>
-                            <select name="payment_status" class="form-control">
-                                <option value="">All</option>
-                                <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Paid</option>
-                                <option value="pending" {{ request('payment_status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                            </select>
-                        </div>
+                        <label class="form-label small text-muted mb-1">Payment</label>
+                        <select name="payment_status" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">All</option>
+                            <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Paid</option>
+                            <option value="pending" {{ request('payment_status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                        </select>
                     </div>
                     <div class="col-md-2">
-                        <div class="form-group mb-2 mb-md-0">
-                            <label>Search</label>
-                            <input type="text" name="search" class="form-control" placeholder="Title..." value="{{ request('search') }}">
-                        </div>
+                        <label class="form-label small text-muted mb-1">Search</label>
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Title..." value="{{ request('search') }}">
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
-                        <a href="{{ route('pnl.expenses.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+                        <a href="{{ route('pnl.expenses.index') }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-times"></i></a>
                     </div>
                 </form>
             </div>
         </div>
 
         <!-- Expenses Table -->
-        <div class="card">
+        <div class="card border-0 shadow-sm">
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Title</th>
-                                <th>Event</th>
-                                <th>Category</th>
-                                <th>Vendor</th>
-                                <th>Date</th>
-                                <th class="text-end">Amount</th>
-                                <th>Payment</th>
-                                <th width="100">Actions</th>
+                                <th class="border-0">Title</th>
+                                <th class="border-0">Event</th>
+                                <th class="border-0">Category</th>
+                                <th class="border-0">Vendor</th>
+                                <th class="border-0">Date</th>
+                                <th class="border-0 text-end">Amount</th>
+                                <th class="border-0">Payment</th>
+                                <th class="border-0" width="80">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($expenses as $expense)
+                                @php $catData = $expense->category_data @endphp
                                 <tr>
-                                    <td><strong><a href="{{ route('pnl.expenses.show', $expense) }}">{{ $expense->title }}</a></strong></td>
-                                    <td><a href="{{ route('pnl.events.show', $expense->event) }}">{{ $expense->event->name }}</a></td>
-                                    <td>
-                                        <span style="color: {{ $expense->category->color }}">
-                                            <i class="{{ $expense->category->icon ?? 'fas fa-tag' }}"></i>
-                                            {{ $expense->category->name }}
-                                        </span>
-                                    </td>
-                                    <td>{{ $expense->vendor?->display_name ?? '-' }}</td>
-                                    <td>{{ $expense->expense_date->format('d M Y') }}</td>
-                                    <td class="text-end">
-                                        <strong>₹{{ number_format($expense->total_amount, 0) }}</strong>
-                                        @if($expense->tax_amount > 0)
-                                            <br><small class="text-muted">+ ₹{{ number_format($expense->tax_amount, 0) }} tax</small>
+                                    <td class="border-0"><strong><a href="{{ route('pnl.expenses.show', $expense) }}" class="text-dark">{{ $expense->title }}</a></strong></td>
+                                    <td class="border-0 small"><a href="{{ route('pnl.events.show', $expense->event) }}">{{ $expense->event->name }}</a></td>
+                                    <td class="border-0">
+                                        @if($catData)
+                                            <span class="badge" style="background-color: {{ $catData->color ?? '#6c757d' }}20; color: {{ $catData->color ?? '#6c757d' }}">
+                                                {{ $catData->name }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary">Uncategorized</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="border-0 small">{{ $expense->vendor?->display_name ?? '-' }}</td>
+                                    <td class="border-0 small">{{ $expense->expense_date->format('d M Y') }}</td>
+                                    <td class="border-0 text-end">
+                                        <strong>£{{ number_format($expense->total_amount, 0) }}</strong>
+                                        @if($expense->tax_amount > 0)
+                                            <br><small class="text-muted">+ £{{ number_format($expense->tax_amount, 0) }} tax</small>
+                                        @endif
+                                    </td>
+                                    <td class="border-0">
                                         @if($expense->payment)
-                                            <span class="badge bg-{{ $expense->payment->status_color }}">
+                                            <span class="badge bg-{{ $expense->payment->status_color }}-subtle text-{{ $expense->payment->status_color }}">
                                                 {{ ucfirst($expense->payment->status) }}
                                             </span>
-                                            @if($expense->payment->is_overdue)
-                                                <span class="badge bg-danger">Overdue</span>
-                                            @endif
                                         @else
-                                            <span class="badge bg-secondary">No Payment</span>
+                                            <span class="badge bg-secondary-subtle text-secondary">None</span>
                                         @endif
                                     </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{{ route('pnl.expenses.edit', $expense) }}" class="btn btn-sm btn-outline-warning">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                    onclick="confirmDelete('{{ route('pnl.expenses.destroy', $expense) }}')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                    <td class="border-0">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ route('pnl.expenses.edit', $expense) }}" class="btn btn-outline-secondary"><i class="fas fa-edit"></i></a>
+                                            <button type="button" class="btn btn-outline-danger" onclick="confirmDelete('{{ route('pnl.expenses.destroy', $expense) }}')"><i class="fas fa-trash"></i></button>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-5">
-                                        <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
+                                    <td colspan="8" class="text-center py-5 border-0">
+                                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
                                         <h5 class="text-muted">No expenses found</h5>
-                                        <a href="{{ route('pnl.expenses.create') }}" class="btn btn-primary mt-2">
-                                            <i class="fas fa-plus"></i> Add Expense
-                                        </a>
+                                        <a href="{{ route('pnl.expenses.create') }}" class="btn btn-danger btn-sm mt-2"><i class="fas fa-plus"></i> Add Expense</a>
                                     </td>
                                 </tr>
                             @endforelse
@@ -140,25 +122,19 @@
                 </div>
             </div>
             @if($expenses->hasPages())
-                <div class="card-footer">{{ $expenses->links() }}</div>
+                <div class="card-footer bg-white border-0">{{ $expenses->links() }}</div>
             @endif
         </div>
 
         <!-- Delete Modal -->
         <div class="modal fade" id="deleteModal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-sm">
                 <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title">Confirm Delete</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">Are you sure you want to delete this expense?</div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <form id="deleteForm" method="POST" style="display:inline;">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
+                    <div class="modal-header border-0"><h6 class="modal-title">Confirm Delete</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body">Delete this expense?</div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form id="deleteForm" method="POST" style="display:inline;">@csrf @method('DELETE')<button type="submit" class="btn btn-sm btn-danger">Delete</button></form>
                     </div>
                 </div>
             </div>
@@ -168,18 +144,10 @@
 
 @section('customjs')
     <script>
-        $(document).ready(function() {
-            if ($.fn.select2) {
-                $('#expense-event-filter').select2({
-                    placeholder: "Filter by Event"
-                });
-            }
-        });
-
         function confirmDelete(url) {
             document.getElementById('deleteForm').action = url;
-            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            deleteModal.show();
+            var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
         }
     </script>
 @endsection

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\PnL\PnlEvent;
-use Illuminate\Auth\Access\Response;
 
 class PnlEventPolicy
 {
@@ -15,7 +14,7 @@ class PnlEventPolicy
 
     public function view(User $user, PnlEvent $event): bool
     {
-        return $user->id === $event->user_id;
+        return (int) $user->id === (int) $event->user_id;
     }
 
     public function create(User $user): bool
@@ -25,21 +24,21 @@ class PnlEventPolicy
 
     public function update(User $user, PnlEvent $event): bool
     {
-        return $user->id === $event->user_id;
+        return (int) $user->id === (int) $event->user_id;
     }
 
     public function delete(User $user, PnlEvent $event): bool
     {
-        return $user->id === $event->user_id;
+        return (int) $user->id === (int) $event->user_id;
     }
 
     public function restore(User $user, PnlEvent $event): bool
     {
-        return $user->id === $event->user_id;
+        return (int) $user->id === (int) $event->user_id;
     }
 
     public function forceDelete(User $user, PnlEvent $event): bool
     {
-        return $user->id === $event->user_id;
+        return (int) $user->id === (int) $event->user_id;
     }
 }

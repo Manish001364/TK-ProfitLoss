@@ -1,139 +1,136 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container-fluid py-4">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 900px;">
         <!-- Page Header -->
-        <div class="mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-calendar-plus"></i> Create New Event</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1">Create New Event</h4>
+                <p class="text-muted small mb-0">Add a new event for P&L tracking</p>
+            </div>
+            <a href="{{ route('pnl.events.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
         </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">Event Details</h5>
-                    </div>
-                    <form action="{{ route('pnl.events.store') }}" method="POST">
-                        @csrf
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <div class="form-group mb-3">
-                                        <label for="name">Event Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                               id="name" name="name" value="{{ old('name') }}" required>
-                                        @error('name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label for="status">Status <span class="text-danger">*</span></label>
-                                        <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
-                                            <option value="draft" {{ old('status') === 'draft' ? 'selected' : '' }}>Draft</option>
-                                            <option value="planning" {{ old('status', 'planning') === 'planning' ? 'selected' : '' }}>Planning</option>
-                                            <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Active</option>
-                                            <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>Completed</option>
-                                        </select>
-                                        @error('status')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-3">
-                                <label for="description">Description</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" 
-                                          id="description" name="description" rows="3">{{ old('description') }}</textarea>
-                                @error('description')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="venue">Venue</label>
-                                        <input type="text" class="form-control @error('venue') is-invalid @enderror" 
-                                               id="venue" name="venue" value="{{ old('venue') }}">
-                                        @error('venue')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="location">Location</label>
-                                        <input type="text" class="form-control @error('location') is-invalid @enderror" 
-                                               id="location" name="location" value="{{ old('location') }}" placeholder="City, State">
-                                        @error('location')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label for="event_date">Event Date <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control @error('event_date') is-invalid @enderror" 
-                                               id="event_date" name="event_date" value="{{ old('event_date') }}" required>
-                                        @error('event_date')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label for="event_time">Event Time</label>
-                                        <input type="time" class="form-control @error('event_time') is-invalid @enderror" 
-                                               id="event_time" name="event_time" value="{{ old('event_time') }}">
-                                        @error('event_time')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group mb-3">
-                                        <label for="budget">Budget (₹)</label>
-                                        <input type="number" step="0.01" class="form-control @error('budget') is-invalid @enderror" 
-                                               id="budget" name="budget" value="{{ old('budget', 0) }}" min="0">
-                                        @error('budget')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Create Event
-                            </button>
-                            <a href="{{ route('pnl.events.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
-                            </a>
-                        </div>
-                    </form>
+        <form action="{{ route('pnl.events.store') }}" method="POST">
+            @csrf
+            
+            <!-- Event Details -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-calendar-alt me-2 text-danger"></i>Event Details</h6>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="card-title mb-0"><i class="fas fa-info-circle"></i> Tips</h5>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-unstyled mb-0">
-                            <li class="mb-2"><i class="fas fa-check text-success"></i> Set a realistic budget for better P&L tracking</li>
-                            <li class="mb-2"><i class="fas fa-check text-success"></i> Use 'Planning' status for upcoming events</li>
-                            <li class="mb-2"><i class="fas fa-check text-success"></i> Add venue details for complete records</li>
-                            <li class="mb-2"><i class="fas fa-check text-success"></i> You can add expenses and revenue after creation</li>
-                        </ul>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small">Event Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" 
+                                   value="{{ old('name') }}" required placeholder="Enter event name">
+                            @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Status <span class="text-danger">*</span></label>
+                            <select name="status" class="form-select @error('status') is-invalid @enderror" required>
+                                <option value="draft" {{ old('status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                                <option value="planning" {{ old('status', 'planning') === 'planning' ? 'selected' : '' }}>Planning</option>
+                                <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">Description</label>
+                            <textarea name="description" class="form-control" rows="2" placeholder="Brief description of the event">{{ old('description') }}</textarea>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Venue & Date -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2 text-primary"></i>Venue & Date</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Venue</label>
+                            <input type="text" name="venue" class="form-control" value="{{ old('venue') }}" placeholder="Venue name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Location</label>
+                            <input type="text" name="location" class="form-control" value="{{ old('location') }}" placeholder="City, Country">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Event Date <span class="text-danger">*</span></label>
+                            <input type="date" name="event_date" class="form-control @error('event_date') is-invalid @enderror" 
+                                   value="{{ old('event_date') }}" required>
+                            @error('event_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Event Time</label>
+                            <input type="time" name="event_time" class="form-control" value="{{ old('event_time') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Currency</label>
+                            <select name="currency" class="form-select">
+                                @foreach($currencies as $code => $info)
+                                    <option value="{{ $code }}" {{ old('currency', $settings->default_currency ?? 'GBP') === $code ? 'selected' : '' }}>
+                                        {{ $info['symbol'] }} {{ $code }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget & Revenue -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0"><i class="fas fa-coins me-2 text-success"></i>Budget & Revenue</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Budget</label>
+                            <div class="input-group">
+                                <span class="input-group-text currency-symbol">{{ $currencies[$settings->default_currency ?? 'GBP']['symbol'] ?? '£' }}</span>
+                                <input type="number" step="0.01" name="budget" class="form-control" value="{{ old('budget', 0) }}" min="0">
+                            </div>
+                            <small class="text-muted">Planned expenditure for this event</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Expected Revenue</label>
+                            <div class="input-group">
+                                <span class="input-group-text currency-symbol">{{ $currencies[$settings->default_currency ?? 'GBP']['symbol'] ?? '£' }}</span>
+                                <input type="number" step="0.01" name="expected_revenue" class="form-control" value="{{ old('expected_revenue', 0) }}" min="0">
+                            </div>
+                            <small class="text-muted">Projected income from ticket sales</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-save me-1"></i> Create Event
+                </button>
+                <a href="{{ route('pnl.events.index') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
     </div>
+@endsection
+
+@section('customjs')
+    <script>
+        // Update currency symbol when currency is changed
+        document.querySelector('[name="currency"]').addEventListener('change', function() {
+            const currencies = @json($currencies);
+            const selected = this.value;
+            const symbol = currencies[selected]?.symbol || '£';
+            document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = symbol);
+        });
+    </script>
 @endsection

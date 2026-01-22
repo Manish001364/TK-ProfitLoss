@@ -1,28 +1,28 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container-fluid py-4">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 900px;">
         <!-- Page Header -->
         <div class="mb-4">
-            <h1 class="h3 mb-0"><i class="fas fa-edit"></i> Edit Payment</h1>
+            <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Payment</h4>
         </div>
 
         <div class="row">
             <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="card-title mb-0">Payment Details</h5>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-danger text-white border-0 py-3">
+                        <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Details</h6>
                     </div>
                     <form action="{{ route('pnl.payments.update', $payment) }}" method="POST">
                         @csrf
                         @method('PUT')
                         <div class="card-body">
-                            <div class="alert alert-info">
-                                <strong>Expense:</strong> {{ $payment->expense->title }}<br>
-                                <strong>Amount:</strong> ₹{{ number_format($payment->amount, 2) }}
+                            <div class="alert alert-light border">
+                                <strong>Expense:</strong> {{ $payment->expense->title ?? 'Unknown' }}<br>
+                                <strong>Amount:</strong> £{{ number_format($payment->amount, 2) }}
                             </div>
 
-                            <div class="row">
+                            <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Status <span class="text-danger">*</span></label>
@@ -110,6 +110,37 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Email Notification Settings (shown when status changes to Paid) -->
+                            <div id="emailNotificationSection" class="mt-3" style="display: none;">
+                                <hr>
+                                <h5><i class="fas fa-envelope text-success me-2"></i>Payment Confirmation Emails</h5>
+                                <p class="text-muted small">When marking as paid, send confirmation emails to:</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="send_vendor_email" name="send_vendor_email" value="1" checked>
+                                            <label class="form-check-label" for="send_vendor_email">
+                                                <i class="fas fa-user-tie text-primary me-1"></i> Vendor
+                                                @if($payment->vendor && $payment->vendor->email)
+                                                    <br><small class="text-muted">{{ $payment->vendor->email }}</small>
+                                                @else
+                                                    <br><small class="text-danger">No email on file</small>
+                                                @endif
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="send_organiser_email" name="send_organiser_email" value="1" checked>
+                                            <label class="form-check-label" for="send_organiser_email">
+                                                <i class="fas fa-user text-success me-1"></i> Yourself (Organiser)
+                                                <br><small class="text-muted">{{ auth()->user()->email ?? 'Your email' }}</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="card-footer">
                             <button type="submit" class="btn btn-warning">
@@ -142,4 +173,27 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('customjs')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.querySelector('select[name="status"]');
+        const emailSection = document.getElementById('emailNotificationSection');
+        
+        function toggleEmailSection() {
+            if (statusSelect.value === 'paid') {
+                emailSection.style.display = 'block';
+            } else {
+                emailSection.style.display = 'none';
+            }
+        }
+        
+        // Initial check
+        toggleEmailSection();
+        
+        // On change
+        statusSelect.addEventListener('change', toggleEmailSection);
+    });
+</script>
 @endsection

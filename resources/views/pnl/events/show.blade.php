@@ -1,96 +1,65 @@
-@extends('layouts.organiser_layout')
+@extends('pnl.layouts.app')
 
-@section('content')
-    <div class="container-fluid py-4">
+@section('pnl_content')
+    <div class="container-fluid" style="max-width: 1100px;">
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h1 class="h3 mb-0">
-                    <i class="fas fa-calendar-alt"></i> {{ $event->name }}
-                    @php
-                        $statusColors = [
-                            'draft' => 'secondary',
-                            'planning' => 'info',
-                            'active' => 'primary',
-                            'completed' => 'success',
-                            'cancelled' => 'danger',
-                        ];
-                    @endphp
-                    <span class="badge bg-{{ $statusColors[$event->status] ?? 'secondary' }}">
-                        {{ ucfirst($event->status) }}
-                    </span>
-                </h1>
-                <p class="text-muted mb-0">
-                    <i class="fas fa-calendar"></i> {{ $event->event_date->format('d M Y') }}
-                    @if($event->venue)
-                        | <i class="fas fa-map-marker-alt"></i> {{ $event->venue }}
-                    @endif
+                <h4 class="mb-1">{{ $event->name }}</h4>
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-calendar me-1"></i>{{ $event->event_date->format('d M Y') }}
+                    @if($event->venue) | <i class="fas fa-map-marker-alt me-1"></i>{{ $event->venue }} @endif
                 </p>
             </div>
-            <div>
-                <a href="{{ route('pnl.events.edit', $event) }}" class="btn btn-warning">
+            <div class="d-flex gap-2">
+                <span class="badge bg-{{ $event->status === 'completed' ? 'success' : ($event->status === 'active' ? 'primary' : 'secondary') }}-subtle text-{{ $event->status === 'completed' ? 'success' : ($event->status === 'active' ? 'primary' : 'secondary') }} py-2 px-3">
+                    {{ ucfirst($event->status) }}
+                </span>
+                <a href="{{ route('pnl.events.edit', $event) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-edit"></i> Edit
                 </a>
-                <a href="{{ route('pnl.export.event', ['event' => $event, 'format' => 'xlsx']) }}" class="btn btn-success">
+                <a href="{{ route('pnl.export.event', ['event' => $event, 'format' => 'xlsx']) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-download"></i> Export
                 </a>
-                <a href="{{ route('pnl.events.index') }}" class="btn btn-secondary">
+                <a href="{{ route('pnl.events.index') }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left"></i> Back
                 </a>
             </div>
         </div>
 
         <!-- P&L Summary Cards -->
-        <div class="row">
-            <div class="col-lg-3 col-6 mb-3">
-                <div class="card bg-success text-white h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-0">₹{{ number_format($summary['total_revenue'], 0) }}</h3>
-                                <p class="mb-0">Net Revenue</p>
-                            </div>
-                            <i class="fas fa-rupee-sign fa-2x opacity-50"></i>
-                        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-lg-3 col-6">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #28a745 !important;">
+                    <div class="card-body py-3">
+                        <p class="text-muted small mb-1">Net Revenue</p>
+                        <h4 class="mb-0 text-success">£{{ number_format($summary['total_revenue'], 0) }}</h4>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-6 mb-3">
-                <div class="card bg-danger text-white h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-0">₹{{ number_format($summary['total_expenses'], 0) }}</h3>
-                                <p class="mb-0">Total Expenses</p>
-                            </div>
-                            <i class="fas fa-money-bill-wave fa-2x opacity-50"></i>
-                        </div>
+            <div class="col-lg-3 col-6">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #dc3545 !important;">
+                    <div class="card-body py-3">
+                        <p class="text-muted small mb-1">Total Expenses</p>
+                        <h4 class="mb-0 text-danger">£{{ number_format($summary['total_expenses'], 0) }}</h4>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-6 mb-3">
-                <div class="card {{ $summary['profit_status'] === 'profit' ? 'bg-primary' : ($summary['profit_status'] === 'loss' ? 'bg-warning' : 'bg-secondary') }} text-white h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-0">{{ $summary['net_profit'] >= 0 ? '' : '-' }}₹{{ number_format(abs($summary['net_profit']), 0) }}</h3>
-                                <p class="mb-0">{{ ucfirst($summary['profit_status']) }}</p>
-                            </div>
-                            <i class="fas {{ $summary['profit_status'] === 'profit' ? 'fa-arrow-up' : ($summary['profit_status'] === 'loss' ? 'fa-arrow-down' : 'fa-equals') }} fa-2x opacity-50"></i>
-                        </div>
+            <div class="col-lg-3 col-6">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid {{ $summary['profit_status'] === 'profit' ? '#28a745' : ($summary['profit_status'] === 'loss' ? '#ffc107' : '#6c757d') }} !important;">
+                    <div class="card-body py-3">
+                        <p class="text-muted small mb-1">{{ ucfirst($summary['profit_status']) }}</p>
+                        <h4 class="mb-0 {{ $summary['profit_status'] === 'profit' ? 'text-success' : ($summary['profit_status'] === 'loss' ? 'text-warning' : 'text-secondary') }}">
+                            {{ $summary['net_profit'] >= 0 ? '' : '-' }}£{{ number_format(abs($summary['net_profit']), 0) }}
+                        </h4>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-6 mb-3">
-                <div class="card bg-info text-white h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h3 class="mb-0">{{ number_format($summary['tickets_sold']) }}</h3>
-                                <p class="mb-0">Tickets Sold</p>
-                            </div>
-                            <i class="fas fa-ticket-alt fa-2x opacity-50"></i>
-                        </div>
+            <div class="col-lg-3 col-6">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #17a2b8 !important;">
+                    <div class="card-body py-3">
+                        <p class="text-muted small mb-1">Tickets Sold</p>
+                        <h4 class="mb-0 text-info">{{ number_format($summary['tickets_sold']) }}</h4>
                     </div>
                 </div>
             </div>
@@ -98,93 +67,98 @@
 
         <!-- Budget Progress -->
         @if($event->budget > 0)
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <span>Budget Utilization</span>
-                        <span>
-                            <strong>₹{{ number_format($summary['total_expenses'], 0) }}</strong> / ₹{{ number_format($event->budget, 0) }}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="small">Budget Utilisation</span>
+                        <span class="small">
+                            <strong>£{{ number_format($summary['total_expenses'], 0) }}</strong> / £{{ number_format($event->budget, 0) }}
                             ({{ number_format($summary['budget_utilization'], 1) }}%)
                         </span>
                     </div>
-                    <div class="progress mt-2" style="height: 20px;">
+                    <div class="progress" style="height: 8px;">
                         @php
                             $utilization = min($summary['budget_utilization'], 100);
                             $progressClass = $utilization > 100 ? 'bg-danger' : ($utilization > 80 ? 'bg-warning' : 'bg-success');
                         @endphp
-                        <div class="progress-bar {{ $progressClass }}" role="progressbar" 
-                             style="width: {{ min($utilization, 100) }}%"></div>
+                        <div class="progress-bar {{ $progressClass }}" style="width: {{ min($utilization, 100) }}%"></div>
                     </div>
                     @if($summary['budget_utilization'] > 100)
-                        <div class="text-danger mt-2">
-                            <i class="fas fa-exclamation-triangle"></i> 
-                            Over budget by ₹{{ number_format($summary['total_expenses'] - $event->budget, 0) }}
-                        </div>
+                        <small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Over budget by £{{ number_format($summary['total_expenses'] - $event->budget, 0) }}</small>
                     @endif
                 </div>
             </div>
         @endif
 
-        <div class="row">
+        <!-- Event-Specific Tips & Insights -->
+        @php
+            $totalBudget = $event->budget ?? 0;
+            $totalExpenses = $summary['total_expenses'] ?? 0;
+            $totalRevenue = $summary['total_revenue'] ?? 0;
+            $netProfit = $summary['net_profit'] ?? 0;
+        @endphp
+        @include('pnl.partials.tips')
+
+        <div class="row g-3 mb-4">
             <!-- Expenses Section -->
-            <div class="col-lg-7 mb-4">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0"><i class="fas fa-receipt"></i> Expenses</h5>
-                        <a href="{{ route('pnl.expenses.create', ['event_id' => $event->id]) }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> Add Expense
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Expenses</h6>
+                        <a href="{{ route('pnl.expenses.create', ['event_id' => $event->id]) }}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-plus"></i> Add
                         </a>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead>
+                            <table class="table table-hover table-sm mb-0">
+                                <thead class="table-light">
                                     <tr>
-                                        <th>Title</th>
-                                        <th>Category</th>
-                                        <th>Vendor</th>
-                                        <th class="text-end">Amount</th>
-                                        <th>Payment</th>
+                                        <th class="border-0">Title</th>
+                                        <th class="border-0">Category</th>
+                                        <th class="border-0">Vendor</th>
+                                        <th class="border-0 text-end">Amount</th>
+                                        <th class="border-0">Payment</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($event->expenses as $expense)
+                                        @php $catData = $expense->category_data @endphp
                                         <tr>
-                                            <td>
-                                                <a href="{{ route('pnl.expenses.show', $expense) }}">{{ $expense->title }}</a>
+                                            <td class="border-0"><a href="{{ route('pnl.expenses.show', $expense) }}">{{ $expense->title }}</a></td>
+                                            <td class="border-0">
+                                                @if($catData)
+                                                    <span class="badge" style="background-color: {{ $catData->color ?? '#6c757d' }}20; color: {{ $catData->color ?? '#6c757d' }}">
+                                                        {{ $catData->name ?? 'Uncategorized' }}
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-secondary-subtle text-secondary">Uncategorized</span>
+                                                @endif
                                             </td>
-                                            <td>
-                                                <span style="color: {{ $expense->category->color }}">
-                                                    <i class="{{ $expense->category->icon ?? 'fas fa-tag' }}"></i>
-                                                    {{ $expense->category->name }}
-                                                </span>
-                                            </td>
-                                            <td>{{ $expense->vendor?->display_name ?? '-' }}</td>
-                                            <td class="text-end">₹{{ number_format($expense->total_amount, 0) }}</td>
-                                            <td>
+                                            <td class="border-0 small">{{ $expense->vendor?->display_name ?? '-' }}</td>
+                                            <td class="border-0 text-end">£{{ number_format($expense->total_amount, 0) }}</td>
+                                            <td class="border-0">
                                                 @if($expense->payment)
-                                                    <span class="badge bg-{{ $expense->payment->status_color }}">
+                                                    <span class="badge bg-{{ $expense->payment->status_color }}-subtle text-{{ $expense->payment->status_color }}">
                                                         {{ ucfirst($expense->payment->status) }}
                                                     </span>
                                                 @else
-                                                    <span class="badge bg-secondary">No Payment</span>
+                                                    <span class="badge bg-secondary-subtle text-secondary">No Payment</span>
                                                 @endif
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center py-3">
-                                                <p class="text-muted mb-0">No expenses recorded yet.</p>
-                                            </td>
+                                            <td colspan="5" class="text-center py-4 border-0 text-muted">No expenses yet</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
                                 @if($event->expenses->count() > 0)
                                     <tfoot class="table-light">
                                         <tr>
-                                            <th colspan="3">Total Expenses</th>
-                                            <th class="text-end text-danger">₹{{ number_format($summary['total_expenses'], 0) }}</th>
-                                            <th></th>
+                                            <th colspan="3" class="border-0">Total</th>
+                                            <th class="border-0 text-end text-danger">£{{ number_format($summary['total_expenses'], 0) }}</th>
+                                            <th class="border-0"></th>
                                         </tr>
                                     </tfoot>
                                 @endif
@@ -194,115 +168,132 @@
                 </div>
             </div>
 
-            <!-- Sidebar -->
-            <div class="col-lg-5 mb-4">
-                <!-- Expense Breakdown Chart -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0"><i class="fas fa-chart-pie"></i> Expense Breakdown</h5>
+            <!-- Sidebar - Expense Chart + Event Details -->
+            <div class="col-lg-5">
+                <!-- Expense Breakdown - SMALLER -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h6 class="mb-0">Expense Breakdown</h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body pt-0">
                         @if($expenseByCategory->count() > 0)
-                            <canvas id="expenseChart" height="200"></canvas>
-                            <hr>
-                            <ul class="list-unstyled mb-0">
-                                @foreach($expenseByCategory as $cat)
-                                    <li class="mb-2">
-                                        <span class="badge" style="background-color: {{ $cat['color'] }}">&nbsp;</span>
-                                        {{ $cat['name'] }}: <strong>₹{{ number_format($cat['total'], 0) }}</strong>
-                                    </li>
-                                @endforeach
-                            </ul>
+                            <div class="row align-items-center">
+                                <div class="col-5">
+                                    <div style="max-width: 120px;">
+                                        <canvas id="expenseChart" height="120"></canvas>
+                                    </div>
+                                </div>
+                                <div class="col-7">
+                                    @foreach($expenseByCategory as $cat)
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="small">
+                                                <span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background-color: {{ $cat['color'] }};"></span>
+                                                {{ $cat['name'] }}
+                                            </span>
+                                            <span class="small fw-bold">£{{ number_format($cat['total'], 0) }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         @else
-                            <p class="text-muted text-center mb-0">No expenses to display</p>
+                            <p class="text-muted text-center small mb-0">No expenses to display</p>
                         @endif
                     </div>
                 </div>
 
                 <!-- Event Details -->
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0"><i class="fas fa-info-circle"></i> Event Details</h5>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h6 class="mb-0">Event Details</h6>
                     </div>
-                    <div class="card-body">
-                        <dl class="row mb-0">
-                            <dt class="col-sm-4">Date</dt>
-                            <dd class="col-sm-8">{{ $event->event_date->format('d M Y') }}</dd>
-                            
+                    <div class="card-body pt-0">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted small" width="40%">Date</td>
+                                <td class="small">{{ $event->event_date->format('d M Y') }}</td>
+                            </tr>
                             @if($event->event_time)
-                                <dt class="col-sm-4">Time</dt>
-                                <dd class="col-sm-8">{{ $event->event_time->format('h:i A') }}</dd>
+                                <tr>
+                                    <td class="text-muted small">Time</td>
+                                    <td class="small">{{ $event->event_time->format('h:i A') }}</td>
+                                </tr>
                             @endif
-                            
                             @if($event->venue)
-                                <dt class="col-sm-4">Venue</dt>
-                                <dd class="col-sm-8">{{ $event->venue }}</dd>
+                                <tr>
+                                    <td class="text-muted small">Venue</td>
+                                    <td class="small">{{ $event->venue }}</td>
+                                </tr>
                             @endif
-                            
                             @if($event->location)
-                                <dt class="col-sm-4">Location</dt>
-                                <dd class="col-sm-8">{{ $event->location }}</dd>
+                                <tr>
+                                    <td class="text-muted small">Location</td>
+                                    <td class="small">{{ $event->location }}</td>
+                                </tr>
                             @endif
-                            
-                            <dt class="col-sm-4">Budget</dt>
-                            <dd class="col-sm-8">₹{{ number_format($event->budget, 0) }}</dd>
-                            
-                            @if($event->description)
-                                <dt class="col-sm-4">Description</dt>
-                                <dd class="col-sm-8">{{ $event->description }}</dd>
-                            @endif
-                        </dl>
+                            <tr>
+                                <td class="text-muted small">Budget</td>
+                                <td class="small">£{{ number_format($event->budget, 0) }}</td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Revenue Section -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0"><i class="fas fa-ticket-alt"></i> Revenue (Ticket Sales)</h5>
-                <a href="{{ route('pnl.revenues.create', ['event_id' => $event->id]) }}" class="btn btn-sm btn-primary">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Revenue (Ticket Sales)</h6>
+                <a href="{{ route('pnl.revenues.create', ['event_id' => $event->id]) }}" class="btn btn-sm btn-danger">
                     <i class="fas fa-plus"></i> Add Revenue
                 </a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead>
+                    <table class="table table-hover table-sm mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th>Ticket Type</th>
-                                <th class="text-end">Price</th>
-                                <th class="text-end">Sold</th>
-                                <th class="text-end">Gross</th>
-                                <th class="text-end">Net</th>
+                                <th class="border-0">Ticket Type</th>
+                                <th class="border-0 text-end">Price</th>
+                                <th class="border-0 text-end">Sold / Available</th>
+                                <th class="border-0 text-end">Gross</th>
+                                <th class="border-0 text-end">Net</th>
+                                <th class="border-0"></th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($event->revenues as $revenue)
                                 <tr>
-                                    <td>
-                                        <a href="{{ route('pnl.revenues.show', $revenue) }}">{{ $revenue->display_name }}</a>
+                                    <td class="border-0"><a href="{{ route('pnl.revenues.show', $revenue) }}">{{ $revenue->display_name }}</a></td>
+                                    <td class="border-0 text-end">£{{ number_format($revenue->ticket_price, 0) }}</td>
+                                    <td class="border-0 text-end">
+                                        {{ $revenue->tickets_sold }} / {{ $revenue->tickets_available }}
+                                        <a href="{{ route('pnl.revenues.edit', $revenue) }}" class="btn btn-sm btn-link p-0 ms-1" title="Update sold count">
+                                            <i class="fas fa-plus-circle text-success"></i>
+                                        </a>
                                     </td>
-                                    <td class="text-end">₹{{ number_format($revenue->ticket_price, 0) }}</td>
-                                    <td class="text-end">{{ $revenue->tickets_sold }} / {{ $revenue->tickets_available }}</td>
-                                    <td class="text-end">₹{{ number_format($revenue->gross_revenue, 0) }}</td>
-                                    <td class="text-end text-success">₹{{ number_format($revenue->net_revenue_after_refunds, 0) }}</td>
+                                    <td class="border-0 text-end">£{{ number_format($revenue->gross_revenue, 0) }}</td>
+                                    <td class="border-0 text-end text-success">£{{ number_format($revenue->net_revenue_after_refunds, 0) }}</td>
+                                    <td class="border-0">
+                                        <a href="{{ route('pnl.revenues.edit', $revenue) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-3">
-                                        <p class="text-muted mb-0">No revenue recorded yet.</p>
-                                    </td>
+                                    <td colspan="6" class="text-center py-4 border-0 text-muted">No revenue recorded yet</td>
                                 </tr>
                             @endforelse
                         </tbody>
                         @if($event->revenues->count() > 0)
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="2">Total</th>
-                                    <th class="text-end">{{ $summary['tickets_sold'] }}</th>
-                                    <th class="text-end">₹{{ number_format($summary['gross_revenue'], 0) }}</th>
-                                    <th class="text-end text-success">₹{{ number_format($summary['total_revenue'], 0) }}</th>
+                                    <th colspan="2" class="border-0">Total</th>
+                                    <th class="border-0 text-end">{{ $summary['tickets_sold'] }}</th>
+                                    <th class="border-0 text-end">£{{ number_format($summary['gross_revenue'], 0) }}</th>
+                                    <th class="border-0 text-end text-success">£{{ number_format($summary['total_revenue'], 0) }}</th>
+                                    <th class="border-0"></th>
                                 </tr>
                             </tfoot>
                         @endif
@@ -326,15 +317,18 @@
                     datasets: [{
                         data: expenseData.map(item => item.total),
                         backgroundColor: expenseData.map(item => item.color),
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
+                    cutout: '55%',
                     plugins: {
+                        legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ₹' + context.parsed.toLocaleString();
+                                    return context.label + ': £' + context.parsed.toLocaleString();
                                 }
                             }
                         }

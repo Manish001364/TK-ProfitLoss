@@ -4,6 +4,7 @@ namespace App\Http\Controllers\PnL;
 
 use App\Http\Controllers\Controller;
 use App\Models\PnL\PnlVendor;
+use App\Models\PnL\PnlServiceType;
 use App\Exports\VendorsExport;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,46 +35,137 @@ class VendorController extends Controller
         $query->orderBy($sortBy, $sortDir);
 
         $vendors = $query->paginate(15)->withQueryString();
-        $vendorTypes = PnlVendor::getTypes();
+        $vendorTypes = PnlServiceType::getTypesForDropdown($userId);
 
         return view('pnl.vendors.index', compact('vendors', 'vendorTypes'));
     }
 
     public function create()
     {
-        $vendorTypes = PnlVendor::getTypes();
-        return view('pnl.vendors.create', compact('vendorTypes'));
+        $userId = auth()->id();
+        $vendorTypes = PnlServiceType::getTypesForDropdown($userId);
+        $countries = PnlVendor::getCountries();
+        return view('pnl.vendors.create', compact('vendorTypes', 'countries'));
     }
 
     public function store(Request $request)
     {
+        // For quick add (AJAX), use simplified validation
+        $isQuickAdd = $request->has('_quick_add');
+        $userId = auth()->id();
+        
+        if ($isQuickAdd) {
+            $validated = $request->validate([
+                'full_name' => 'required|string|max:255',
+                'type' => 'required|string|max:100',
+                'phone' => 'required|string|max:50',
+                'phone_country_code' => 'nullable|string|max:10',
+                'email' => 'nullable|email|max:255',
+                'specialization' => 'nullable|string|max:255',
+            ]);
+            
+            // Validate service type exists
+            $serviceTypeSlug = $validated['type'];
+            $serviceTypeExists = $this->validateServiceTypeExists($serviceTypeSlug, $userId);
+            if (!$serviceTypeExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected service type is invalid. Please select from the dropdown.',
+                    'errors' => ['type' => ['The selected service type is invalid.']]
+                ], 422);
+            }
+            
+            // Check for duplicates
+            $duplicateCheck = $this->checkDuplicateVendor($userId, $validated['full_name'], $validated['email'] ?? null);
+            if ($duplicateCheck) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $duplicateCheck,
+                    'duplicate' => true
+                ], 422);
+            }
+            
+            // Map service type slug to valid ENUM value for backward compatibility
+            $enumType = $this->mapServiceTypeToEnum($serviceTypeSlug);
+            
+            $validated['user_id'] = $userId;
+            $validated['is_active'] = true;
+            $validated['service_type_id'] = $serviceTypeSlug; // Store the original service type slug
+            $validated['type'] = $enumType; // Store mapped ENUM value
+            
+            $vendor = PnlVendor::create($validated);
+            
+            return response()->json([
+                'success' => true,
+                'vendor' => [
+                    'id' => $vendor->id,
+                    'display_name' => $vendor->display_name,
+                    'type' => $vendor->service_type_name,
+                ],
+                'message' => 'Vendor created successfully'
+            ]);
+        }
+        
+        // Full form validation - name, phone, type are mandatory
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
             'business_name' => 'nullable|string|max:255',
-            'type' => ['required', Rule::in(array_keys(PnlVendor::getTypes()))],
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'alternate_phone' => 'nullable|string|max:20',
+            'type' => 'required|string|max:100', // Service type slug from dropdown
+            'phone_country_code' => 'nullable|string|max:10',
+            'phone' => 'required|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'alternate_phone_country_code' => 'nullable|string|max:10',
+            'alternate_phone' => 'nullable|string|max:50',
             'business_address' => 'nullable|string',
+            'business_country' => 'nullable|string|max:100',
+            'business_postcode' => 'nullable|string|max:20',
             'home_address' => 'nullable|string',
+            'home_country' => 'nullable|string|max:100',
+            'home_postcode' => 'nullable|string|max:20',
             'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:20',
+            'emergency_contact_phone_country_code' => 'nullable|string|max:10',
+            'emergency_contact_phone' => 'nullable|string|max:50',
             'emergency_contact_relation' => 'nullable|string|max:100',
             'bank_name' => 'nullable|string|max:255',
             'bank_account_name' => 'nullable|string|max:255',
-            'bank_account_number' => 'nullable|string|max:50',
-            'bank_ifsc_code' => 'nullable|string|max:20',
+            'bank_account_number' => 'nullable|string|max:100',
+            'bank_ifsc_code' => 'nullable|string|max:50',
             'bank_branch' => 'nullable|string|max:255',
-            'tax_vat_reference' => 'nullable|string|max:50',
-            'pan_number' => 'nullable|string|max:20',
-            'gst_number' => 'nullable|string|max:20',
+            'tax_vat_reference' => 'nullable|string|max:100',
+            'pan_number' => 'nullable|string|max:50',
+            'gst_number' => 'nullable|string|max:50',
+            'specialization' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'preferred_payment_cycle' => 'nullable|string|max:50',
             'is_active' => 'boolean',
         ]);
 
-        $validated['user_id'] = auth()->id();
+        // Validate service type exists (system or user)
+        $serviceTypeSlug = $validated['type'];
+        $serviceTypeExists = $this->validateServiceTypeExists($serviceTypeSlug, $userId);
+        if (!$serviceTypeExists) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['type' => 'The selected service type is invalid. Please select a valid type from the dropdown.']);
+        }
+
+        // Check for duplicates
+        $duplicateCheck = $this->checkDuplicateVendor($userId, $validated['full_name'], $validated['email'] ?? null);
+        if ($duplicateCheck) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('warning', $duplicateCheck);
+        }
+
+        // Map service type slug to valid ENUM value for backward compatibility
+        $enumType = $this->mapServiceTypeToEnum($serviceTypeSlug);
+
+        $validated['user_id'] = $userId;
         $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['service_type_id'] = $serviceTypeSlug; // Store the original service type slug
+        $validated['type'] = $enumType; // Store mapped ENUM value
 
         $vendor = PnlVendor::create($validated);
 
@@ -82,11 +174,42 @@ class VendorController extends Controller
             ->with('success', 'Vendor/Artist created successfully!');
     }
 
+    /**
+     * Check for duplicate vendor by name or email
+     */
+    private function checkDuplicateVendor($userId, $name, $email = null, $excludeId = null)
+    {
+        $query = PnlVendor::forUser($userId);
+        
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        // Check by name
+        $existingByName = (clone $query)->where('full_name', 'like', $name)->first();
+        if ($existingByName) {
+            return "A vendor with the name '{$name}' already exists. Please check the existing vendor list.";
+        }
+
+        // Check by email if provided
+        if ($email) {
+            $existingByEmail = (clone $query)->where('email', $email)->first();
+            if ($existingByEmail) {
+                return "A vendor with the email '{$email}' already exists ({$existingByEmail->display_name}). Please check the existing vendor list.";
+            }
+        }
+
+        return null;
+    }
+
     public function show(PnlVendor $vendor)
     {
         $this->authorize('view', $vendor);
 
-        $vendor->load(['expenses.event', 'payments', 'attachments']);
+        $vendor->load(['expenses.event', 'payments.expense.event', 'attachments']);
+
+        // Get all payments for this vendor
+        $payments = $vendor->payments()->with(['expense.event'])->orderBy('created_at', 'desc')->get();
 
         // Calculate vendor summary
         $summary = [
@@ -96,32 +219,42 @@ class VendorController extends Controller
             'events_count' => $vendor->expenses->pluck('event_id')->unique()->count(),
         ];
 
-        return view('pnl.vendors.show', compact('vendor', 'summary'));
+        return view('pnl.vendors.show', compact('vendor', 'summary', 'payments'));
     }
 
     public function edit(PnlVendor $vendor)
     {
         $this->authorize('update', $vendor);
         
-        $vendorTypes = PnlVendor::getTypes();
-        return view('pnl.vendors.edit', compact('vendor', 'vendorTypes'));
+        $userId = auth()->id();
+        $vendorTypes = PnlServiceType::getTypesForDropdown($userId);
+        $countries = PnlVendor::getCountries();
+        return view('pnl.vendors.edit', compact('vendor', 'vendorTypes', 'countries'));
     }
 
     public function update(Request $request, PnlVendor $vendor)
     {
         $this->authorize('update', $vendor);
+        $userId = auth()->id();
 
         $validated = $request->validate([
             'full_name' => 'required|string|max:255',
             'business_name' => 'nullable|string|max:255',
-            'type' => ['required', Rule::in(array_keys(PnlVendor::getTypes()))],
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'alternate_phone' => 'nullable|string|max:20',
+            'type' => 'required|string|max:100', // Service type slug from dropdown
+            'email' => 'nullable|email|max:255',
+            'phone_country_code' => 'nullable|string|max:10',
+            'phone' => 'required|string|max:50',
+            'alternate_phone_country_code' => 'nullable|string|max:10',
+            'alternate_phone' => 'nullable|string|max:50',
             'business_address' => 'nullable|string',
+            'business_country' => 'nullable|string|max:100',
+            'business_postcode' => 'nullable|string|max:20',
             'home_address' => 'nullable|string',
+            'home_country' => 'nullable|string|max:100',
+            'home_postcode' => 'nullable|string|max:20',
             'emergency_contact_name' => 'nullable|string|max:255',
-            'emergency_contact_phone' => 'nullable|string|max:20',
+            'emergency_contact_phone_country_code' => 'nullable|string|max:10',
+            'emergency_contact_phone' => 'nullable|string|max:50',
             'emergency_contact_relation' => 'nullable|string|max:100',
             'bank_name' => 'nullable|string|max:255',
             'bank_account_name' => 'nullable|string|max:255',
@@ -131,12 +264,28 @@ class VendorController extends Controller
             'tax_vat_reference' => 'nullable|string|max:50',
             'pan_number' => 'nullable|string|max:20',
             'gst_number' => 'nullable|string|max:20',
+            'specialization' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'preferred_payment_cycle' => 'nullable|string|max:50',
             'is_active' => 'boolean',
         ]);
 
+        // Validate service type exists (system or user)
+        $serviceTypeSlug = $validated['type'];
+        $serviceTypeExists = $this->validateServiceTypeExists($serviceTypeSlug, $userId);
+        if (!$serviceTypeExists) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['type' => 'The selected service type is invalid. Please select a valid type from the dropdown.']);
+        }
+
+        // Map service type slug to valid ENUM value for backward compatibility
+        $enumType = $this->mapServiceTypeToEnum($serviceTypeSlug);
+
         $validated['is_active'] = $request->boolean('is_active', true);
+        $validated['service_type_id'] = $serviceTypeSlug; // Store the original service type slug
+        $validated['type'] = $enumType; // Store mapped ENUM value
 
         $vendor->update($validated);
 
@@ -165,5 +314,73 @@ class VendorController extends Controller
             new VendorsExport(auth()->id(), $request->all()),
             $filename . '.' . $format
         );
+    }
+
+    /**
+     * Validate that a service type exists in either system or user tables
+     */
+    private function validateServiceTypeExists($typeSlug, $userId): bool
+    {
+        // Check in hardcoded defaults first
+        $defaults = PnlServiceType::getDefaultTypes();
+        if (isset($defaults[$typeSlug])) {
+            return true;
+        }
+
+        // Check in legacy PnlVendor::getTypes()
+        $legacyTypes = PnlVendor::getTypes();
+        if (isset($legacyTypes[$typeSlug])) {
+            return true;
+        }
+
+        // Check in system service types table
+        try {
+            $exists = \DB::table('pnl_service_types_system')
+                ->where('slug', $typeSlug)
+                ->where('is_active', true)
+                ->exists();
+            if ($exists) return true;
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        // Check in user service types table
+        try {
+            $exists = \DB::table('pnl_service_types_user')
+                ->where('user_id', $userId)
+                ->where('slug', $typeSlug)
+                ->where('is_active', true)
+                ->exists();
+            if ($exists) return true;
+        } catch (\Exception $e) {
+            // Table might not exist
+        }
+
+        return false;
+    }
+
+    /**
+     * Map service type slug to a valid ENUM value for the 'type' column
+     * The pnl_vendors.type column is: ENUM('artist', 'dj', 'vendor', 'caterer', 'security', 'equipment', 'venue', 'marketing', 'staff', 'other')
+     */
+    private function mapServiceTypeToEnum($serviceTypeSlug): string
+    {
+        // Direct mapping for slugs that match ENUM values
+        $validEnumValues = ['artist', 'dj', 'vendor', 'caterer', 'security', 'equipment', 'venue', 'marketing', 'staff', 'other'];
+        
+        if (in_array($serviceTypeSlug, $validEnumValues)) {
+            return $serviceTypeSlug;
+        }
+        
+        // Map other service types to closest ENUM value
+        $mappings = [
+            'photography' => 'vendor',
+            'transport' => 'vendor',
+            'decor' => 'vendor',
+            'mc' => 'artist',
+            'catering' => 'caterer',
+        ];
+        
+        return $mappings[$serviceTypeSlug] ?? 'other';
     }
 }

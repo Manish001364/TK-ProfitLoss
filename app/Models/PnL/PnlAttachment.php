@@ -5,28 +5,25 @@ namespace App\Models\PnL;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Storage;
 
 class PnlAttachment extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids;
 
     protected $table = 'pnl_attachments';
 
     protected $fillable = [
         'attachable_type',
         'attachable_id',
-        'user_id',
         'filename',
         'original_filename',
         'mime_type',
-        'file_size',
+        'size',
         'path',
-        'type',
-        'description',
+        'uploaded_by',
     ];
 
     // Attachment type options
@@ -60,7 +57,7 @@ class PnlAttachment extends Model
 
     public function getFileSizeFormattedAttribute(): string
     {
-        $bytes = $this->file_size;
+        $bytes = $this->size;
         $units = ['B', 'KB', 'MB', 'GB'];
         $i = 0;
         while ($bytes >= 1024 && $i < count($units) - 1) {
@@ -87,11 +84,6 @@ class PnlAttachment extends Model
     }
 
     // Scopes
-    public function scopeForUser($query, $userId)
-    {
-        return $query->where('user_id', $userId);
-    }
-
     public function scopeOfType($query, $type)
     {
         return $query->where('type', $type);

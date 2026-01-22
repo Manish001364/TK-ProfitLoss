@@ -2,6 +2,7 @@
 
 namespace App\Models\PnL;
 
+use App\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PnlPayment extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes, HasAuditLog;
 
     protected $table = 'pnl_payments';
 
@@ -31,6 +32,7 @@ class PnlPayment extends Model
         'reminder_on_due_date',
         'last_reminder_sent_at',
         'reminder_count',
+        'send_email_to_vendor',
     ];
 
     protected $casts = [
@@ -39,6 +41,7 @@ class PnlPayment extends Model
         'actual_paid_date' => 'date',
         'reminder_enabled' => 'boolean',
         'reminder_on_due_date' => 'boolean',
+        'send_email_to_vendor' => 'boolean',
         'last_reminder_sent_at' => 'datetime',
     ];
 

@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\PnL\PnlPayment;
 use App\Models\PnL\PnlAuditLog;
 use App\Mail\PaymentReminderMail;
+use App\Mail\PaymentConfirmationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class PaymentController extends Controller
@@ -83,6 +85,8 @@ class PaymentController extends Controller
             'reminder_enabled' => 'boolean',
             'reminder_days_before' => 'nullable|integer|min:1|max:30',
             'reminder_on_due_date' => 'boolean',
+            'send_vendor_email' => 'boolean',
+            'send_organiser_email' => 'boolean',
         ]);
 
         $oldStatus = $payment->status;
@@ -94,11 +98,49 @@ class PaymentController extends Controller
             $validated['actual_paid_date'] = now()->toDateString();
         }
 
+        // Remove email options from validated data before update
+        unset($validated['send_vendor_email'], $validated['send_organiser_email']);
+
         $payment->update($validated);
 
         // Log status change
-        if ($oldStatus !== $validated['status']) {
-            $payment->logStatusChange($oldStatus, $validated['status'], $request->input('status_change_reason'));
+        if ($oldStatus !== $request->input('status')) {
+            $payment->logStatusChange($oldStatus, $request->input('status'), $request->input('status_change_reason'));
+            
+            // Send confirmation emails if status changed to 'paid'
+            if ($request->input('status') === 'paid') {
+                $payment->load(['expense.event', 'vendor']);
+                $emailsSent = [];
+
+                // Send email to vendor
+                $sendVendorEmail = $request->boolean('send_vendor_email', true);
+                if ($sendVendorEmail && $payment->vendor && $payment->vendor->email) {
+                    try {
+                        Mail::to($payment->vendor->email)->send(new PaymentConfirmationMail($payment, 'vendor'));
+                        $emailsSent[] = 'vendor';
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send payment confirmation to vendor: ' . $e->getMessage());
+                    }
+                }
+
+                // Send email to organiser
+                $sendOrganiserEmail = $request->boolean('send_organiser_email', true);
+                $user = auth()->user();
+                if ($sendOrganiserEmail && $user && $user->email) {
+                    try {
+                        Mail::to($user->email)->send(new PaymentConfirmationMail($payment, 'organiser'));
+                        $emailsSent[] = 'organiser';
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send payment confirmation to organiser: ' . $e->getMessage());
+                    }
+                }
+
+                if (!empty($emailsSent)) {
+                    return redirect()
+                        ->route('pnl.payments.show', $payment)
+                        ->with('success', 'Payment updated and marked as paid! Confirmation emails sent to: ' . implode(', ', $emailsSent));
+                }
+            }
         }
 
         return redirect()
@@ -114,6 +156,8 @@ class PaymentController extends Controller
             'actual_paid_date' => 'nullable|date',
             'payment_method' => ['nullable', Rule::in(array_keys(PnlPayment::getPaymentMethods()))],
             'transaction_reference' => 'nullable|string|max:255',
+            'send_vendor_email' => 'boolean',
+            'send_organiser_email' => 'boolean',
         ]);
 
         $oldStatus = $payment->status;
@@ -127,9 +171,42 @@ class PaymentController extends Controller
 
         $payment->logStatusChange($oldStatus, 'paid', 'Marked as paid');
 
+        // Load relationships for email
+        $payment->load(['expense.event', 'vendor']);
+
+        $emailsSent = [];
+
+        // Send email to vendor if they have an email
+        $sendVendorEmail = $request->boolean('send_vendor_email', true);
+        if ($sendVendorEmail && $payment->vendor && $payment->vendor->email) {
+            try {
+                Mail::to($payment->vendor->email)->send(new PaymentConfirmationMail($payment, 'vendor'));
+                $emailsSent[] = 'vendor (' . $payment->vendor->email . ')';
+            } catch (\Exception $e) {
+                Log::error('Failed to send payment confirmation to vendor: ' . $e->getMessage());
+            }
+        }
+
+        // Send email to organiser (logged-in user)
+        $sendOrganiserEmail = $request->boolean('send_organiser_email', true);
+        $user = auth()->user();
+        if ($sendOrganiserEmail && $user && $user->email) {
+            try {
+                Mail::to($user->email)->send(new PaymentConfirmationMail($payment, 'organiser'));
+                $emailsSent[] = 'organiser (' . $user->email . ')';
+            } catch (\Exception $e) {
+                Log::error('Failed to send payment confirmation to organiser: ' . $e->getMessage());
+            }
+        }
+
+        $successMessage = 'Payment marked as paid!';
+        if (!empty($emailsSent)) {
+            $successMessage .= ' Confirmation emails sent to: ' . implode(', ', $emailsSent);
+        }
+
         return redirect()
             ->back()
-            ->with('success', 'Payment marked as paid!');
+            ->with('success', $successMessage);
     }
 
     public function sendReminder(PnlPayment $payment)

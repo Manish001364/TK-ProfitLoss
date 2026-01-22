@@ -19,6 +19,7 @@ class DashboardController extends Controller
         $eventId = $request->get('event_id');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
+        $chartPeriod = $request->get('chart_period', '6'); // Default 6 months
 
         // Get all events for filter dropdown
         $events = PnlEvent::forUser($userId)->orderBy('event_date', 'desc')->get();
@@ -37,12 +38,28 @@ class DashboardController extends Controller
 
         $filteredEventIds = $eventQuery->pluck('id');
 
-        // Summary Statistics
-        $totalRevenue = PnlRevenue::whereIn('event_id', $filteredEventIds)->sum('net_revenue_after_refunds');
-        $grossRevenue = PnlRevenue::whereIn('event_id', $filteredEventIds)->sum('gross_revenue');
-        $totalExpenses = PnlExpense::whereIn('event_id', $filteredEventIds)->sum('total_amount');
+        // Summary Statistics - Calculate from actual columns
+        // Gross Revenue = ticket_price * tickets_sold
+        // Net Revenue = Gross - platform_fees - payment_gateway_fees - taxes - refund_amount
+        $revenueStats = PnlRevenue::whereIn('event_id', $filteredEventIds)
+            ->select(
+                DB::raw('SUM(ticket_price * tickets_sold) as gross_revenue'),
+                DB::raw('SUM((ticket_price * tickets_sold) - COALESCE(platform_fees, 0) - COALESCE(payment_gateway_fees, 0) - COALESCE(taxes, 0) - COALESCE(refund_amount, 0)) as net_revenue'),
+                DB::raw('SUM(tickets_sold) as tickets_sold')
+            )
+            ->first();
+
+        $grossRevenue = (float) ($revenueStats->gross_revenue ?? 0);
+        $totalRevenue = (float) ($revenueStats->net_revenue ?? 0);
+        $totalTicketsSold = (int) ($revenueStats->tickets_sold ?? 0);
+
+        $totalExpenses = (float) (PnlExpense::whereIn('event_id', $filteredEventIds)->sum('total_amount') ?? 0);
+        
+        // Calculate total budget
+        $totalBudget = (float) (PnlEvent::whereIn('id', $filteredEventIds)->sum('budget') ?? 0);
+        
+        // Net Profit = Total Revenue - Total Expenses
         $netProfit = $totalRevenue - $totalExpenses;
-        $totalTicketsSold = PnlRevenue::whereIn('event_id', $filteredEventIds)->sum('tickets_sold');
 
         // Profit Status
         $profitStatus = 'break-even';
@@ -63,13 +80,44 @@ class DashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
-        // Revenue by ticket type
+        // Expense breakdown by vendor type (Artist, DJ, Venue, Equipment, etc.)
+        $expenseByVendorType = DB::table('pnl_expenses')
+            ->join('pnl_vendors', 'pnl_expenses.vendor_id', '=', 'pnl_vendors.id')
+            ->whereIn('pnl_expenses.event_id', $filteredEventIds)
+            ->whereNull('pnl_expenses.deleted_at')
+            ->select(
+                'pnl_vendors.type',
+                DB::raw('SUM(pnl_expenses.total_amount) as total'),
+                DB::raw('COUNT(DISTINCT pnl_expenses.id) as count')
+            )
+            ->groupBy('pnl_vendors.type')
+            ->orderByDesc('total')
+            ->get()
+            ->map(function ($item) {
+                $colors = [
+                    'artist' => '#dc3545',
+                    'dj' => '#6f42c1',
+                    'vendor' => '#0d6efd',
+                    'caterer' => '#fd7e14',
+                    'security' => '#6c757d',
+                    'equipment' => '#20c997',
+                    'venue' => '#0dcaf0',
+                    'marketing' => '#d63384',
+                    'staff' => '#198754',
+                    'other' => '#adb5bd',
+                ];
+                $item->color = $colors[$item->type] ?? '#6c757d';
+                $item->label = ucfirst($item->type);
+                return $item;
+            });
+
+        // Revenue by ticket type - using calculated fields
         $revenueByTicketType = PnlRevenue::whereIn('event_id', $filteredEventIds)
             ->select(
                 'ticket_type',
                 DB::raw('SUM(tickets_sold) as tickets_sold'),
-                DB::raw('SUM(gross_revenue) as gross_revenue'),
-                DB::raw('SUM(net_revenue_after_refunds) as net_revenue')
+                DB::raw('SUM(ticket_price * tickets_sold) as gross_revenue'),
+                DB::raw('SUM((ticket_price * tickets_sold) - platform_fees - payment_gateway_fees - taxes - refund_amount) as net_revenue')
             )
             ->groupBy('ticket_type')
             ->get();
@@ -78,13 +126,13 @@ class DashboardController extends Controller
         $paymentSummary = [
             'paid' => PnlPayment::forUser($userId)->whereHas('expense', function($q) use ($filteredEventIds) {
                 $q->whereIn('event_id', $filteredEventIds);
-            })->where('status', 'paid')->sum('amount'),
+            })->where('status', 'paid')->sum('amount') ?? 0,
             'pending' => PnlPayment::forUser($userId)->whereHas('expense', function($q) use ($filteredEventIds) {
                 $q->whereIn('event_id', $filteredEventIds);
-            })->where('status', 'pending')->sum('amount'),
+            })->where('status', 'pending')->sum('amount') ?? 0,
             'scheduled' => PnlPayment::forUser($userId)->whereHas('expense', function($q) use ($filteredEventIds) {
                 $q->whereIn('event_id', $filteredEventIds);
-            })->where('status', 'scheduled')->sum('amount'),
+            })->where('status', 'scheduled')->sum('amount') ?? 0,
         ];
 
         // Upcoming Payments (next 30 days)
@@ -121,28 +169,86 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Chart data for Revenue vs Expenses trend (last 6 months)
-        $trendData = $this->getMonthlyTrend($userId, 6);
+        // Vendor Summary with payment totals
+        $vendorSummary = PnlVendor::forUser($userId)
+            ->active()
+            ->withCount('payments')
+            ->get()
+            ->map(function ($vendor) {
+                $totalPaid = $vendor->payments()->where('status', 'paid')->sum('amount');
+                $totalPending = $vendor->payments()->whereIn('status', ['pending', 'scheduled'])->sum('amount');
+                return [
+                    'id' => $vendor->id,
+                    'name' => $vendor->display_name,
+                    'type' => $vendor->type,
+                    'email' => $vendor->email,
+                    'total_paid' => $totalPaid,
+                    'total_pending' => $totalPending,
+                    'payments_count' => $vendor->payments_count,
+                ];
+            })
+            ->sortByDesc('total_paid')
+            ->take(10)
+            ->values();
+
+        // Chart data for Revenue vs Expenses trend (configurable period)
+        $chartMonths = $this->getChartMonths($chartPeriod);
+        $trendData = $this->getMonthlyTrend($userId, $chartMonths);
+
+        // Check if walkthrough should be shown
+        $settings = \App\Models\PnL\PnlSettings::getOrCreate($userId);
+        $showWalkthrough = !$settings?->walkthrough_dismissed && $events->count() == 0;
+        
+        // Get currency symbol for display
+        $defaultCurrency = $settings->default_currency ?? 'GBP';
+        $currencySymbol = match($defaultCurrency) {
+            'GBP' => '£',
+            'USD' => '$',
+            'EUR' => '€',
+            'INR' => '₹',
+            default => $defaultCurrency . ' '
+        };
 
         return view('pnl.dashboard.index', compact(
             'events',
             'totalRevenue',
             'grossRevenue',
             'totalExpenses',
+            'totalBudget',
             'netProfit',
             'profitStatus',
             'totalTicketsSold',
             'expenseByCategory',
+            'expenseByVendorType',
             'revenueByTicketType',
             'paymentSummary',
             'upcomingPayments',
             'overduePayments',
             'recentEvents',
+            'vendorSummary',
             'trendData',
             'eventId',
             'dateFrom',
-            'dateTo'
+            'dateTo',
+            'chartPeriod',
+            'showWalkthrough',
+            'currencySymbol',
+            'defaultCurrency'
         ));
+    }
+
+    /**
+     * Convert chart period selection to months
+     */
+    private function getChartMonths($period): int
+    {
+        return match($period) {
+            '3' => 3,
+            '6' => 6,
+            '12' => 12,
+            'ytd' => now()->month, // Year to date
+            default => 6,
+        };
     }
 
     private function getMonthlyTrend($userId, $months = 6): array
@@ -160,8 +266,13 @@ class DashboardController extends Controller
                 ->whereMonth('event_date', $date->month)
                 ->pluck('id');
 
-            $revenues[] = PnlRevenue::whereIn('event_id', $eventIds)->sum('net_revenue_after_refunds');
-            $expenses[] = PnlExpense::whereIn('event_id', $eventIds)->sum('total_amount');
+            // Calculate net revenue from actual columns
+            $netRevenue = PnlRevenue::whereIn('event_id', $eventIds)
+                ->select(DB::raw('SUM((ticket_price * tickets_sold) - platform_fees - payment_gateway_fees - taxes - refund_amount) as net'))
+                ->value('net') ?? 0;
+
+            $revenues[] = (float) $netRevenue;
+            $expenses[] = (float) (PnlExpense::whereIn('event_id', $eventIds)->sum('total_amount') ?? 0);
         }
 
         return [
@@ -174,25 +285,170 @@ class DashboardController extends Controller
     public function cashFlow(Request $request)
     {
         $userId = auth()->id();
-        $period = $request->get('period', 30); // days
+        $period = $request->get('period', '30'); // days: 30, 60, 90
+
+        // Get settings for currency
+        $settings = \App\Models\PnL\PnlSettings::getOrCreate($userId);
+        $currencySymbol = $settings->currency_symbol;
 
         // Upcoming payments grouped by period
-        $upcoming7 = PnlPayment::forUser($userId)->upcoming(7)->sum('amount');
-        $upcoming14 = PnlPayment::forUser($userId)->upcoming(14)->sum('amount');
-        $upcoming30 = PnlPayment::forUser($userId)->upcoming(30)->sum('amount');
+        $upcoming7 = PnlPayment::forUser($userId)->upcoming(7)->sum('amount') ?? 0;
+        $upcoming14 = PnlPayment::forUser($userId)->upcoming(14)->sum('amount') ?? 0;
+        $upcoming30 = PnlPayment::forUser($userId)->upcoming(30)->sum('amount') ?? 0;
+        $upcoming60 = PnlPayment::forUser($userId)->upcoming(60)->sum('amount') ?? 0;
+        $upcoming90 = PnlPayment::forUser($userId)->upcoming(90)->sum('amount') ?? 0;
 
         // Outstanding (all pending/scheduled)
-        $outstanding = PnlPayment::forUser($userId)->pending()->sum('amount');
+        $outstanding = PnlPayment::forUser($userId)->pending()->sum('amount') ?? 0;
 
         // Overdue
-        $overdue = PnlPayment::forUser($userId)->overdue()->sum('amount');
+        $overdue = PnlPayment::forUser($userId)->overdue()->sum('amount') ?? 0;
+
+        // Get detailed upcoming payments
+        $upcomingPaymentsList = PnlPayment::forUser($userId)
+            ->whereIn('status', ['pending', 'scheduled'])
+            ->where(function ($q) {
+                $q->whereNull('scheduled_date')
+                    ->orWhere('scheduled_date', '>=', now()->toDateString());
+            })
+            ->with(['expense.event', 'vendor'])
+            ->orderBy('scheduled_date')
+            ->get()
+            ->map(function ($payment) {
+                $daysUntil = $payment->scheduled_date ? now()->diffInDays($payment->scheduled_date, false) : null;
+                return [
+                    'id' => $payment->id,
+                    'vendor_name' => $payment->vendor?->display_name ?? 'Unknown Vendor',
+                    'event_name' => $payment->expense?->event?->name ?? 'Unknown Event',
+                    'amount' => $payment->amount,
+                    'scheduled_date' => $payment->scheduled_date,
+                    'days_until' => $daysUntil,
+                    'status' => $payment->status,
+                    'urgency' => $daysUntil !== null ? ($daysUntil <= 7 ? 'high' : ($daysUntil <= 14 ? 'medium' : 'low')) : 'unknown',
+                ];
+            });
+
+        // Get upcoming events with expected revenue
+        // NOTE: Profit/Loss is calculated from ACTUAL total_revenue - total_expenses
+        // NOT from expected_revenue which is just a manual estimate
+        $upcomingEvents = PnlEvent::forUser($userId)
+            ->upcoming()
+            ->with(['revenues', 'expenses'])
+            ->orderBy('event_date')
+            ->limit(10)
+            ->get()
+            ->map(function ($event) {
+                $actualRevenue = $event->total_revenue; // Calculated from ticket sales
+                $actualExpenses = $event->total_expenses; // Sum of expenses
+                $actualProfit = $actualRevenue - $actualExpenses;
+                
+                return [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'date' => $event->event_date,
+                    'expected_revenue' => $actualRevenue, // Use actual revenue for display
+                    'current_revenue' => $actualRevenue,
+                    'total_expenses' => $actualExpenses,
+                    'projected_profit' => $actualProfit, // FIXED: Use actual profit calculation
+                    'profit_status' => $event->profit_status, // Include profit status
+                    'days_until' => now()->diffInDays($event->event_date, false),
+                ];
+            });
+
+        // Calculate projections for timeline chart
+        $projectionData = $this->calculateProjections($userId, (int) $period);
+
+        // Cash flow summary - use current_revenue (actual ticket sales) instead of expected_revenue
+        $totalProjectedOutflow = $upcomingPaymentsList->sum('amount');
+        $totalProjectedInflow = $upcomingEvents->sum('current_revenue');
 
         return view('pnl.dashboard.cashflow', compact(
             'upcoming7',
             'upcoming14',
             'upcoming30',
+            'upcoming60',
+            'upcoming90',
             'outstanding',
-            'overdue'
+            'overdue',
+            'upcomingPaymentsList',
+            'upcomingEvents',
+            'projectionData',
+            'totalProjectedOutflow',
+            'totalProjectedInflow',
+            'period',
+            'currencySymbol',
+            'settings'
         ));
+    }
+
+    /**
+     * Calculate cash flow projections for chart
+     * Uses actual revenue from ticket sales, NOT expected_revenue estimates
+     */
+    private function calculateProjections($userId, $days = 30): array
+    {
+        $labels = [];
+        $outflows = [];
+        $inflows = [];
+        $cumulative = [];
+        $runningTotal = 0;
+
+        // Get all scheduled payments
+        $payments = PnlPayment::forUser($userId)
+            ->whereIn('status', ['pending', 'scheduled'])
+            ->whereNotNull('scheduled_date')
+            ->where('scheduled_date', '>=', now()->toDateString())
+            ->where('scheduled_date', '<=', now()->addDays($days)->toDateString())
+            ->select('scheduled_date', DB::raw('SUM(amount) as total'))
+            ->groupBy('scheduled_date')
+            ->pluck('total', 'scheduled_date')
+            ->toArray();
+
+        // Get actual revenue from events in the date range
+        // Calculate from ticket sales (not expected_revenue estimate)
+        $eventRevenues = [];
+        $upcomingEvents = PnlEvent::forUser($userId)
+            ->where('event_date', '>=', now()->toDateString())
+            ->where('event_date', '<=', now()->addDays($days)->toDateString())
+            ->with('revenues')
+            ->get();
+        
+        foreach ($upcomingEvents as $event) {
+            $dateStr = $event->event_date->format('Y-m-d');
+            // Use total_revenue (calculated from ticket sales) instead of expected_revenue
+            $actualRevenue = $event->total_revenue;
+            if (!isset($eventRevenues[$dateStr])) {
+                $eventRevenues[$dateStr] = 0;
+            }
+            $eventRevenues[$dateStr] += $actualRevenue;
+        }
+
+        // Build daily projections
+        for ($i = 0; $i <= $days; $i += 7) { // Weekly intervals for cleaner chart
+            $date = now()->addDays($i);
+            $dateStr = $date->format('Y-m-d');
+            $labels[] = $date->format('M d');
+
+            // Sum payments for this week
+            $weekOutflow = 0;
+            $weekInflow = 0;
+            for ($j = 0; $j < 7 && ($i + $j) <= $days; $j++) {
+                $checkDate = now()->addDays($i + $j)->format('Y-m-d');
+                $weekOutflow += $payments[$checkDate] ?? 0;
+                $weekInflow += $eventRevenues[$checkDate] ?? 0;
+            }
+
+            $outflows[] = (float) $weekOutflow;
+            $inflows[] = (float) $weekInflow;
+            $runningTotal += ($weekInflow - $weekOutflow);
+            $cumulative[] = (float) $runningTotal;
+        }
+
+        return [
+            'labels' => $labels,
+            'outflows' => $outflows,
+            'inflows' => $inflows,
+            'cumulative' => $cumulative,
+        ];
     }
 }

@@ -75,12 +75,13 @@
                             <tr>
                                 <td class="text-muted">Category</td>
                                 <td>
-                                    @if($expense->category)
-                                        <span class="badge" style="background-color: {{ $expense->category->color ?? '#6c757d' }}20; color: {{ $expense->category->color ?? '#6c757d' }}">
-                                            <i class="{{ $expense->category->icon ?? 'fas fa-tag' }} me-1"></i>
-                                            {{ $expense->category->name }}
+                                    @php $catData = $expense->category_data @endphp
+                                    @if($catData)
+                                        <span class="badge" style="background-color: {{ $catData->color ?? '#6c757d' }}20; color: {{ $catData->color ?? '#6c757d' }}">
+                                            <i class="{{ $catData->icon ?? 'fas fa-tag' }} me-1"></i>
+                                            {{ $catData->name }}
                                         </span>
-                                        <span class="badge bg-secondary-subtle text-secondary ms-1">{{ ucfirst($expense->category->type ?? 'variable') }}</span>
+                                        <span class="badge bg-secondary-subtle text-secondary ms-1">{{ ucfirst($catData->type ?? 'variable') }}</span>
                                     @else
                                         <span class="badge bg-secondary">Uncategorized</span>
                                     @endif

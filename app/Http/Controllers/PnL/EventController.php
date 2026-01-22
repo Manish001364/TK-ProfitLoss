@@ -102,14 +102,15 @@ class EventController extends Controller
             'budget_utilization' => $event->budget_utilization,
         ];
 
-        // Expense breakdown - handle null categories
+        // Expense breakdown - handle null categories using category_data accessor
         $expenseByCategory = $event->expenses
             ->groupBy('category_id')
             ->map(function ($expenses) {
-                $category = $expenses->first()->category;
+                $expense = $expenses->first();
+                $catData = $expense->category_data;
                 return [
-                    'name' => $category->name ?? 'Uncategorized',
-                    'color' => $category->color ?? '#6c757d',
+                    'name' => $catData->name ?? 'Uncategorized',
+                    'color' => $catData->color ?? '#6c757d',
                     'total' => $expenses->sum('total_amount'),
                 ];
             })
